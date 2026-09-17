@@ -90,6 +90,23 @@ or map them to a throw rather than a return.
 The record is durable before the response body reaches the client, so a client that sees a
 response can rely on a retry replaying it.
 
+## The request body is buffered
+
+To fingerprint a body and still let your handler read it, the filter wraps the request in a
+replayable one that buffers what it reads. Two consequences follow.
+
+**Non-blocking reads are not supported.** The wrapped input stream rejects
+`setReadListener` with `Non-blocking IO is not supported`. A handler using the Servlet async
+read API on a request carrying an idempotency key will hit this; ordinary blocking reads,
+including everything Spring MVC does for `@RequestBody`, are unaffected.
+
+**The body is held in memory** up to `idempotency.web.max-body-bytes`, which defaults to
+1 MiB. A larger body is rejected with `413` rather than buffered, which is what keeps the
+ceiling predictable rather than letting a large upload decide it.
+
+Endpoints that stream large uploads should not be annotated. The key is not a good fit for
+them anyway - a retried upload is rarely the same bytes.
+
 ## Status codes and replay headers
 
 The full tables are in the [HTTP reference](/docs/reference/http/). In short: the filter can

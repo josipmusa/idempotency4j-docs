@@ -63,6 +63,26 @@ different request.
 Whatever the sanitizer returns is what a duplicate receives, so it must not strip something
 the client needs to act on the response.
 
+## What the log actually contains
+
+The digest form is applied in both directions - log lines and exception messages - so an
+exception that escapes into an error tracker carries no key either. A listener that throws is
+logged the same way, naming the record by scope and digest.
+
+This is worth knowing before you build alerting on it: there is no log line anywhere that
+contains a raw idempotency key, by design. Correlation has to go through the digest or through
+your own request id.
+
+## Size is a security property too
+
+`idempotency.web.max-body-bytes` defaults to 1 MiB and bounds what the filter will
+fingerprint; a larger body is rejected with `413` rather than read and stored unchecked.
+
+Response size has no equivalent ceiling. An endpoint returning a large collection has that
+collection stored for the full TTL, once per distinct key. Auditing what is annotated includes
+auditing how big its responses get, which is why that appears in the list above rather than as
+a performance note.
+
 ## Reporting a vulnerability
 
 See the library's

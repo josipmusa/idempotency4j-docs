@@ -31,6 +31,55 @@ public IdempotencyStore idempotencyStore(StatefulRedisConnection<String, byte[]>
 
 One thread-safe connection can serve the store.
 
+## Tuning the store
+
+`RedisIdempotencyStoreConfig` carries more than the key prefix. The defaults are sound and
+most applications change none of them, but two matter under load and one matters for
+durability.
+
+| Setting | Default | What it controls |
+|---|---|---|
+| `keyPrefix` | provider default | Namespace for every key the store writes |
+| `pollInterval` | 50ms | How often a waiting caller re-checks a held key |
+| `retentionGrace` | 1 hour | Extra margin before an expired record is purged |
+| `purgeBatchSize` | 500 | Records scanned per purge page |
+| `maxPurgePagesPerCall` | 100 | Pages one purge run will scan before stopping |
+| `replicaAcknowledgement` | disabled | Redis `WAIT` policy applied after each mutation |
+
+**`pollInterval`** is the one to know about. Redis has no way to block on the specific
+condition the store waits for, so a caller waiting out someone else's lease polls. At 50ms a
+duplicate that arrives mid-flight adds up to 50ms of latency before it sees the completion.
+Lowering it sharpens that at the cost of more round trips per waiting caller.
+
+**`purgeBatchSize` and `maxPurgePagesPerCall`** bound a single purge run, which is what keeps
+the SCAN from becoming a long-running command on a large keyspace. A run that hits the page
+limit stops and resumes on the next scheduled purge, so the two together cap how much work one
+run does rather than how much gets purged overall.
+
+## Durability across a failover
+
+Redis replication is asynchronous. A completion the primary acknowledged may not have reached
+a replica yet, so losing the primary at that moment loses the record - and the next duplicate
+re-executes.
+
+Where that matters, require replica acknowledgement:
+
+```java
+RedisIdempotencyStoreConfig config = RedisIdempotencyStoreConfig.builder()
+        .keyPrefix("payments:idempotency:")
+        .replicaAcknowledgement(RedisReplicaAcknowledgement.require(1, Duration.ofMillis(200)))
+        .build();
+```
+
+This applies Redis `WAIT` after each successful mutation, so a write is not treated as done
+until the requested number of replicas has it. It costs latency on every mutation and it is
+disabled by default, because paying it unconditionally would be the wrong default for the
+majority of deployments that do not run replicas at all.
+
+It narrows the window rather than closing it. `WAIT` reports how many replicas acknowledged;
+it is not a distributed transaction. If losing a record is unacceptable, use
+[JDBC](/docs/storage/jdbc/).
+
 ## Operating it
 
 Use Redis 7 or newer. Choose an application-specific key prefix, and configure the server

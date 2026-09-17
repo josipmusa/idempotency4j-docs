@@ -70,6 +70,43 @@ The three durations are per-method overridable on
 | `enabled` | `true` | Register the purge scheduler |
 | `cron` | `0 0 * * * *` | Cron for purging expired records. Hourly |
 
+## Precedence
+
+Three levels, nearest wins:
+
+1. **The annotation attribute**, when not empty - `@Idempotent(lease = "PT60S")`.
+2. **The property**, for every method that left the attribute empty -
+   `idempotency.default-lease`.
+3. **The built-in default**, shown in the tables above.
+
+`key` and `scope` have no property level: a key is per-method by nature, and an empty `scope`
+means "derive it" rather than "take the application default".
+
+## What is not configurable here
+
+The properties above are the whole Spring surface. Store-level tuning is not exposed through
+them, because it differs per backend and belongs to the store rather than to the application.
+
+That is not a gap - it is where those settings live. To change them, declare the store bean
+yourself and configure it:
+
+- **Redis** - poll interval, purge batch sizing and replica acknowledgement are on
+  `RedisIdempotencyStoreConfig`. See [Redis](/docs/storage/redis/).
+- **JDBC** - the `initSchema` flag and the connection resolver are constructor arguments when
+  you build the store by hand. See [JDBC](/docs/storage/jdbc/).
+
+A store bean you declare always wins; the starter never replaces one, so declaring it is also
+how you keep every property above working while changing what only the store knows about.
+
+## Validation
+
+Values are validated where they are bound, and the failure names the value it received rather
+than only the key - `defaultTtl must be at least 1ms, got: PT0S`. Durations are ISO-8601, so
+thirty seconds is `PT30S`. The cron expression is Spring's six-field form, seconds first.
+
+Malformed configuration fails the context at startup. See
+[troubleshooting](/docs/operating/troubleshooting/).
+
 ## Two worth a second look
 
 **`completion-failure-policy` defaults to `log-and-return` here, not to the engine's own

@@ -23,7 +23,8 @@ void on(OrderPlaced event) {
 ## Three preconditions
 
 Three things have to be true for this to work, and the library tells you at startup or on
-entry if they are not.
+entry if they are not. Each failure names itself precisely - the messages are on
+[troubleshooting](/docs/operating/troubleshooting/).
 
 **The store must support it.** JDBC does; the in-memory and Redis stores do not. Asking for
 joined completion against a store that cannot give it fails the context at startup, whether
@@ -39,7 +40,8 @@ rather than an order, so break it:
 ```
 
 A `@Transactional` method that asks for joined completion while the transaction advisor is
-not ordered ahead fails the context at startup with exactly that instruction. A joined
+not ordered ahead fails the context at startup, and the message names both advisors' actual
+order values so you can see the tie rather than infer it. A joined
 context entered without an active transaction at runtime is an `IllegalStateException`, not a
 silent downgrade.
 
@@ -51,6 +53,26 @@ recoverable.
 **The store needs the caller's connection.** The starter wires a
 `TransactionAwareConnectionResolver` into the JDBC store for you, which runs `COMPLETE` on the
 transaction-bound connection and everything else on a connection of its own.
+
+## What the store guarantees
+
+The behaviour a transactional store must provide is pinned by `TransactionalStoreContract`,
+which every store claiming support has to pass. Four guarantees come out of it, and they are
+worth knowing because they decide what a crash leaves behind:
+
+- **A completion inside a transaction is not visible from another connection before the
+  commit.** A concurrent duplicate on a different connection still sees the record in
+  progress, not complete.
+- **After the commit, a duplicate sees it.** The record and your writes become visible
+  together.
+- **After a rollback, the record is still in progress** - not complete, and not absent. The
+  lease still fences it.
+- **A rollback followed by a release leaves the record absent,** which is what makes the key
+  retriable again.
+
+That third point is the one to hold onto: a rollback does not delete the record by itself. It
+stays in progress until the lease is released or expires, and only then is the key free. A
+retry arriving in between is told the work is in flight rather than being allowed to run.
 
 ## What moves with the record
 

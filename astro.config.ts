@@ -98,6 +98,7 @@ export default defineConfig({
             { slug: 'docs/operating/purging-and-retention' },
             { slug: 'docs/operating/security' },
             { slug: 'docs/operating/limitations' },
+            { slug: 'docs/operating/troubleshooting' },
             { slug: 'docs/operating/upgrading' },
           ],
         },

@@ -68,6 +68,18 @@ Pass the listeners to the engine directly:
 IdempotencyEngine engine = new IdempotencyEngine(store, scheduler, List.of(auditListener));
 ```
 
+## The listener cannot break the call
+
+Worth being concrete about what "swallowed" means, because it decides how defensively you
+have to write one. A listener that throws is logged at WARN, naming the listener and the
+callback it threw from, and rendering the record as its scope and key digest rather than the
+key itself. The engine then carries on exactly as it would have.
+
+The consequence is that a listener is not a place to enforce anything. If your audit write
+fails, the guarded action still completes and the record is still stored; nothing retries the
+listener and nothing tells the caller. Observation that must not be lost belongs inside the
+guarded action, where a failure releases the lease and the work is retried.
+
 ## What to use them for
 
 Metrics and audit trails, which need the boundary rather than the business method. Binding

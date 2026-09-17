@@ -50,6 +50,13 @@ Where the first execution published messages downstream, store their ids in a pa
 `attributes` so the duplicate can reference them instead of republishing - see
 [payloads and codecs](/docs/concepts/payloads-and-codecs/).
 
+## Buffered request bodies over HTTP
+
+The filter buffers the request body so it can fingerprint it and still hand it to your
+handler, which means Servlet non-blocking reads are unsupported on an annotated endpoint and
+the body is held in memory up to `idempotency.web.max-body-bytes`. Streaming upload endpoints
+should not be annotated. See [HTTP endpoints](/docs/http-endpoints/).
+
 ## Also not
 
 It is not a distributed lock you can borrow for general use. The HTTP adapter is
