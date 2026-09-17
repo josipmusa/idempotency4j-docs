@@ -191,18 +191,23 @@ The receiving side, and only part of it.
 
 Its records are step 1's dedup table. `@Idempotent` is transport-neutral, so it goes on a
 `@KafkaListener` or an `@EventListener` as readily as on an MVC handler, with the key given as a
-SpEL expression over the method's parameters because there is no transport to take one from. Its
-default scope is the class and method name, which keeps two consumers of the same message
-independent. With the JDBC store and `join-transaction` completion, the record is written on the
-caller's own transaction-bound connection, so the record and the business writes commit or roll
-back together. That is step 1's one-commit property, for the inbound half.
+SpEL expression over the method's parameters. Its default scope is the class and method name,
+which keeps two consumers of the same message independent. With the JDBC store and
+`join-transaction` completion, the record is written on the caller's own transaction-bound
+connection, so the record and the business writes commit or roll back together. That is step 1's
+one-commit property, for the inbound half.
 
-What it does not do today is the rest of the picture. There is no messaging module: nothing
-extracts a key from a Kafka record or an SQS message for you, nothing writes an outbox, nothing
-dispatches one, and nothing knows what a Spring Modulith event publication is. The one-commit
-property belongs to the JDBC store; the Redis store reports that it cannot support transactional
-completion and always will, because there is no transaction a JDBC caller's writes could join.
-The HTTP side is a servlet filter, with no reactive equivalent.
+The expression is the whole integration, and it cuts both ways: you supply the key, and the
+library never looks at the transport. It cannot tell a Kafka record from an SQS message, which
+is why it works on either and why choosing what to pull out of them stays your decision, on the
+terms the previous section describes.
+
+What it does not do today is the rest of the picture. There is no messaging module: no
+broker-specific key extraction, nothing that writes an outbox, nothing that dispatches one, and
+nothing that knows what a Spring Modulith event publication is. The one-commit property belongs
+to the JDBC store; the Redis store reports that it cannot support transactional completion and
+always will, because there is no transaction a JDBC caller's writes could join. The HTTP side is
+a servlet filter, with no reactive equivalent.
 
 Step 3 has a seam, at least. `IdempotencyLifecycleListener.onDuplicate` fires exactly when a
 completed record is found and the action is skipped, which is the moment step 3 describes: the

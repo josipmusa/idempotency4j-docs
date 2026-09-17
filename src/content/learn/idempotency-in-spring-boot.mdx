@@ -170,12 +170,13 @@ nothing at all.
 Now the database arbitrates, and this version is correct as far as it goes. Two things it
 still does not do:
 
-**It cannot tell "in progress" from "done".** The row exists from the moment the first
-attempt starts. If that attempt then crashes, the row is committed in some designs and rolled
-back in others, and neither is right: committed means the work never happens and the key is
-poisoned forever, rolled back means every duplicate that arrives during the work re-executes.
-Distinguishing the two states is what a lease is for, and a lease is meaningfully more code
-than this snippet.
+**It cannot tell "in progress" from "done".** The claim commits the moment the first attempt
+starts, which is exactly what makes it arbitrate between two racing consumers. It also means
+that if the attempt then dies inside `doTheWork`, the row is still there and still reads as
+processed. Every redelivery after that is refused, the work never happens, and the key stays
+poisoned for as long as the row lives. Nothing in the table separates an execution that is
+running from one that finished, so nothing can decide the row is safe to reclaim. Making that
+distinction is what a lease is for, and a lease is meaningfully more code than this snippet.
 
 **It has no result.** A duplicate is refused, not answered. That is fine for a message
 consumer, which only needs to not run twice. It is not fine for an HTTP caller that retried
