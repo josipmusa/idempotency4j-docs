@@ -1,0 +1,49 @@
+---
+title: Choosing a store
+description: JDBC, Redis or in-memory, what idempotency.store-type does, and why auto does not fall back to in-memory.
+sourceOf: README "Storage backends"
+---
+
+| Module | Use when | Autoconfigured |
+|---|---|---|
+| `idempotency-jdbc` | You have a relational database. PostgreSQL and MySQL, H2 for development | Yes, from a single `DataSource` bean |
+| `idempotency-redis` | You have Redis. Standalone and Sentinel topologies | No - declare the connection and the store |
+| `idempotency-inmemory` | Local development and tests. Not for more than one instance | Only on `store-type: in-memory` |
+
+Take the store you already run. The idempotency record is small and short-lived, and it is
+not worth introducing a new piece of infrastructure to hold it.
+
+One difference does bear on the choice rather than on operations: **only the JDBC store
+supports [joined completion](/docs/joining-your-transaction/)**. If you want the record to
+commit with your business writes, that decides it.
+
+## Selection
+
+A store bean you declare yourself always wins; the starter never replaces one.
+`idempotency.store-type` decides what happens when you do not:
+
+| Value | Behaviour |
+|---|---|
+| `auto` (default) | Build a JDBC store when the provider and a single `DataSource` are both present. Nothing otherwise |
+| `jdbc` | Demand a JDBC store; fail at startup if the provider or the `DataSource` is missing |
+| `in-memory` | Demand an in-memory store |
+| `none` | Build nothing |
+
+Whichever store is selected is logged at startup.
+
+## `auto` does not fall back to in-memory
+
+An in-memory record set deduplicates within one JVM until it restarts, which is not a
+property anything should acquire by accident - **ask for it by name.**
+
+The failure this prevents is specific. A deployment that loses its `DataSource` binding would
+otherwise start cleanly, log nothing alarming, and silently provide idempotency that evaporates
+on the next restart and does not hold across instances at all. Every request would look
+correct. The duplicates would arrive months later, in production, as money charged twice.
+
+Building nothing is louder, and loud is what you want here.
+
+## Next
+
+[JDBC](/docs/storage/jdbc/) · [Redis](/docs/storage/redis/) ·
+[In-memory](/docs/storage/in-memory/) · [Writing a store](/docs/storage/writing-a-store/)

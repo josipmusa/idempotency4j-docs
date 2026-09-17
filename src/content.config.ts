@@ -1,4 +1,4 @@
-import { defineCollection } from 'astro:content';
+import { defineCollection, z } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
 
@@ -34,6 +34,22 @@ function generateId({ entry }: { entry: string }): string {
 export const collections = {
   docs: defineCollection({
     loader: docsLoader({ generateId }),
-    schema: docsSchema(),
+    schema: docsSchema({
+      /**
+       * The README section this page derives from (docs/DECISIONS.md D4).
+       * The parity check reads it to know which prose to compare against.
+       * Optional: the docs landing page and the javadoc index have no README
+       * source and omit it rather than carrying an empty string.
+       */
+      extend: z.object({
+        sourceOf: z.string().optional(),
+        /**
+         * The diagram this page owns, named as it is in docs/CONTENT.md. Phase 4
+         * assigns it; phase 7 places the asset. Present on exactly the two pages
+         * that carry one.
+         */
+        diagram: z.enum(['record-lifecycle', 'request-outcomes']).optional(),
+      }),
+    }),
   }),
 };
