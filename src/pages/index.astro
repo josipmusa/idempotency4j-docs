@@ -1,0 +1,29 @@
+---
+// Holding page. Phase 7 builds the real homepage - eight sections, the signature
+// scene, DESIGN.md tokens. Nothing here anticipates that design; it exists so the
+// route is correct rather than the Astro scaffold, and so it is not a dead end.
+import { href, SITE_TITLE, SITE_DESCRIPTION, GITHUB_URL } from '../consts';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href={href('/favicon.svg')} />
+		<link rel="icon" href={href('/favicon.ico')} />
+		<meta name="generator" content={Astro.generator} />
+		<title>{SITE_TITLE}</title>
+		<meta name="description" content={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<main>
+			<h1>{SITE_TITLE}</h1>
+			<p>{SITE_DESCRIPTION}</p>
+			<p>
+				<a href={href('/docs/')}>Documentation</a>
+				<span aria-hidden="true"> · </span>
+				<a href={GITHUB_URL}>GitHub</a>
+			</p>
+		</main>
+	</body>
+</html>
