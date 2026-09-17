@@ -1,0 +1,74 @@
+---
+title: Documentation
+description: How to use idempotency4j - installation, the mental model, the adapters and the reference.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { href } from '../../consts';
+
+idempotency4j gives a unit of work a key: it runs once, and every duplicate gets the stored
+result back.
+
+<LinkCard
+  title="Quickstart"
+  href={href('/docs/quickstart/')}
+  description="The starter, one storage backend and one annotation, running in five minutes."
+/>
+
+## Explore the docs
+
+The groups are ordered so you can stop after any one of them and have something that works.
+
+<CardGrid>
+  <Card title="Getting started">
+    [What it does](/docs/what-it-does/) is the mental model in about four hundred words,
+    before any code. Read it first if you are still deciding. Then
+    [requirements](/docs/requirements/) for the support matrix.
+  </Card>
+  <Card title="Core concepts">
+    [Scope and key](/docs/concepts/scope-and-key/), the
+    [record lifecycle](/docs/concepts/record-lifecycle/),
+    [leases](/docs/concepts/leases-and-waiting/),
+    [outcomes](/docs/concepts/outcomes/),
+    [payloads](/docs/concepts/payloads-and-codecs/) and
+    [fingerprints](/docs/concepts/fingerprints/) - the vocabulary the rest of the docs assume.
+  </Card>
+  <Card title="Using it">
+    The adapter you will actually write against:
+    [annotated methods](/docs/annotated-methods/),
+    [HTTP endpoints](/docs/http-endpoints/), or [the raw engine](/docs/the-engine/).
+  </Card>
+  <Card title="Storage">
+    [Choosing](/docs/storage/choosing/) between [JDBC](/docs/storage/jdbc/),
+    [Redis](/docs/storage/redis/) and [in-memory](/docs/storage/in-memory/) - and
+    [writing your own](/docs/storage/writing-a-store/).
+  </Card>
+  <Card title="Reference">
+    Every [configuration key](/docs/reference/configuration/), every
+    [annotation attribute](/docs/reference/annotation/), every
+    [status code](/docs/reference/http/), and the
+    [Javadoc](/docs/reference/javadoc/).
+  </Card>
+  <Card title="Operating it">
+    [Retention](/docs/operating/purging-and-retention/),
+    [security](/docs/operating/security/),
+    [troubleshooting](/docs/operating/troubleshooting/),
+    [upgrading](/docs/operating/upgrading/) - and what the library
+    [does not do](/docs/operating/limitations/).
+  </Card>
+</CardGrid>
+
+## Two pages worth reading before you adopt
+
+<CardGrid>
+  <LinkCard
+    title="Limitations"
+    href={href('/docs/operating/limitations/')}
+    description="No reactive, no tenant isolation, no Redis Cluster, and what downstream side effects are not covered. Better found now than later."
+  />
+  <LinkCard
+    title="Troubleshooting"
+    href={href('/docs/operating/troubleshooting/')}
+    description="Every startup failure, warning and runtime surprise by its exact message, with cause and fix."
+  />
+</CardGrid>

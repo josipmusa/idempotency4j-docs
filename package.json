@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "check:links": "node scripts/check-links.mjs",
+    "check:overflow": "node scripts/check-overflow.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },

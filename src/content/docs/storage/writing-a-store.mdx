@@ -1,0 +1,65 @@
+---
+title: Writing a store
+description: The three-method SPI, the store contract, and why behaviour changes belong in the contract first.
+sourceOf: README "Adding a backend"
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+The store SPI is three methods. Everything difficult about idempotency that is not the
+engine's job lives behind them: all blocking, waiting, and stale-lease stealing happens
+inside `tryAcquire`.
+
+That concentration is deliberate. A store can wait the way its technology actually waits - a
+Postgres advisory lock, a Redis blocking primitive, a condition variable - instead of the
+engine polling on a schedule it would have to tune for every backend.
+
+## The contract is the specification
+
+`IdempotencyStoreContract` in `idempotency-test` is the single source of truth for store
+behaviour.
+
+<Steps>
+
+1. **Implement the SPI** against your backend.
+
+2. **Extend the contract** and implement `store()`.
+
+   ```java
+   class MyStoreTest extends IdempotencyStoreContract {
+       @Override
+       protected IdempotencyStore store() {
+           return new MyIdempotencyStore(...);
+       }
+   }
+   ```
+
+3. **Pass all of it.** Not most of it - a store whose lease stealing is almost right is worse
+   than one that does not support the feature, because the difference only appears under
+   concurrency in production.
+
+4. **Extend `TransactionalStoreContract` too**, if and only if your store can complete inside
+   a caller's transaction. Declining is a supported answer.
+
+</Steps>
+
+## Behaviour changes belong in the contract first
+
+:::note[Write the expectation into the contract before the store]
+Every existing backend then either satisfies it or fails its build, which is how the
+divergence gets found on the machine of the person introducing it.
+:::
+
+This is the rule that keeps three backends from becoming three subtly different libraries.
+
+If your store cannot honour a behaviour - joined completion is the usual one - say so rather
+than approximating it. The engine fails the context at startup when something asks for what
+the store does not provide, which is a better outcome than an approximation that holds until
+it does not.
+
+## Before you write one
+
+The three shipped stores cover a relational database, Redis, and a single JVM. A new backend
+is worth writing when you run a durable store that is none of those and would rather not add
+one. It is not worth writing to get a slightly different schema out of the JDBC store -
+constructing that store by hand against a second `DataSource` is the cheaper answer.

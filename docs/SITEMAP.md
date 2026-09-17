@@ -44,7 +44,7 @@ Sections 3 and 4 are under review in phase 6a - see the adjacency check in DESIG
 
 ## `/docs` - Reference
 
-Starlight. Six sidebar groups with monospace uppercase labels. ~24 pages.
+Starlight. Six sidebar groups with monospace uppercase labels. 29 pages.
 
 Ordered so that a reader can stop after any group and have something that works. Group 1
 gets them running, group 2 gives them the mental model, group 3 is the adapter they actually
@@ -107,6 +107,18 @@ use, and the rest is consulted rather than read.
 | `/docs/operating/security` | The store holds whatever the adapter hands it, which over HTTP means full response bodies. Encryption at rest, Redis TLS and ACLs, short TTLs. `ResponseSanitizer`. Why keys are never logged and what the `scope/#digest` form is. | README "Security" |
 | `/docs/operating/limitations` | No reactive. No tenant isolation. No Redis Cluster. Downstream side effects are not covered. Verbatim in the library's own register. | README "Limitations" + "What this is not" |
 | `/docs/operating/upgrading` | 0.3.x (Boot 3) → 0.4.x (Boot 4, Framework 7). What moved, and that Boot 3 apps should stay on 0.3.0 with no releases scheduled. Replaces versioned docs for v1. | README "Spring Boot 3", CHANGELOG |
+| `/docs/operating/troubleshooting` | Every startup failure, warning and runtime surprise by its **exact message**, with cause and fix. Added in phase 4. | Library source, not the README |
+
+**`/docs/operating/troubleshooting` is keyed on exact error strings**, because that is what
+an engineer pastes into a search box mid-incident. It is the clearest case of the site being a
+superset of the README (DECISIONS.md D4): every entry is derived from the library's own source
+and none of it exists in the README. Added during phase 4 rather than at kickoff.
+
+**Five docs pages carry a diagram, not two.** `scope-and-key`, `leases-and-waiting` and
+`joining-your-transaction` were assigned one during phase 4, on the same reasoning as the
+troubleshooting page above: each is a page whose central claim prose states badly, and
+styling in phase 7 cannot add structure the content layer never asked for. The full list,
+with what each diagram shows, is in [CONTENT.md](CONTENT.md).
 
 **`/docs/operating/limitations` is a deliberate first-class page, linked from the homepage.**
 For the secondary audience - a lead deciding between adopting and building - the honesty is

@@ -109,6 +109,18 @@ principle 10).
 | **Two charges, or one** | home §2, the signature | Two frames, one SVG, switch-driven. Full spec in MOTION.md. Its ON frame is also the homepage Open Graph image. |
 | **Execution model** - Request → Acquire → Execute → Store → Replay | home §3 | Five stages. Static. |
 | **Four layers** - Engine / Spring / HTTP / Store, with what each owns | home §4 | Static. May merge with the above per the DESIGN.md adjacency check. |
+| **Scope and key** - one message id arriving at two consumers, resolving to two records | `/docs/concepts/scope-and-key` | Static. The page's central claim, and the one prose states least well. |
+| **Lease and wait** - both durations on one timeline from a common origin, with the heartbeat at `lease / 2` and a second caller's wait running out underneath | `/docs/concepts/leases-and-waiting` | Static. Two durations that are constantly conflated; a shared time axis is what separates them. |
+| **The completion window** - two timelines, autonomous above and joined below, with the crash window marked on the first and absent from the second | `/docs/joining-your-transaction` | Static. The window is the page's whole argument, and a window in time is what prose does worst. |
+
+The last three were added during phase 4, not at kickoff. The docs carried two diagrams
+across twenty-nine pages, which made `/docs` a wall of prose that phase 7 could only restyle,
+not rescue: styling cannot invent structure that the content layer never asked for. Each of
+the three is the central claim of the page it sits on, and each page's prose is written to
+stand without it - the still-frame rule in DESIGN.md cuts both ways.
+
+Placement is recorded in each page's `diagram:` frontmatter, which `src/content.config.ts`
+constrains to this list.
 
 ## Copy source
 

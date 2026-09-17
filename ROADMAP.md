@@ -90,20 +90,27 @@ restorable dependency, and the kept palette renders - are in
 `docs/specs/phase-3-workspace.md`. One standing build warning is recorded there: Starlight
 looks for an `i18n` collection the English-only site has no use for.
 
-## Phase 4. Product and copy
+## Phase 4. Product and copy - **DONE** 2026-09-17
 **Goal:** all content exists before any design work.
 - [x] PRODUCT.md: audience, one job, positioning, voice, never-invent list
 - [x] Sitemap and full docs IA - docs/SITEMAP.md
 - [x] Content storage decided: Markdown/MDX collections, no CMS
 - [x] Language strategy: English only, with the reason
-- [ ] Homepage copy drafted in voice, all eight sections
-- [ ] `/docs` - ~24 pages drafted from the README against the IA
-- [ ] `/learn` - three articles written (original work, not README-derived)
-- [ ] The README-parity check script specified in D4
-- [ ] **One outside reader before copy is locked** (own-site substitute for the client
-      content gate)
+- [x] Homepage copy drafted in voice, all eight sections - docs/COPY-HOME.md
+- [x] `/docs` - 29 pages drafted from the README against the IA, then given structure
+      (asides, steps, tabs, cards) rather than left as prose
+- [x] `/learn` - three articles written (original work, not README-derived)
+- [x] The README-parity check script specified in D4 -
+      docs/specs/readme-parity-check.md
+- [x] **One outside reader before copy is locked** - closed by the owner on 2026-09-17
+      without running it. The gate was the own-site substitute for the client content
+      gate; waiving it means no one outside the project has read the copy before it was
+      locked, and the first outside reader will now be a visitor.
 
 **Done when:** every page has real copy and every diagram is assigned.
+**Met.** 29 docs pages, three learn articles, the homepage deck, five diagrams assigned.
+Two build checks added along the way - `check:links` and `check:overflow` - because the
+defects they catch are invisible in development.
 
 ## Phase 5. Design brief draft - **DONE** 2026-09-17
 **Goal:** DESIGN.md drafted: locks what is known, states what phase 6 decides.
