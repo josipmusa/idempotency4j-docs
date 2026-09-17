@@ -127,6 +127,8 @@ add it to a build file, and what did you not believe. This needs a person; the o
 arranges it. Phase 4 is not done until it happens, and the reading package is prepared as
 part of commit 4.
 
+**Outcome: waived by the owner on 2026-09-17 without being run.** See the deviation below.
+
 ---
 
 ## Deviations
@@ -220,3 +222,21 @@ rather than as a script's input. The spec also proposes a `LIBRARY_VERSION` cons
 `src/consts.ts`: the version is pinned in fourteen places inside code fences a reader copies
 verbatim, so it cannot be templated, and the same shape that solved `base` applies - write it
 down once and let a check enforce the literals.
+
+### The outside-reader gate was waived, not run
+
+A reading package was prepared as commit 4 specified: the qualifying criteria for the reader,
+the three questions with what a pass and a failure look like for each, and a findings table.
+The owner closed the gate on 2026-09-17 without running it and removed the package as
+redundant.
+
+Recorded here because the gate was the own-site substitute for the playbook's client content
+gate, and waiving it is a decision rather than an omission. What it would have caught is copy
+that is mechanically correct and does not land: every other phase 4 check is automated, and
+none of them can tell whether a Java engineer who has never seen this library reads the
+homepage and decides. The first outside reader is now a visitor.
+
+One limitation the package named, which stands regardless: the homepage is not a page until
+phase 7, so the reader would have read `docs/COPY-HOME.md`. That tests the claims and their
+order and cannot test whether the hero lands. Phase 7 and 8 own that question, and it is still
+open.
