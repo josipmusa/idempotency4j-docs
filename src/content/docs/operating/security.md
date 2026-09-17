@@ -7,8 +7,10 @@ sourceOf: README "Security"
 The store persists whatever an adapter hands it. Over HTTP that means full response bodies,
 which depending on your endpoints may include PII, tokens, or financial data.
 
-That sentence is the whole security model in one line: the idempotency table is a copy of
-your responses, and it needs whatever protection your responses need.
+:::caution[The idempotency table is a copy of your responses]
+It needs whatever protection your responses need. That is the whole security model in one
+line.
+:::
 
 ## What to do
 
@@ -23,6 +25,11 @@ your responses, and it needs whatever protection your responses need.
 The last one is the one people skip. An endpoint annotated for good reasons may return a
 field nobody thought about, and the annotation means that field is now stored for the full
 TTL somewhere it was not stored before.
+
+:::note[There is no log line anywhere containing a raw idempotency key]
+Alerting and correlation have to go through the scope-and-digest form below, or through your
+own request id.
+:::
 
 ## Keys are never logged
 
@@ -66,12 +73,10 @@ the client needs to act on the response.
 ## What the log actually contains
 
 The digest form is applied in both directions - log lines and exception messages - so an
-exception that escapes into an error tracker carries no key either. A listener that throws is
-logged the same way, naming the record by scope and digest.
+exception that escapes into an error tracker carries no key either.
 
-This is worth knowing before you build alerting on it: there is no log line anywhere that
-contains a raw idempotency key, by design. Correlation has to go through the digest or through
-your own request id.
+This is worth knowing before you build alerting on it. A listener that throws is logged the
+same way, naming the record by scope and digest rather than by key.
 
 ## Size is a security property too
 

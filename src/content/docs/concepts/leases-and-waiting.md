@@ -2,12 +2,20 @@
 title: Leases and waiting
 description: lease and wait as independent durations, the heartbeat at lease/2, and why blocking lives in the store.
 sourceOf: README "How it works"
+diagram: lease-and-wait
 ---
 
 Two durations govern an acquisition, and they are set independently.
 
 - **`lease`** is how long an acquisition is protected.
 - **`wait`** is how long a second caller blocks for someone else's.
+
+<!--
+  Phase 7 places the `lease-and-wait` diagram here (docs/CONTENT.md): one timeline
+  carrying both durations from the same origin - the holder's lease with its
+  heartbeat at lease/2, and a second caller's wait running out underneath it. The
+  prose stands without it.
+-->
 
 They answer different questions and conflating them is the usual source of confusion. `lease`
 is about the holder: how long may this caller hold the key before the library assumes it
@@ -47,10 +55,13 @@ away.
 @Idempotent(key = "#event.id()", waitTimeout = "PT0S")
 ```
 
-`waitTimeout = "PT0S"` is what you almost always want on a consumer thread. Declining a
-redelivery is cheap; parking a consumer thread is not, and a pool of threads parked on each
-other is how a consumer group stops making progress. The call throws
-`IdempotencyInFlightException`, which carries `retryAfter` so the broker can redeliver later.
+The call throws `IdempotencyInFlightException`, which carries `retryAfter` so the broker can
+redeliver later.
+
+:::tip[`PT0S` is what you almost always want on a consumer thread]
+Declining a redelivery is cheap; parking a consumer thread is not, and a pool of threads
+parked on each other is how a consumer group stops making progress.
+:::
 
 Over HTTP the same situation produces a `409` with a `Retry-After` header rather than an
 exception.

@@ -20,7 +20,9 @@ These come from the filter itself, before or instead of your handler. Each carri
 | `422 Unprocessable Entity` | Key reused with a different request body |
 | `409 Conflict` | Another request still holds the key after `waitTimeout`; carries `Retry-After`. Configurable through `idempotency.web.in-flight-status` |
 
-Any other status your client sees came from your handler, including a replayed one.
+:::note[Any other status your client sees came from your handler]
+Including a replayed one. The five above are the only statuses the filter produces itself.
+:::
 
 ## Response headers on a replay
 

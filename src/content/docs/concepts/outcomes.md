@@ -33,9 +33,12 @@ trying again, derived from the remaining lease.
 
 A sealed type makes the third case unavoidable. `InFlight` is the case people forget when
 they write this by hand, because it only happens under concurrency and never in a unit test
-written from the happy path. An `if (alreadyProcessed) return;` has no room to express it at
-all, and silently treats a concurrent duplicate as a completed one - which means dropping
-work that was never done.
+written from the happy path.
+
+:::note[`if (alreadyProcessed) return;` cannot express `InFlight` at all]
+It silently treats a concurrent duplicate as a completed one, which means dropping work that
+was never done. That is the bug a sealed type exists to make impossible.
+:::
 
 `Executed` and `Replayed` both carry a value; `InFlight` carries a delay. Switching on the
 type is what makes that difference legible.

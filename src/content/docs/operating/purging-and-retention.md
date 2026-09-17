@@ -26,9 +26,11 @@ warns at startup if it is on without it, rather than quietly never purging.
 class Application { }
 ```
 
-Without it the setting reads as on, the scheduler is never registered, and the table grows
-until someone notices. The warning exists because the symptom - a slowly growing table - is
-one nobody attributes to this library for months.
+:::caution[Without it the setting reads as on and nothing is ever purged]
+The scheduler is never registered and the table grows until someone notices. The warning
+exists because the symptom - a slowly growing table - is one nobody attributes to this
+library for months.
+:::
 
 ## TTL is a retention control
 

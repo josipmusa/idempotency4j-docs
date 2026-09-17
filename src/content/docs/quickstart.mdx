@@ -1,0 +1,159 @@
+---
+title: Quickstart
+description: The starter, a JDBC store and one annotation - idempotency4j running in five minutes.
+sourceOf: README "Quick start"
+---
+
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. **Add the starter and one storage backend.**
+
+   <Tabs syncKey="build-tool">
+   <TabItem label="Maven">
+   ```xml
+   <dependency>
+       <groupId>io.github.josipmusa</groupId>
+       <artifactId>idempotency-spring-boot-starter</artifactId>
+       <version>0.4.0</version>
+   </dependency>
+
+   <!-- Pick one storage backend -->
+   <dependency>
+       <groupId>io.github.josipmusa</groupId>
+       <artifactId>idempotency-jdbc</artifactId>
+       <version>0.4.0</version>
+   </dependency>
+   ```
+   </TabItem>
+   <TabItem label="Maven + BOM">
+   ```xml
+   <dependencyManagement>
+       <dependencies>
+           <dependency>
+               <groupId>io.github.josipmusa</groupId>
+               <artifactId>idempotency-bom</artifactId>
+               <version>0.4.0</version>
+               <type>pom</type>
+               <scope>import</scope>
+           </dependency>
+       </dependencies>
+   </dependencyManagement>
+
+   <dependencies>
+       <dependency>
+           <groupId>io.github.josipmusa</groupId>
+           <artifactId>idempotency-spring-boot-starter</artifactId>
+       </dependency>
+       <dependency>
+           <groupId>io.github.josipmusa</groupId>
+           <artifactId>idempotency-jdbc</artifactId>
+       </dependency>
+   </dependencies>
+   ```
+   </TabItem>
+   <TabItem label="Gradle">
+   ```groovy
+   dependencies {
+       implementation platform('io.github.josipmusa:idempotency-bom:0.4.0')
+       implementation 'io.github.josipmusa:idempotency-spring-boot-starter'
+       implementation 'io.github.josipmusa:idempotency-jdbc'
+   }
+   ```
+   </TabItem>
+   </Tabs>
+
+   The BOM keeps every module on one version, which is the failure worth avoiding when you
+   upgrade several at once.
+
+2. **Create the table, unless you are on an embedded database.**
+
+   With `idempotency-jdbc` on the classpath and a `DataSource` in the context, the store
+   wires itself. The table does not.
+
+   <Tabs syncKey="database">
+   <TabItem label="PostgreSQL">
+   Point Flyway, Liquibase or your own migration at `idempotency-schema-postgresql.sql`,
+   shipped inside the `idempotency-jdbc` jar.
+   </TabItem>
+   <TabItem label="MySQL">
+   Point Flyway, Liquibase or your own migration at `idempotency-schema-mysql.sql`, shipped
+   inside the `idempotency-jdbc` jar.
+   </TabItem>
+   <TabItem label="H2">
+   Nothing to do. `idempotency.jdbc.initialize-schema` defaults to `embedded`, which creates
+   the table on an embedded database and only there.
+   </TabItem>
+   </Tabs>
+
+   See [JDBC](/docs/storage/jdbc/) for the full story, including `initialize-schema: always`.
+
+3. **Annotate the work.**
+
+   <Tabs syncKey="adapter">
+   <TabItem label="On a method">
+   A method has no transport to take a key from, so name the key with a SpEL expression over
+   the parameters:
+
+   ```java
+   @Idempotent(key = "#event.id()", waitTimeout = "PT0S")
+   @KafkaListener(topics = "orders")
+   void on(OrderPlaced event) {
+       // Runs once per event id, however many times the broker redelivers.
+   }
+   ```
+
+   `waitTimeout = "PT0S"` is what you want on a consumer thread: declining a redelivery is
+   cheap, parking a consumer thread is not.
+   </TabItem>
+   <TabItem label="On an endpoint">
+   An HTTP request brings its own key in a header, so the annotation needs nothing:
+
+   ```java
+   @PostMapping("/payments")
+   @Idempotent
+   public ResponseEntity<Payment> createPayment(@RequestBody PaymentRequest request) {
+       // Duplicates get the stored response replayed.
+       // The payment provider should also receive its own idempotency key.
+       return ResponseEntity.ok(paymentService.charge(request));
+   }
+   ```
+   </TabItem>
+   <TabItem label="Without Spring">
+   The engine is a plain Java object you call directly:
+
+   ```java
+   IdempotencyEngine engine = new IdempotencyEngine(store, scheduler);
+   ```
+
+   See [the engine](/docs/the-engine/).
+   </TabItem>
+   </Tabs>
+
+4. **Check it.**
+
+   Send the same request twice with the same `Idempotency-Key`:
+
+   ```bash
+   curl -i -X POST localhost:8080/payments \
+     -H 'Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000' \
+     -H 'Content-Type: application/json' \
+     -d '{"amount": 100, "currency": "USD"}'
+   ```
+
+   The second response carries `Idempotent-Replayed: true` and the handler did not run.
+
+</Steps>
+
+:::caution[Check the startup log before you trust this]
+Under the default `store-type: auto`, a missing provider or an absent `DataSource` is a
+warning, not a failure. The application starts, serves traffic, and deduplicates nothing.
+The selected store is logged at startup - confirm it is there. See
+[choosing a store](/docs/storage/choosing/).
+:::
+
+## Next
+
+**[What it does](/docs/what-it-does/)** - the model behind what you ran, in about four
+hundred words. Read it before you annotate anything else.

@@ -75,10 +75,13 @@ have to write one. A listener that throws is logged at WARN, naming the listener
 callback it threw from, and rendering the record as its scope and key digest rather than the
 key itself. The engine then carries on exactly as it would have.
 
-The consequence is that a listener is not a place to enforce anything. If your audit write
-fails, the guarded action still completes and the record is still stored; nothing retries the
-listener and nothing tells the caller. Observation that must not be lost belongs inside the
-guarded action, where a failure releases the lease and the work is retried.
+:::caution[A listener is not a place to enforce anything]
+If your audit write fails, the guarded action still completes and the record is still
+stored. Nothing retries the listener and nothing tells the caller.
+
+Observation that must not be lost belongs inside the guarded action, where a failure
+releases the lease and the work is retried.
+:::
 
 ## What to use them for
 

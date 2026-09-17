@@ -2,6 +2,7 @@
 title: Scope and key
 description: A record is identified by a scope and a key together, never by the key alone - and why that matters.
 sourceOf: README "How it works"
+diagram: scope-and-key
 ---
 
 A record is identified by a **scope** and a **key** together, never by the key alone.
@@ -15,6 +16,12 @@ every consumer subscribed to a topic. The same `Idempotency-Key` can be sent to 
 endpoints by a client that generates one key per user action. If the key alone identified the
 record, the first consumer to finish would mark the work done and the second would skip
 work it had never performed.
+
+<!--
+  Phase 7 places the `scope-and-key` diagram here (docs/CONTENT.md): one message id
+  arriving at two consumers, resolving to two records rather than one. The prose
+  above states the same thing and stands without it.
+-->
 
 Scoping removes the ambiguity. Both adapters default the scope to
 `<simple class name>.<method name>`, so the same message id delivered to two consumers, or
@@ -41,9 +48,17 @@ A scope that is too long is rejected when the context starts, not on the first m
 ## Keys are yours to shape
 
 Records are scoped per method, but within a scope there is no built-in per-tenant or per-user
-isolation: two callers using the same key in the same scope share idempotency state. Where
-that matters, prefix the key at the application level, for example `userId:clientKey`. This
-is a [documented limitation](/docs/operating/limitations/) rather than an oversight.
+isolation.
+
+:::caution[Two callers using the same key in the same scope share idempotency state]
+On a public API this matters: a client generating keys from a sequence rather than a UUID
+will collide with another tenant's keys, and the second tenant gets the first tenant's
+stored response replayed to them.
+
+Prefix the key at the application level, for example `userId:clientKey`. It is a
+[documented limitation](/docs/operating/limitations/) rather than an oversight, and the fix
+is yours to apply.
+:::
 
 Idempotency keys are client-controlled and may carry identifying data, so the library never
 writes one to a log or an exception message. Both render a record as its scope followed by a

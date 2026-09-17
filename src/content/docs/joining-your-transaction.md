@@ -2,6 +2,7 @@
 title: Joining your transaction
 description: completion = "join-transaction", the window it closes, its three preconditions, and the advisor ordering trap.
 sourceOf: README "Completing inside your transaction"
+diagram: completion-window
 ---
 
 By default the record is written on its own, the moment the action returns. That leaves a
@@ -11,6 +12,13 @@ the record stays in progress and a redelivery runs the action again.
 `completion = "join-transaction"` closes it. The engine writes the record inside the
 transaction the method is already running in, so the record and your business writes commit
 together - a crash before the commit leaves neither, a crash after it leaves both.
+
+<!--
+  Phase 7 places the `completion-window` diagram here (docs/CONTENT.md): two timelines,
+  autonomous above and joined below, with the window between the business commit and the
+  record write marked on the first and absent from the second. The prose above and below
+  stands without it.
+-->
 
 ```java
 @Transactional
@@ -45,10 +53,11 @@ order values so you can see the tie rather than infer it. A joined
 context entered without an active transaction at runtime is an `IllegalStateException`, not a
 silent downgrade.
 
-This is the trap. Two advisors at the same precedence is a tie, and a tie is resolved by
-something that is not your intent. The startup failure exists because the alternative -
-discovering it in production when the ordering happened to come out the other way - is not
-recoverable.
+:::caution[Two advisors at the same precedence is a tie, not an order]
+A tie is resolved by something that is not your intent. The startup failure exists because
+the alternative - discovering it in production when the ordering happened to come out the
+other way - is not recoverable.
+:::
 
 **The store needs the caller's connection.** The starter wires a
 `TransactionAwareConnectionResolver` into the JDBC store for you, which runs `COMPLETE` on the
@@ -70,15 +79,16 @@ worth knowing because they decide what a crash leaves behind:
 - **A rollback followed by a release leaves the record absent,** which is what makes the key
   retriable again.
 
-That third point is the one to hold onto: a rollback does not delete the record by itself. It
-stays in progress until the lease is released or expires, and only then is the key free. A
-retry arriving in between is told the work is in flight rather than being allowed to run.
+:::caution[A rollback does not delete the record by itself]
+It stays in progress until the lease is released or expires, and only then is the key free.
+A retry arriving in between is told the work is in flight rather than being allowed to run.
+:::
 
 ## What moves with the record
 
 Under joined completion the terminal lifecycle callback moves with the record: `onCompleted`
 fires after the commit, and a rollback releases the lease and fires
-`onFailed(..., ROLLBACK)`. Exactly one terminal still fires per lease, just later. See
+`onFailed(..., ROLLBACK)`. Exactly one terminal still fires per lease, only later. See
 [lifecycle callbacks](/docs/lifecycle-callbacks/).
 
 ## Application-wide

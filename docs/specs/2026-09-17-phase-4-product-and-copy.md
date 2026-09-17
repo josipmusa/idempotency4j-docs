@@ -126,3 +126,81 @@ and `/docs/operating/limitations`, and answers three questions: what does this d
 add it to a build file, and what did you not believe. This needs a person; the owner
 arranges it. Phase 4 is not done until it happens, and the reading package is prepared as
 part of commit 4.
+
+---
+
+## Deviations
+
+Recorded after implementation, per docs/specs convention.
+
+### The docs pages gained structure the spec did not ask for
+
+The spec treated `/docs` as prose, and the first pass delivered exactly that: twenty-nine
+pages of paragraphs, code fences and ten tables, with no asides, tabs, steps or cards
+anywhere, and two diagrams across the whole section.
+
+That is a phase 4 defect rather than a phase 7 one. Phase 7's contract is to build without
+writing a word, and restyling cannot introduce structure the content layer never asked for -
+a wall of text restyled is a wall of text. Whether a sequence is a numbered sequence, whether
+two coordinates are a choice between tabs, and whether a caveat is a callout are content
+decisions.
+
+So phase 4 also delivers:
+
+- **Asides** on the traps that were previously prose - roughly one or two per page, with
+  `danger` reserved for the three that lose data silently (`auto` not falling back to
+  in-memory, Redis without `maxmemory-policy noeviction`, and returning an error status
+  rather than throwing). The budget is deliberate: the docs own blue, green, amber and red
+  for note / tip / caution / danger (DECISIONS.md D16), and used freely they become a colour
+  field that means nothing.
+- **Steps** for the three real sequences: the quickstart, the Redis three-bean setup, and
+  implementing a store against the contract.
+- **Tabs** for genuinely exclusive choices: Maven / Maven+BOM / Gradle, the three databases,
+  and YAML / properties. Synced across pages by key, so a Gradle reader stays a Gradle
+  reader.
+- **Cards** on the docs landing page and on `storage/choosing`, so the entry points are
+  doors rather than a bulleted list.
+- **A symptom index** on `troubleshooting` and a "does this rule the library out for you"
+  table on `limitations` - the two pages most likely to be read under time pressure.
+- **Three more diagrams assigned**, recorded in docs/CONTENT.md and constrained by the
+  `diagram` enum in `src/content.config.ts`. Phase 7 still draws them.
+
+Seven pages became `.mdx` because Starlight's Steps, Tabs and Card components are Astro
+components. This added no dependency: `@astrojs/mdx` is already a Starlight dependency and
+Starlight registers the integration itself. Asides need no MDX - Starlight turns on directive
+support in the Sätteri processor, so `:::caution` works in plain Markdown.
+
+No icons. Starlight ships about twenty generic ones, and mapping six sidebar groups onto them
+would be decoration rather than signal, which DESIGN.md's refuse list rules out.
+
+### A link checker, because components made the old guarantee false
+
+`src/plugins/base-links.mjs` resolves Markdown links against `base`, but it is an mdast
+plugin and only sees mdast `link` nodes. An `href` passed as a prop - `<LinkCard
+href="/docs/quickstart/">` - never reaches it, and the first card written shipped
+unprefixed: correct in dev, 404 in production, which is the failure CLAUDE.md rule 1 names as
+the worst shape available.
+
+Component props now go through `href()` from `src/consts.ts`, and `scripts/check-links.mjs`
+fails on any internal URL that is unprefixed, resolves to nothing, or names a fragment the
+target page does not have. The third check exists because this phase added hand-written
+anchors to generated heading ids, which go stale silently when a heading is reworded.
+
+Run with `npm run check:links` after a build. Phase 7 wires it into CI alongside the
+README-parity check.
+
+### A second standing build warning
+
+Each `.mdx` content file now produces a Rollup advisory:
+
+```
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive
+"use astro:head-inject" in "src/content/docs/<page>.mdx?astroPropagatedAssets"
+may not be preserved when bundling.
+```
+
+The directive is injected by Astro core - `astro/dist/content/vite-plugin-content-assets.js`
+- and stripped by it again; nothing in `src/` writes it. Silencing it would mean registering
+`@astrojs/mdx` here without Starlight's `optimize: true`, which trades a real build
+optimisation for a cosmetic warning. Recorded rather than fixed, alongside the phase 3
+`i18n` collection warning in `docs/specs/phase-3-workspace.md`.

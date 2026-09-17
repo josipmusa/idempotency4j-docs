@@ -27,8 +27,10 @@ store are all you need - see [the engine](/docs/the-engine/).
 
 ## What is not supported
 
-**Spring WebFlux.** Nothing registers and no error is raised, so a WebFlux application gets
-no idempotency from the HTTP adapter and no warning. The engine's `execute` is blocking.
+:::caution[WebFlux fails silently]
+Nothing registers and no error is raised, so a WebFlux application gets no idempotency from
+the HTTP adapter and no warning that this is the case. The engine's `execute` is blocking.
+:::
 
 **Redis Cluster.** Standalone and Sentinel master-replica connections work.
 

@@ -16,12 +16,15 @@ idempotency:
 
 An in-memory record set deduplicates within one JVM until it restarts.
 
-That is the whole guarantee, and both halves of it are limits:
+That is the whole guarantee, and both halves of it are limits.
 
-- **One JVM.** Two instances of your application do not share records, so a duplicate that
-  lands on the other instance re-executes. Any deployment with more than one replica has no
-  idempotency at all.
-- **Until it restarts.** Records do not survive a redeploy, a crash, or a pod eviction.
+:::caution[One JVM, and only until it restarts]
+Two instances of your application do not share records, so a duplicate that lands on the
+other instance re-executes. Any deployment with more than one replica has no idempotency at
+all.
+
+Records do not survive a redeploy, a crash, or a pod eviction.
+:::
 
 It also does not support [joined completion](/docs/joining-your-transaction/).
 

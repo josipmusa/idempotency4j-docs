@@ -79,10 +79,12 @@ IdempotencyEngine engine = new IdempotencyEngine(
                 .build());
 ```
 
-**The starter wires its engine with `LOG_AND_RETURN`, not the engine's own default.** Set
+:::note[The starter does not use the engine's default]
+It wires its engine with `LOG_AND_RETURN`. Set
 `idempotency.completion-failure-policy=propagate` to change it. The difference between the
 two defaults is the one configuration surprise worth knowing about, and it is called out
 again in [configuration](/docs/reference/configuration/).
+:::
 
 ## Listeners outside Spring
 

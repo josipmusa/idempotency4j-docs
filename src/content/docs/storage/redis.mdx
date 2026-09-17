@@ -4,47 +4,65 @@ description: The three beans, RedisIdempotencyStore.CODEC, why it is not autocon
 sourceOf: README "Storage backends"
 ---
 
-The Redis store uses [Lettuce](https://lettuce.io/). Open the connection with
-`RedisIdempotencyStore.CODEC` so stored bodies stay binary-safe. The application owns the
-client and the connection, which is why the beans declare their shutdown methods:
+import { Steps } from '@astrojs/starlight/components';
 
-```java
-@Bean(destroyMethod = "shutdown")
-public RedisClient redisClient() {
-    return RedisClient.create("redis://localhost:6379");
-}
+The Redis store uses [Lettuce](https://lettuce.io/). The application owns the client and the
+connection, which is why the beans declare their shutdown methods.
 
-@Bean(destroyMethod = "close")
-public StatefulRedisConnection<String, byte[]> idempotencyRedisConnection(RedisClient client) {
-    return client.connect(RedisIdempotencyStore.CODEC);
-}
+<Steps>
 
-@Bean
-public IdempotencyStore idempotencyStore(StatefulRedisConnection<String, byte[]> connection) {
-    RedisIdempotencyStoreConfig config = RedisIdempotencyStoreConfig.builder()
-            .keyPrefix("payments:idempotency:")
-            .build();
+1. **The client.**
 
-    return new RedisIdempotencyStore(connection, config);
-}
-```
+   ```java
+   @Bean(destroyMethod = "shutdown")
+   public RedisClient redisClient() {
+       return RedisClient.create("redis://localhost:6379");
+   }
+   ```
 
-One thread-safe connection can serve the store.
+2. **The connection, opened with the store's own codec.**
+
+   `RedisIdempotencyStore.CODEC` is what keeps stored bodies binary-safe. One thread-safe
+   connection can serve the store.
+
+   ```java
+   @Bean(destroyMethod = "close")
+   public StatefulRedisConnection<String, byte[]> idempotencyRedisConnection(RedisClient client) {
+       return client.connect(RedisIdempotencyStore.CODEC);
+   }
+   ```
+
+3. **The store.**
+
+   ```java
+   @Bean
+   public IdempotencyStore idempotencyStore(StatefulRedisConnection<String, byte[]> connection) {
+       RedisIdempotencyStoreConfig config = RedisIdempotencyStoreConfig.builder()
+               .keyPrefix("payments:idempotency:")
+               .build();
+
+       return new RedisIdempotencyStore(connection, config);
+   }
+   ```
+
+</Steps>
 
 ## Tuning the store
 
 `RedisIdempotencyStoreConfig` carries more than the key prefix. The defaults are sound and
-most applications change none of them, but two matter under load and one matters for
-durability.
+most applications change none of them. Two concerns are worth understanding before you do:
+what a waiting caller costs under load, and what survives a failover.
 
-| Setting | Default | What it controls |
-|---|---|---|
-| `keyPrefix` | provider default | Namespace for every key the store writes |
-| `pollInterval` | 50ms | How often a waiting caller re-checks a held key |
-| `retentionGrace` | 1 hour | Extra margin before an expired record is purged |
-| `purgeBatchSize` | 500 | Records scanned per purge page |
-| `maxPurgePagesPerCall` | 100 | Pages one purge run will scan before stopping |
-| `replicaAcknowledgement` | disabled | Redis `WAIT` policy applied after each mutation |
+- **`keyPrefix`** - namespace for every key the store writes. Defaults to the provider's own
+  prefix.
+- **`pollInterval`** - how often a waiting caller re-checks a held key. Defaults to 50ms.
+- **`retentionGrace`** - extra margin before an expired record is purged. Defaults to
+  1 hour.
+- **`purgeBatchSize`** - records scanned per purge page. Defaults to 500.
+- **`maxPurgePagesPerCall`** - pages one purge run will scan before stopping. Defaults
+  to 100.
+- **`replicaAcknowledgement`** - the Redis `WAIT` policy applied after each mutation.
+  Disabled by default.
 
 **`pollInterval`** is the one to know about. Redis has no way to block on the specific
 condition the store waits for, so a caller waiting out someone else's lease polls. At 50ms a
@@ -82,12 +100,14 @@ it is not a distributed transaction. If losing a record is unacceptable, use
 
 ## Operating it
 
-Use Redis 7 or newer. Choose an application-specific key prefix, and configure the server
-with `maxmemory-policy noeviction` so records are not evicted out from under the store.
+Use Redis 7 or newer, and choose an application-specific key prefix.
 
-`noeviction` is not a tuning preference. Under any other policy Redis is free to drop an
-idempotency record to make room, and a dropped `COMPLETE` record means the next duplicate
-re-executes the action. The store cannot detect that this happened.
+:::danger[Configure the server with `maxmemory-policy noeviction`]
+Under any other policy Redis is free to drop an idempotency record to make room, and a
+dropped `COMPLETE` record means the next duplicate re-executes the action.
+
+The store cannot detect that this happened.
+:::
 
 ## Why it is not autoconfigured
 
@@ -103,13 +123,13 @@ explicit beans you can read beat a bridge that breaks on a Spring Data Redis upg
 
 ## What it cannot do
 
-**No joined completion.** A Redis store cannot enlist in a caller's transaction, so
-`completion = "join-transaction"` is not available on top of it. Asking for it anyway fails
-the context at startup.
+:::caution[No joined completion, and no Redis Cluster]
+A Redis store cannot enlist in a caller's transaction, so `completion = "join-transaction"`
+is not available on top of it. Asking for it anyway fails the context at startup.
 
-**No Redis Cluster.** The provider takes Lettuce's non-cluster `StatefulRedisConnection`, and
-its bounded SCAN purge is not node-aware. Standalone and Sentinel master-replica connections
-work.
+The provider takes Lettuce's non-cluster `StatefulRedisConnection`, and its bounded SCAN
+purge is not node-aware. Standalone and Sentinel master-replica connections work.
+:::
 
 Both are listed on [limitations](/docs/operating/limitations/).
 

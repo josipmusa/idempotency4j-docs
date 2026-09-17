@@ -7,6 +7,16 @@ sourceOf: README "Limitations", "What this is not"
 Read this before adopting rather than after. If one of these is a problem for you, it is
 better found now.
 
+| Limitation | Does it rule the library out for you? |
+|---|---|
+| [No reactive support](#no-reactive-support) | Yes, if your application is WebFlux-only. Nothing registers and nothing warns you |
+| [No tenant isolation](#no-tenant-isolation) | No, but you must prefix keys yourself on a multi-tenant public API |
+| [No Redis Cluster](#redis-cluster-is-not-supported) | Yes, if Cluster is the only Redis you run. Standalone and Sentinel work |
+| [Downstream side effects](#downstream-side-effects) | No, but it is the thing most often expected and not provided |
+| [Buffered request bodies](#buffered-request-bodies-over-http) | Yes, for streaming upload endpoints. Do not annotate them |
+
+The rest of this page is each row in full.
+
 ## No reactive support
 
 The HTTP adapter is built on `OncePerRequestFilter` (Servlet API), and the engine's `execute`

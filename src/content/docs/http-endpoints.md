@@ -79,13 +79,14 @@ A handler that *throws* is different: the engine releases the lease, which delet
 record, and the next request with that key sees a key that was never used and runs the
 handler again.
 
-**If you want a failed request to be retriable, throw. If you return an error status, you are
-telling the library that error is the final answer for that key.**
+:::danger[If you want a failed request to be retriable, throw]
+Returning an error status tells the library that error is the final answer for that key, and
+it is replayed for the full TTL.
 
-This is the single most important sentence on the page. A `@ControllerAdvice` that converts
-every exception into a `ResponseEntity` will, without anyone intending it, make every failure
-permanent for its key. If you use one, let the exceptions you want retried propagate past it,
-or map them to a throw rather than a return.
+A `@ControllerAdvice` that converts every exception into a `ResponseEntity` will, without
+anyone intending it, make every failure permanent for its key. If you use one, let the
+exceptions you want retried propagate past it, or map them to a throw rather than a return.
+:::
 
 The record is durable before the response body reaches the client, so a client that sees a
 response can rely on a retry replaying it.
@@ -95,10 +96,12 @@ response can rely on a retry replaying it.
 To fingerprint a body and still let your handler read it, the filter wraps the request in a
 replayable one that buffers what it reads. Two consequences follow.
 
-**Non-blocking reads are not supported.** The wrapped input stream rejects
-`setReadListener` with `Non-blocking IO is not supported`. A handler using the Servlet async
-read API on a request carrying an idempotency key will hit this; ordinary blocking reads,
-including everything Spring MVC does for `@RequestBody`, are unaffected.
+:::caution[Non-blocking reads are not supported]
+The wrapped input stream rejects `setReadListener` with `Non-blocking IO is not supported`.
+A handler using the Servlet async read API on a request carrying an idempotency key will hit
+this. Ordinary blocking reads, including everything Spring MVC does for `@RequestBody`, are
+unaffected.
+:::
 
 **The body is held in memory** up to `idempotency.web.max-body-bytes`, which defaults to
 1 MiB. A larger body is rejected with `413` rather than buffered, which is what keeps the

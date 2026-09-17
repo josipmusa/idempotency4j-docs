@@ -4,6 +4,9 @@ description: JDBC, Redis or in-memory, what idempotency.store-type does, and why
 sourceOf: README "Storage backends"
 ---
 
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { href } from '../../../consts';
+
 | Module | Use when | Autoconfigured |
 |---|---|---|
 | `idempotency-jdbc` | You have a relational database. PostgreSQL and MySQL, H2 for development | Yes, from a single `DataSource` bean |
@@ -36,14 +39,37 @@ Whichever store is selected is logged at startup.
 An in-memory record set deduplicates within one JVM until it restarts, which is not a
 property anything should acquire by accident - **ask for it by name.**
 
-The failure this prevents is specific. A deployment that loses its `DataSource` binding would
-otherwise start cleanly, log nothing alarming, and silently provide idempotency that evaporates
-on the next restart and does not hold across instances at all. Every request would look
-correct. The duplicates would arrive months later, in production, as money charged twice.
+:::danger[A deployment that loses its `DataSource` binding starts cleanly and deduplicates nothing]
+It would log nothing alarming, provide idempotency that evaporates on the next restart, and
+not hold across instances at all. Every request would look correct. The duplicates would
+arrive months later, in production, as money charged twice.
 
-Building nothing is louder, and loud is what you want here.
+Building nothing is louder, and loud is what you want here. Check the startup log for the
+selected store, and treat `No IdempotencyStore bean is present` as an error - see
+[troubleshooting](/docs/operating/troubleshooting/).
+:::
 
-## Next
+## The four backends
 
-[JDBC](/docs/storage/jdbc/) · [Redis](/docs/storage/redis/) ·
-[In-memory](/docs/storage/in-memory/) · [Writing a store](/docs/storage/writing-a-store/)
+<CardGrid>
+  <LinkCard
+    title="JDBC"
+    href={href('/docs/storage/jdbc/')}
+    description="Autoconfigured from a DataSource. The only store that can join your transaction."
+  />
+  <LinkCard
+    title="Redis"
+    href={href('/docs/storage/redis/')}
+    description="Three explicit beans. Tuning, replica acknowledgement, and what it cannot do."
+  />
+  <LinkCard
+    title="In-memory"
+    href={href('/docs/storage/in-memory/')}
+    description="Development and tests only. One JVM, lost on restart, asked for by name."
+  />
+  <LinkCard
+    title="Writing a store"
+    href={href('/docs/storage/writing-a-store/')}
+    description="The three-method SPI and the contract that specifies it."
+  />
+</CardGrid>

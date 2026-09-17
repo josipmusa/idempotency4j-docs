@@ -114,6 +114,12 @@ an engineer pastes into a search box mid-incident. It is the clearest case of th
 superset of the README (DECISIONS.md D4): every entry is derived from the library's own source
 and none of it exists in the README. Added during phase 4 rather than at kickoff.
 
+**Five docs pages carry a diagram, not two.** `scope-and-key`, `leases-and-waiting` and
+`joining-your-transaction` were assigned one during phase 4, on the same reasoning as the
+troubleshooting page above: each is a page whose central claim prose states badly, and
+styling in phase 7 cannot add structure the content layer never asked for. The full list,
+with what each diagram shows, is in [CONTENT.md](CONTENT.md).
+
 **`/docs/operating/limitations` is a deliberate first-class page, linked from the homepage.**
 For the secondary audience - a lead deciding between adopting and building - the honesty is
 the sales pitch. It is not buried at the bottom of a reference page.

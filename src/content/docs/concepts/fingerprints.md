@@ -17,9 +17,12 @@ IdempotencyContext context = IdempotencyContext.builder("PaymentService.charge",
 
 ## The clash rule
 
-**Two acquisitions clash only when both carry a fingerprint and the two differ.**
+:::note[Two acquisitions clash only when both carry a fingerprint and the two differ]
+An incoming request with a fingerprint cannot be contradicted by a stored record without
+one, and the reverse also holds. Both are duplicates, not mismatches.
+:::
 
-Each half of that matters:
+Each half of that rule matters:
 
 - **Both must carry one.** An acquisition with no fingerprint makes no claim about its
   payload, so there is nothing to contradict. This is what lets fingerprinting be adopted on

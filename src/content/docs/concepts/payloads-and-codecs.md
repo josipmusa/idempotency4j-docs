@@ -44,11 +44,13 @@ older version of the code rather than deserialising it into something wrong.
 `attributes` are where correlation data goes - the ids of the messages the first execution
 published, say - so a duplicate can reference them instead of publishing again.
 
-This is the part that does real work and is easy to skip past. The library makes *your* work
-safe to retry; it cannot make *someone else's* endpoint safe to retry for you. If the first
-execution published three messages downstream, replaying the return value does not unpublish
-them, and the duplicate must not publish them a second time. Storing their ids as attributes
-gives the duplicate something to point at:
+:::caution[Replaying a value does not undo what the first execution published]
+The library makes *your* work safe to retry; it cannot make *someone else's* endpoint safe
+to retry for you. If the first execution published three messages downstream, the duplicate
+must not publish them a second time.
+:::
+
+Storing their ids as attributes gives the duplicate something to point at:
 
 ```java
 return new Payload(

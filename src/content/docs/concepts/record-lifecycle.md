@@ -49,10 +49,11 @@ a failure stays authoritative and what a later caller should do about it, and ev
 that is wrong for someone. Deleting the row instead makes the rule short enough to hold in
 your head: **if you want a failed request to be retriable, throw.**
 
-The consequence over HTTP is worth stating plainly, because it surprises people: a handler
-that *returns* a `500` has that `500` stored and replayed to every duplicate for the full TTL.
+:::caution[A handler that returns a `500` has that `500` replayed for the full TTL]
 Returning an error status tells the library that error is the final answer for that key.
+This is the consequence of the rule above that surprises people most.
 [HTTP endpoints](/docs/http-endpoints/) covers it in full.
+:::
 
 ## Fencing
 

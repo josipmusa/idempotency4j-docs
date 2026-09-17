@@ -41,8 +41,10 @@ Three attributes are rejected at startup on a request mapping handler:
 | `codec` | The filter stores the HTTP response through its own `StoredResponseCodec` |
 | `completion` | The filter completes after the response is captured, outside any method transaction |
 
-They are rejected rather than ignored. An attribute that is silently ignored reads as though
-it took effect, and the reader has no way to discover otherwise.
+:::note[Rejected rather than ignored]
+An attribute that is silently ignored reads as though it took effect, and the reader has no
+way to discover otherwise.
+:::
 
 ## Validation
 

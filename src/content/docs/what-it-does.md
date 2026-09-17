@@ -41,16 +41,18 @@ void on(OrderPlaced event) {
 Over HTTP the client generates the key and sends it as a header, so the annotation needs
 nothing from you. Without Spring, the engine is a plain Java object you call directly.
 
+:::caution[This is not an exactly-once guarantee for downstream side effects]
+Lease fencing protects the idempotency record, not the third-party charge your action made
+just before the process died. If you need that guarantee you still need a shared
+transaction, a transactional outbox, or an idempotency key passed to the downstream service.
+
+This library makes *your* work safe to retry; it cannot make *someone else's* endpoint safe
+to retry for you.
+:::
+
 ## What it is not
 
-**This is not an exactly-once guarantee for arbitrary downstream side effects.** Lease
-fencing protects the idempotency record, not the third-party charge your action made just
-before the process died. If you need that guarantee you still need a shared transaction, a
-transactional outbox, or an idempotency key passed to the downstream service. This library
-makes *your* work safe to retry; it cannot make *someone else's* endpoint safe to retry for
-you.
-
-It is also not a distributed lock you can borrow for general use, and the HTTP adapter is
+It is not a distributed lock you can borrow for general use, and the HTTP adapter is
 Servlet-only.
 
 The rest of what it does not do is on the [limitations](/docs/operating/limitations/) page,

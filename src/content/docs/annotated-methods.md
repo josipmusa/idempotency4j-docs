@@ -50,16 +50,18 @@ consumer receives traffic, which is the worst moment to discover it.
 
 ## `waitTimeout = "PT0S"` on a consumer thread
 
-This is what you almost always want on a consumer thread: declining a redelivery is cheap,
-parking a consumer thread is not.
+:::tip[Set it on every consumer]
+Declining a redelivery is cheap. Parking a consumer thread is not, and a pool of threads
+parked on each other is how a consumer group stops making progress.
+:::
 
 A call that finds the key in flight throws `IdempotencyInFlightException`, which carries
 `retryAfter` so the broker can redeliver later. Register an `OutcomeMapper` bean to answer
 differently.
 
 The default of `PT10S` suits a request thread, where blocking briefly to hand the caller the
-real answer beats telling them to come back. It does not suit a consumer, where the thread
-you are parking is one of a small fixed pool and the broker is happy to redeliver.
+real answer beats telling them to come back. A consumer is the opposite case, which is why
+the default is the wrong one there.
 
 ## Returning a value
 

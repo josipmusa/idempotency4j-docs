@@ -4,11 +4,15 @@ description: Every key under idempotency.*, with defaults, and the two that surp
 sourceOf: README "Configuration"
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Everything is under the `idempotency` prefix. Transport-neutral settings sit at the top
 level; those that only make sense over HTTP live under `web`, and those that only apply to a
 JDBC store under `jdbc`, so an application that uses neither never has to read past the first
 group.
 
+<Tabs syncKey="config-format">
+<TabItem label="YAML">
 ```yaml
 idempotency:
   default-ttl: PT24H              # How long a completed record stays replayable. Default: 24h
@@ -32,6 +36,29 @@ idempotency:
     enabled: true                 # Register the purge scheduler. Default: true
     cron: "0 0 * * * *"           # Cron for purging expired records. Default: hourly
 ```
+</TabItem>
+<TabItem label="Properties">
+```properties
+idempotency.default-ttl=PT24H
+idempotency.default-lease=PT30S
+idempotency.default-wait=PT10S
+idempotency.completion-mode=autonomous
+idempotency.completion-failure-policy=log-and-return
+idempotency.store-type=auto
+
+idempotency.jdbc.initialize-schema=embedded
+
+idempotency.web.key-header=Idempotency-Key
+idempotency.web.required=true
+idempotency.web.in-flight-status=409
+idempotency.web.max-body-bytes=1048576
+idempotency.web.filter-order=0
+
+idempotency.purge.enabled=true
+idempotency.purge.cron=0 0 * * * *
+```
+</TabItem>
+</Tabs>
 
 ## Top level
 
@@ -47,13 +74,13 @@ idempotency:
 The three durations are per-method overridable on
 [`@Idempotent`](/docs/reference/annotation/).
 
-## `jdbc`
+## JDBC settings
 
 | Key | Default | What it sets |
 |---|---|---|
 | `initialize-schema` | `embedded` | `embedded`, `always` or `never`. See [JDBC](/docs/storage/jdbc/) |
 
-## `web`
+## Web settings
 
 | Key | Default | What it sets |
 |---|---|---|
@@ -63,7 +90,7 @@ The three durations are per-method overridable on
 | `max-body-bytes` | `1048576` | Largest body the filter will fingerprint |
 | `filter-order` | `0` | Order of the filter in the chain |
 
-## `purge`
+## Purge settings
 
 | Key | Default | What it sets |
 |---|---|---|
@@ -109,12 +136,18 @@ Malformed configuration fails the context at startup. See
 
 ## Two worth a second look
 
-**`completion-failure-policy` defaults to `log-and-return` here, not to the engine's own
-`propagate`.** When the action succeeded but the store refused to record it, the result the
-action already produced still reaches the caller; the idempotency guarantee is lost for that
-one key, and a later duplicate re-executes. Set `propagate` where losing the guarantee
-silently is worse than failing the call.
+:::caution[The starter's default differs from the engine's own]
+`completion-failure-policy` is `log-and-return` here; the engine on its own uses `propagate`.
 
-**`purge.enabled` needs `@EnableScheduling` on your application to do anything.** The starter
-warns at startup if it is on without it, rather than quietly never purging. See
+When the action succeeded but the store refused to record it, the result the action already
+produced still reaches the caller. The idempotency guarantee is lost for that one key, and a
+later duplicate re-executes.
+
+Set `propagate` where losing the guarantee silently is worse than failing the call.
+:::
+
+:::caution[Purging needs scheduling enabled on your application]
+Without `@EnableScheduling`, `purge.enabled` reads as on and nothing is ever purged. The
+starter warns at startup rather than staying quiet about it. See
 [purging and retention](/docs/operating/purging-and-retention/).
+:::

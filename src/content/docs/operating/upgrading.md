@@ -11,9 +11,10 @@ sourceOf: README "Spring Boot 3", CHANGELOG.md
 Spring Boot 3.5 reached open source end of life on 30 June 2026, and 3.5.16 was its final OSS
 patch, so the 3.x line no longer receives fixes from Spring itself.
 
-**Boot 3 applications should stay on 0.3.0**, which remains on Maven Central. The `0.3.x`
-branch exists so a serious fix could still be published from it, but no releases are
-scheduled and none are promised.
+:::caution[Boot 3 applications should stay on 0.3.0]
+It remains on Maven Central. The `0.3.x` branch exists so a serious fix could still be
+published from it, but no releases are scheduled and none are promised.
+:::
 
 If you are moving to 0.4.x, the move is a Spring Boot 4 migration first. Upgrade Boot, then
 the coordinate:

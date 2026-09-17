@@ -45,10 +45,18 @@ export const collections = {
         sourceOf: z.string().optional(),
         /**
          * The diagram this page owns, named as it is in docs/CONTENT.md. Phase 4
-         * assigns it; phase 7 places the asset. Present on exactly the two pages
-         * that carry one.
+         * assigns it; phase 7 places the asset. The first two already exist in the
+         * library repo; the other three are drawn for this site.
          */
-        diagram: z.enum(['record-lifecycle', 'request-outcomes']).optional(),
+        diagram: z
+          .enum([
+            'record-lifecycle',
+            'request-outcomes',
+            'scope-and-key',
+            'lease-and-wait',
+            'completion-window',
+          ])
+          .optional(),
       }),
     }),
   }),
