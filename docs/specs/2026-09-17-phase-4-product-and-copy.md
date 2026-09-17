@@ -204,3 +204,19 @@ The directive is injected by Astro core - `astro/dist/content/vite-plugin-conten
 `@astrojs/mdx` here without Starlight's `optimize: true`, which trades a real build
 optimisation for a cosmetic warning. Recorded rather than fixed, alongside the phase 3
 `i18n` collection warning in `docs/specs/phase-3-workspace.md`.
+
+### The parity check cannot be the two-way diff the spec implied
+
+The spec put `sourceOf` in every page's frontmatter as "the input the parity script reads",
+which reads as a comparison of each page against its README section. By the time the docs
+were written that was no longer buildable, and the reason is the phase working as intended:
+the site now asserts a great deal the README does not. The troubleshooting page is derived
+from library source and has no README counterpart at all, and three pages have no `sourceOf`
+rather than the four the spec anticipated.
+
+So [readme-parity-check.md](readme-parity-check.md) specifies a one-way, fact-by-fact check
+that tolerates the site being a superset, and `sourceOf` stays as provenance for a human
+rather than as a script's input. The spec also proposes a `LIBRARY_VERSION` constant in
+`src/consts.ts`: the version is pinned in fourteen places inside code fences a reader copies
+verbatim, so it cannot be templated, and the same shape that solved `base` applies - write it
+down once and let a check enforce the literals.
