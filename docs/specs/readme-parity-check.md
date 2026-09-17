@@ -154,7 +154,7 @@ skipped.
 | Prose | D4 accepts prose drift explicitly. The site restructures the README by design, and any similarity metric over rewritten prose is a coin toss dressed as a check |
 | Page structure against README section order | The IA is docs/SITEMAP.md's decision, not the README's |
 | Code sample bodies | They are rewritten for the site's context. Their coordinates are checked; their contents are reviewed by a person |
-| The three `/learn` articles | Original writing about the problem, not derived from the library, and they name no version |
+| The `/learn` articles | Original writing about the problem, not derived from the library, and they name no version |
 | `docs/COPY-HOME.md` beyond version literals | It is a copy deck, not a page. Phase 7 builds the components from it and the built page is what gets checked thereafter |
 | That the site documents everything the library has | This would be a coverage check, not a parity check. It is a real gap and a different script; it is not in scope here |
 

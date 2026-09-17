@@ -16,7 +16,7 @@ answer for yours, which mostly means knowing what each one fails at.
 
 ## 0. Nothing, because the operation is already idempotent
 
-The option worth checking first, because it is free.
+The option to check first, because it is free.
 
 ```java
 @Transactional
@@ -188,8 +188,8 @@ naming the handler.
 
 ## 3. `@Cacheable`
 
-This one comes up constantly and it does not work. It is worth understanding exactly why,
-because the reason is not the obvious one.
+This one comes up constantly and it does not work. The reason is not the obvious one, which is
+why it keeps coming up.
 
 ```java
 @Cacheable(value = "payments", key = "#request.requestId()")
@@ -251,7 +251,7 @@ ShedLock is good at that and is not trying to solve this problem.
 
 ## 5. Spring Integration's idempotent receiver
 
-The answer already in the Spring ecosystem, and worth knowing about before writing anything.
+The answer already in the Spring ecosystem, and the one to rule out before writing anything.
 
 Spring Integration ships an `IdempotentReceiverInterceptor` backed by a `MetadataStore`, with
 implementations over JDBC, Redis and others. The `ConcurrentMetadataStore` interface offers
@@ -268,8 +268,8 @@ as options 2 and 4.
 
 ## 6. A transactional outbox
 
-Frequently proposed in this conversation and solving an adjacent problem, so it is worth
-placing precisely.
+Frequently proposed in this conversation, and solving an adjacent problem, so it needs placing
+precisely.
 
 The outbox pattern writes the message you intend to publish into a table inside the same
 transaction as the business change, and a separate process publishes it. It exists because a
@@ -282,8 +282,16 @@ the row will publish again, which is exactly the at-least-once delivery the cons
 survive. Adopting an outbox does not reduce the need for idempotent consumers; it is one of
 the things that produces duplicates for them.
 
-Both are correct, they are not alternatives, and a design that has one usually needs the
-other.
+On Spring you rarely build one by hand. Spring Modulith's event publication registry is an
+outbox for application events, writing a row per listener in the publishing transaction and
+re-invoking the ones that never completed, and Namastack Outbox is a dedicated outbox that
+Spring Modulith 2.1 can delegate event externalization to. Kafka's exactly-once semantics are
+not a third option here: they cover Kafka-to-Kafka processing and reach neither your database
+writes nor your outbound calls.
+
+Both are correct, they are not alternatives, and a design that has one usually needs the other.
+[Idempotency in message-driven systems](/learn/idempotency-in-message-driven-systems/) covers
+how the two fit together, and what a duplicate is supposed to trigger on the consumer side.
 
 ## 7. Building the full thing
 

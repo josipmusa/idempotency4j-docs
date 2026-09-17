@@ -353,14 +353,15 @@ invent list is not negotiable.
 
 **Heading:**
 
-> Three articles about the problem, not the library.
+> Four articles about the problem, not the library.
 
 **Body:** none. The titles and their first sentences are the section.
 
 **Captions:**
 
-Each article shows its title and its real first sentence. These sentences are the opening
-lines of the articles themselves and must match them exactly once commit 3 lands.
+Each article shows its title and its real opening. These are the opening lines of the articles
+themselves and must match them exactly. The fourth needs both of its opening sentences, because
+the first does not stand without the second.
 
 **What idempotency actually means**
 
@@ -378,6 +379,11 @@ lines of the articles themselves and must match them exactly once commit 3 lands
 > A `processed_events` table, a unique constraint, `@Cacheable` and a distributed lock are
 > four real answers to duplicate work, and three of them are wrong under concurrency in a way
 > that only shows up in production.
+
+**Idempotency in message-driven systems**
+
+> A duplicate message is usually treated as something to discard. It is also evidence: the
+> first attempt got far enough to leave a record, and it may have died before it finished.
 
 **Asset:** none.
 

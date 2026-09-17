@@ -41,7 +41,7 @@ settled on retrying for exactly this reason.
 The duplicate is not a bug in the caller. It is the caller behaving correctly in a situation
 where correct behaviour is indistinguishable from the bug.
 
-This is worth being precise about, because it determines where the fix can live. The caller
+Being precise about this determines where the fix can live. The caller
 cannot fix it: no protocol gives it the information it would need. The network cannot fix it:
 a lost response is the thing networks do. **Only the receiver can fix it**, because only the
 receiver knows whether the work already ran.
@@ -83,9 +83,9 @@ Anyone searching for this will find the HTTP specification's definition first, a
 genuine source of confusion.
 
 RFC 9110 says that `PUT` and `DELETE` are idempotent, along with the safe methods `GET`,
-`HEAD`, `OPTIONS` and `TRACE`, while `POST` and `PATCH` are not. Read carefully, that sentence is a statement about what those methods
-are **defined to mean**, not a promise about what any particular server does when you call one
-twice.
+`HEAD`, `OPTIONS` and `TRACE`, while `POST` and `PATCH` are not. Read carefully, that sentence
+is a statement about what those methods are **defined to mean**, not a promise about what any
+particular server does when you call one twice.
 
 The specification is telling intermediaries what they may safely do. A proxy is allowed to
 retry a `PUT` on a connection failure without asking, because the method's semantics say a
@@ -111,8 +111,8 @@ retry. What you need is a property of your **implementation**, and you have to b
 
 ## Naturally idempotent, and everything else
 
-Some operations are idempotent without help, and it is worth knowing which, because they are
-the ones you do not need to spend effort on.
+Some operations are idempotent without help, and knowing which is what tells you where not to
+spend the effort.
 
 ```sql
 -- Idempotent. Running it twice leaves the same row.
@@ -167,7 +167,7 @@ every serious payment API accepts an idempotency key of its own, and why passing
 through is not an optional refinement. The same applies to any outbound call whose effect
 outlives your process.
 
-This generalises into a rule worth holding on to: making your own work safe to retry is
+The rule generalises. Making your own work safe to retry is
 achievable, and making someone else's endpoint safe to retry for you is not. Any library,
 framework or pattern that appears to promise the second is promising something it cannot
 deliver.
@@ -184,7 +184,9 @@ What is achievable is **at-least-once delivery combined with idempotent processi
 produces exactly one effect from possibly many deliveries. Some people call this
 effectively-once. The distinction matters because it tells you where to spend your effort: not
 on preventing duplicate delivery, which is impossible, but on making duplicate delivery
-harmless, which is ordinary engineering.
+harmless, which is ordinary engineering. Brokers and outboxes are where this gets concrete, and
+[idempotency in message-driven systems](/learn/idempotency-in-message-driven-systems/) works
+through it.
 
 ## What this actually requires
 

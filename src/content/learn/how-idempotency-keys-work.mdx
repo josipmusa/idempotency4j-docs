@@ -56,8 +56,8 @@ would be wrong.
 
 ## Business identifiers versus opaque keys
 
-Where a real identifier exists, it is often better than a UUID, and this is worth thinking
-about rather than defaulting.
+Where a real identifier exists, it is often better than a UUID, and the choice deserves a
+decision rather than a default.
 
 An opaque UUID protects against exactly one thing: the same request arriving twice. A business
 key such as `order-8891-refund` protects against something stronger, because it is derived
@@ -135,7 +135,7 @@ differently, the fingerprint changes between a request and its own retry, and yo
 legitimate retry as a mismatch. That failure is loud rather than silent, which is the right
 way round, but it is still an outage.
 
-One asymmetry is worth designing in deliberately: **a record without a fingerprint cannot be
+One asymmetry has to be designed in deliberately. **A record without a fingerprint cannot be
 contradicted.** If the original was stored before fingerprinting was added, or by a path that
 does not compute one, an incoming request that has a fingerprint should be treated as a
 duplicate rather than a mismatch. Two requests conflict only when both carry a fingerprint and
