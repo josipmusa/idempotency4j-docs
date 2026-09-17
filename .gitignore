@@ -30,6 +30,7 @@ spikes/screenshots/*
 # ...except the palette renders that D16 was decided from
 !spikes/screenshots/palette-*.png
 !spikes/screenshots/locked-*.png
+!spikes/screenshots/signature-*.png
 
 # Installed agent tooling is a restorable dependency, not project source.
 # `npx skills experimental_install` and `npx impeccable install --project`

@@ -158,7 +158,10 @@ in DESIGN.md.
 **Feasibility test:** build both static frames as a single SVG pair at 1440 and 390 before
 writing any motion. Gate: each frame is comprehensible on its own with no caption beyond its
 mono labels, and the 390 version is legible without zooming.
-**Status: not yet run.**
+**Status: run 2026-09-17, passed.** Both frames built in `spikes/signature.html`, captured at
+1440 / 768 / 390 in both themes. The interactive version proceeds; the fallback below stays
+as the reduced-motion state and the Open Graph source. Findings for phase 6a are in
+`docs/specs/phase-2-signature-feasibility.md`.
 
 **Fallback:** a static side-by-side two-panel figure, OFF left and ON right, captioned. The
 fallback is also the reduced-motion state and the Open Graph source, so it gets built first

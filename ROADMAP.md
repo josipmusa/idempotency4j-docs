@@ -57,12 +57,14 @@ decided.
 - [x] Imagery policy recorded - no photography, no stock, no AI imagery, no 3D. No gap plan
       needed as a consequence
 - [x] Signature moment chosen: *Two charges, or one*
-- [ ] **Signature feasibility test not yet run** - build both static SVG frames at 1440 and
-      390 and check each is comprehensible alone. Fallback and gate in docs/CONTENT.md
+- [x] Signature feasibility test run 2026-09-17 - both static SVG frames built in
+      `spikes/signature.html` and captured at 1440 / 768 / 390 in both themes. **Passed:**
+      each frame is comprehensible alone on its mono labels, and 390 is legible at 1:1. The
+      interactive version proceeds; the fallback stays as the reduced-motion state
 
-**Done when:** docs/CONTENT.md is the single authority for what goes on the site.
-**Met, with the feasibility test outstanding.** It needs the workspace, so it runs at the
-start of phase 6a; the fallback is specified, so it does not block.
+**Done when:** docs/CONTENT.md is the single authority for what goes on the site. **Met.**
+The four constraints the test puts on the phase 6a component are in
+`docs/specs/phase-2-signature-feasibility.md`.
 
 ## Phase 3. Workspace - **DONE** 2026-09-17
 **Goal:** the agent can build, screenshot, review and fix without manual intervention.

@@ -217,6 +217,10 @@ fallback in DESIGN.md - a static side-by-side two-panel figure - becomes the sig
 the site has no motion beyond its reveals. That is an acceptable outcome, not a failure
 state.
 
+**Run 2026-09-17: passed.** Both frames are comprehensible alone and 390 is legible at 1:1.
+The choreography above is cleared to be built. `docs/specs/phase-2-signature-feasibility.md`
+records four constraints the built component inherits from the test.
+
 ## Micro-interactions
 
 | Element | Response | Duration |

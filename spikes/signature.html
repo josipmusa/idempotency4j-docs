@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Signature feasibility - Two charges, or one</title>
+<style>
+  /* Phase 2 feasibility test (docs/CONTENT.md; MOTION.md "Feasibility test").
+     Both static frames of the signature scene, both themes, no motion.
+     Gate: each frame is comprehensible alone with no caption beyond its mono
+     labels, and the 390 version is legible without zooming.
+     The typeface is OPEN until phase 6b, so this uses the system mono stack -
+     the test is the composition, not the face. */
+  [data-theme="dark"] {
+    --ink-0: #0a0c11; --rule: #242a36; --rule-hi: #566275;
+    --dim: #7c8798; --text: #c3cad6; --text-hi: #f2f5f9; --signal: #3ddbd9;
+    color-scheme: dark;
+  }
+  [data-theme="light"] {
+    --ink-0: #f7f8fa; --rule: #d3d8e0; --rule-hi: #7f8998;
+    --dim: #5c6675; --text: #2a3038; --text-hi: #0d1117; --signal: #0d7373;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0a0c11; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .theme { background: var(--ink-0); padding: 48px 48px 64px; }
+  .chrome { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim);
+            margin: 0 0 16px; border-top: 1px solid var(--rule); padding-top: 12px; }
+  .frame { margin: 0 0 64px; }
+  .frame:last-child { margin-bottom: 0; }
+  .scene { display: block; width: 100%; height: auto; max-width: 1440px; margin: 0 auto; }
+  .mobile-only { display: none; max-width: 342px; }
+  /* Below 1024 the horizontal scene would scale to 0.56 and its 13px mono
+     labels to 7px, so the stacked layout takes over well above 390. */
+  @media (max-width: 1023px) {
+    .theme { padding: 24px 24px 40px; }
+    .desktop-only { display: none; }
+    .mobile-only { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<section class="theme" data-theme="dark">
+  <figure class="frame">
+    <p class="chrome">dark / switch off</p>
+    <svg class="scene desktop-only" viewBox="0 0 1200 560" role="img" aria-label="Two charges, or one - switch off">
+  <defs>
+    <marker id="ah-dark-off-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-dark-off-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M152 90H1180" /><path d="M152 200H1180" /><path d="M152 310H1180" />
+  </g>
+  <g font-size="13" fill="var(--dim)" text-anchor="end">
+    <text x="136" y="94">Client</text><text x="136" y="204">Server</text><text x="136" y="314">Payments</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-dark-off-d)">
+    <path d="M220 90L300 200" /><path d="M330 200L410 310" /><path d="M460 310L540 200" />
+    <path d="M720 90L800 200" /><path d="M830 200L910 310" /><path d="M955 310L1035 200" /><path d="M1060 200L1140 90" />
+  </g>
+  <path d="M570 200L607 149" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <path d="M628 120L641 102" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="424" y="304" width="12" height="12" /><rect x="924" y="304" width="12" height="12" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="430" y="338" text-anchor="middle">charge</text>
+    <text x="930" y="338" text-anchor="middle">charge</text>
+    <text x="640" y="122">timeout</text>
+    <text x="720" y="72">retry</text>
+  </g>
+  <text x="1180" y="48" font-size="18" fill="var(--text-hi)" text-anchor="end">2 charges</text>
+  <rect x="152" y="490" width="88" height="40" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="156" y="494" width="32" height="32" fill="var(--rule-hi)" />
+  <text x="256" y="516" font-size="14" fill="var(--text)">@Idempotent</text>
+    </svg>
+    <svg class="scene mobile-only" viewBox="0 0 342 660" role="img" aria-label="Two charges, or one - switch off">
+  <defs>
+    <marker id="ah-dark-off-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-dark-off-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M44 30V484" /><path d="M136 30V484" /><path d="M232 30V484" />
+  </g>
+  <g font-size="12" fill="var(--dim)" text-anchor="middle">
+    <text x="44" y="14">Client</text><text x="136" y="14">Server</text><text x="232" y="14">Payments</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-dark-off-m)">
+    <path d="M44 60L136 82" /><path d="M136 100L232 122" /><path d="M232 172L136 194" />
+    <path d="M44 288L136 310" /><path d="M136 328L232 350" /><path d="M232 400L136 422" /><path d="M136 440L44 462" />
+  </g>
+  <path d="M136 214L104 234" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <path d="M84 246L58 262" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="226" y="138" width="12" height="12" /><rect x="226" y="366" width="12" height="12" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="248" y="148">charge</text><text x="248" y="376">charge</text>
+    <text x="150" y="240">timeout</text><text x="48" y="280">retry</text>
+  </g>
+  <text x="171" y="528" font-size="16" fill="var(--text-hi)" text-anchor="middle">2 charges</text>
+  <rect x="44" y="556" width="92" height="44" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="48" y="560" width="36" height="36" fill="var(--rule-hi)" />
+  <text x="148" y="583" font-size="13" fill="var(--text)">@Idempotent</text>
+    </svg>
+  </figure>
+  <figure class="frame">
+    <p class="chrome">dark / switch on</p>
+    <svg class="scene desktop-only" viewBox="0 0 1200 560" role="img" aria-label="Two charges, or one - switch on">
+  <defs>
+    <marker id="ah-dark-on-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-dark-on-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M152 90H1180" /><path d="M152 200H1180" /><path d="M152 310H1180" /><path d="M152 420H1180" />
+  </g>
+  <g font-size="13" fill="var(--dim)" text-anchor="end">
+    <text x="136" y="94">Client</text><text x="136" y="204">Server</text>
+    <text x="136" y="314">Payments</text><text x="136" y="424">Store</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-dark-on-d)">
+    <path d="M220 90L300 200" /><path d="M330 200L410 310" /><path d="M460 310L540 200" /><path d="M720 90L800 200" />
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M315 200L315 412" /><path d="M555 200L555 412" /><path d="M820 200L820 420" />
+    <path d="M570 200L607 149" /><path d="M628 120L641 102" />
+  </g>
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="309" y="414" width="12" height="12" /><rect x="549" y="414" width="12" height="12" /><rect x="424" y="304" width="12" height="12" />
+  </g>
+  <g fill="none" stroke="var(--signal)" stroke-width="1" marker-end="url(#as-dark-on-d)">
+    <path d="M820 420L920 200" /><path d="M940 200L1020 90" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="430" y="338" text-anchor="middle">charge</text>
+    <text x="315" y="446" text-anchor="middle">acquire</text>
+    <text x="555" y="446" text-anchor="middle">store</text>
+    <text x="640" y="122">timeout</text>
+    <text x="720" y="72">retry</text>
+  </g>
+  <text x="1040" y="112" font-size="13" fill="var(--signal)">Outcome.Replayed</text>
+  <text x="1180" y="48" font-size="18" fill="var(--text-hi)" text-anchor="end">1 charge</text>
+  <rect x="152" y="490" width="88" height="40" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="204" y="494" width="32" height="32" fill="var(--text-hi)" />
+  <text x="256" y="516" font-size="14" fill="var(--text)">@Idempotent</text>
+    </svg>
+    <svg class="scene mobile-only" viewBox="0 0 342 660" role="img" aria-label="Two charges, or one - switch on">
+  <defs>
+    <marker id="ah-dark-on-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-dark-on-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M44 30V484" /><path d="M136 30V484" /><path d="M232 30V484" /><path d="M316 30V484" />
+  </g>
+  <g font-size="12" fill="var(--dim)" text-anchor="middle">
+    <text x="44" y="14">Client</text><text x="136" y="14">Server</text>
+    <text x="232" y="14">Payments</text><text x="316" y="14">Store</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-dark-on-m)">
+    <path d="M44 60L136 82" /><path d="M136 148L232 170" /><path d="M232 216L136 238" />
+    <path d="M44 366L136 388" /><path d="M136 398L310 418" />
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M136 92L306 110" /><path d="M136 250L306 268" />
+    <path d="M136 286L104 306" /><path d="M84 318L58 334" />
+  </g>
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="310" y="108" width="12" height="12" /><rect x="310" y="262" width="12" height="12" /><rect x="226" y="184" width="12" height="12" />
+  </g>
+  <g fill="none" stroke="var(--signal)" stroke-width="1" marker-end="url(#as-dark-on-m)">
+    <path d="M316 430L136 450" /><path d="M136 458L44 478" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="248" y="194">charge</text>
+    <text x="304" y="134" text-anchor="end">acquire</text>
+    <text x="304" y="288" text-anchor="end">store</text>
+    <text x="150" y="312">timeout</text><text x="48" y="358">retry</text>
+  </g>
+  <text x="44" y="500" font-size="12" fill="var(--signal)">Outcome.Replayed</text>
+  <text x="171" y="528" font-size="16" fill="var(--text-hi)" text-anchor="middle">1 charge</text>
+  <rect x="44" y="556" width="92" height="44" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="96" y="560" width="36" height="36" fill="var(--text-hi)" />
+  <text x="148" y="583" font-size="13" fill="var(--text)">@Idempotent</text>
+    </svg>
+  </figure>
+</section>
+
+<section class="theme" data-theme="light">
+  <figure class="frame">
+    <p class="chrome">light / switch off</p>
+    <svg class="scene desktop-only" viewBox="0 0 1200 560" role="img" aria-label="Two charges, or one - switch off">
+  <defs>
+    <marker id="ah-light-off-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-light-off-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M152 90H1180" /><path d="M152 200H1180" /><path d="M152 310H1180" />
+  </g>
+  <g font-size="13" fill="var(--dim)" text-anchor="end">
+    <text x="136" y="94">Client</text><text x="136" y="204">Server</text><text x="136" y="314">Payments</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-light-off-d)">
+    <path d="M220 90L300 200" /><path d="M330 200L410 310" /><path d="M460 310L540 200" />
+    <path d="M720 90L800 200" /><path d="M830 200L910 310" /><path d="M955 310L1035 200" /><path d="M1060 200L1140 90" />
+  </g>
+  <path d="M570 200L607 149" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <path d="M628 120L641 102" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="424" y="304" width="12" height="12" /><rect x="924" y="304" width="12" height="12" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="430" y="338" text-anchor="middle">charge</text>
+    <text x="930" y="338" text-anchor="middle">charge</text>
+    <text x="640" y="122">timeout</text>
+    <text x="720" y="72">retry</text>
+  </g>
+  <text x="1180" y="48" font-size="18" fill="var(--text-hi)" text-anchor="end">2 charges</text>
+  <rect x="152" y="490" width="88" height="40" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="156" y="494" width="32" height="32" fill="var(--rule-hi)" />
+  <text x="256" y="516" font-size="14" fill="var(--text)">@Idempotent</text>
+    </svg>
+    <svg class="scene mobile-only" viewBox="0 0 342 660" role="img" aria-label="Two charges, or one - switch off">
+  <defs>
+    <marker id="ah-light-off-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-light-off-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M44 30V484" /><path d="M136 30V484" /><path d="M232 30V484" />
+  </g>
+  <g font-size="12" fill="var(--dim)" text-anchor="middle">
+    <text x="44" y="14">Client</text><text x="136" y="14">Server</text><text x="232" y="14">Payments</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-light-off-m)">
+    <path d="M44 60L136 82" /><path d="M136 100L232 122" /><path d="M232 172L136 194" />
+    <path d="M44 288L136 310" /><path d="M136 328L232 350" /><path d="M232 400L136 422" /><path d="M136 440L44 462" />
+  </g>
+  <path d="M136 214L104 234" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <path d="M84 246L58 262" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="226" y="138" width="12" height="12" /><rect x="226" y="366" width="12" height="12" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="248" y="148">charge</text><text x="248" y="376">charge</text>
+    <text x="150" y="240">timeout</text><text x="48" y="280">retry</text>
+  </g>
+  <text x="171" y="528" font-size="16" fill="var(--text-hi)" text-anchor="middle">2 charges</text>
+  <rect x="44" y="556" width="92" height="44" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="48" y="560" width="36" height="36" fill="var(--rule-hi)" />
+  <text x="148" y="583" font-size="13" fill="var(--text)">@Idempotent</text>
+    </svg>
+  </figure>
+  <figure class="frame">
+    <p class="chrome">light / switch on</p>
+    <svg class="scene desktop-only" viewBox="0 0 1200 560" role="img" aria-label="Two charges, or one - switch on">
+  <defs>
+    <marker id="ah-light-on-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-light-on-d" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M152 90H1180" /><path d="M152 200H1180" /><path d="M152 310H1180" /><path d="M152 420H1180" />
+  </g>
+  <g font-size="13" fill="var(--dim)" text-anchor="end">
+    <text x="136" y="94">Client</text><text x="136" y="204">Server</text>
+    <text x="136" y="314">Payments</text><text x="136" y="424">Store</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-light-on-d)">
+    <path d="M220 90L300 200" /><path d="M330 200L410 310" /><path d="M460 310L540 200" /><path d="M720 90L800 200" />
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M315 200L315 412" /><path d="M555 200L555 412" /><path d="M820 200L820 420" />
+    <path d="M570 200L607 149" /><path d="M628 120L641 102" />
+  </g>
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="309" y="414" width="12" height="12" /><rect x="549" y="414" width="12" height="12" /><rect x="424" y="304" width="12" height="12" />
+  </g>
+  <g fill="none" stroke="var(--signal)" stroke-width="1" marker-end="url(#as-light-on-d)">
+    <path d="M820 420L920 200" /><path d="M940 200L1020 90" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="430" y="338" text-anchor="middle">charge</text>
+    <text x="315" y="446" text-anchor="middle">acquire</text>
+    <text x="555" y="446" text-anchor="middle">store</text>
+    <text x="640" y="122">timeout</text>
+    <text x="720" y="72">retry</text>
+  </g>
+  <text x="1040" y="112" font-size="13" fill="var(--signal)">Outcome.Replayed</text>
+  <text x="1180" y="48" font-size="18" fill="var(--text-hi)" text-anchor="end">1 charge</text>
+  <rect x="152" y="490" width="88" height="40" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="204" y="494" width="32" height="32" fill="var(--text-hi)" />
+  <text x="256" y="516" font-size="14" fill="var(--text)">@Idempotent</text>
+    </svg>
+    <svg class="scene mobile-only" viewBox="0 0 342 660" role="img" aria-label="Two charges, or one - switch on">
+  <defs>
+    <marker id="ah-light-on-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+    </marker>
+    <marker id="as-light-on-m" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L6.5 4 L1 7" fill="none" stroke="var(--signal)" stroke-width="1" />
+    </marker>
+  </defs>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M44 30V484" /><path d="M136 30V484" /><path d="M232 30V484" /><path d="M316 30V484" />
+  </g>
+  <g font-size="12" fill="var(--dim)" text-anchor="middle">
+    <text x="44" y="14">Client</text><text x="136" y="14">Server</text>
+    <text x="232" y="14">Payments</text><text x="316" y="14">Store</text>
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1" marker-end="url(#ah-light-on-m)">
+    <path d="M44 60L136 82" /><path d="M136 148L232 170" /><path d="M232 216L136 238" />
+    <path d="M44 366L136 388" /><path d="M136 398L310 418" />
+  </g>
+  <g fill="none" stroke="var(--rule-hi)" stroke-width="1">
+    <path d="M136 92L306 110" /><path d="M136 250L306 268" />
+    <path d="M136 286L104 306" /><path d="M84 318L58 334" />
+  </g>
+  <g fill="none" stroke="var(--text-hi)" stroke-width="1">
+    <rect x="310" y="108" width="12" height="12" /><rect x="310" y="262" width="12" height="12" /><rect x="226" y="184" width="12" height="12" />
+  </g>
+  <g fill="none" stroke="var(--signal)" stroke-width="1" marker-end="url(#as-light-on-m)">
+    <path d="M316 430L136 450" /><path d="M136 458L44 478" />
+  </g>
+  <g font-size="12" fill="var(--dim)">
+    <text x="248" y="194">charge</text>
+    <text x="304" y="134" text-anchor="end">acquire</text>
+    <text x="304" y="288" text-anchor="end">store</text>
+    <text x="150" y="312">timeout</text><text x="48" y="358">retry</text>
+  </g>
+  <text x="44" y="500" font-size="12" fill="var(--signal)">Outcome.Replayed</text>
+  <text x="171" y="528" font-size="16" fill="var(--text-hi)" text-anchor="middle">1 charge</text>
+  <rect x="44" y="556" width="92" height="44" rx="2" fill="none" stroke="var(--rule-hi)" stroke-width="1" />
+  <rect x="96" y="560" width="36" height="36" fill="var(--text-hi)" />
+  <text x="148" y="583" font-size="13" fill="var(--text)">@Idempotent</text>
+    </svg>
+  </figure>
+</section>
+</body>
+</html>
