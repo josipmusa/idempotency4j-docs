@@ -64,20 +64,29 @@ decided.
 **Met, with the feasibility test outstanding.** It needs the workspace, so it runs at the
 start of phase 6a; the fallback is specified, so it does not block.
 
-## Phase 3. Workspace - **NOT STARTED**
+## Phase 3. Workspace - **DONE** 2026-09-17
 **Goal:** the agent can build, screenshot, review and fix without manual intervention.
-- [ ] **Rename this directory and the repo to `idempotency4j-docs`** (D6) - do this first
-- [ ] Astro scaffolded with `site` and `base` from a single exported constant (D5)
-- [ ] Starlight added and mounted at `/docs`
-- [ ] Playbook template copied; dev toolbar disabled
-- [ ] Third-party skills installed from skills-lock.json
-- [ ] Spike harness produced a contact sheet from two dummy variants
-- [ ] Reviewer returned a verdict on a dummy page
-- [ ] GitHub Actions Pages workflow, deploying on push to `main`
+- [x] **Rename this directory and the repo to `idempotency4j-docs`** (D6) - done before
+      `git init`, so nothing carries the old name
+- [x] Astro scaffolded with `site` and `base` from a single exported constant (D5) -
+      `src/consts.ts`, with `href()` and `absoluteUrl()` helpers
+- [x] Starlight added and mounted at `/docs` - by prefixing generated ids rather than
+      nesting the content directory, so files stay where CLAUDE.md says they live
+- [x] Playbook template copied; dev toolbar disabled
+- [x] Third-party skills installed from skills-lock.json, plus Impeccable
+- [x] Spike harness produced a contact sheet from two dummy variants
+- [x] Reviewer returned a verdict on a dummy page - PASS WITH ISSUES; the P1 base-prefix
+      defect and both material P2s fixed
+- [x] GitHub Actions Pages workflow, deploying on push to `main`
 
-**Done when:** all verified. **Gate currently unmet** - this phase was deliberately not run
-at kickoff, since the owner asked for research and documents on this pass and no
-implementation.
+**Done when:** all verified. **Met.** Live at
+`https://josipmusa.github.io/idempotency4j-docs/`; `/`, `/docs/`, the favicon and the
+sitemap all resolve under the prefix and the site makes zero third-party requests (D15).
+
+Build notes and the three deviations - the Starlight mount, agent tooling treated as a
+restorable dependency, and the kept palette renders - are in
+`docs/specs/phase-3-workspace.md`. One standing build warning is recorded there: Starlight
+looks for an `i18n` collection the English-only site has no use for.
 
 ## Phase 4. Product and copy
 **Goal:** all content exists before any design work.

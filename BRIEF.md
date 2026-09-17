@@ -210,7 +210,7 @@ step with library releases.
 | Item | Depends on | Status |
 |---|---|---|
 | Directory and repo rename to `idempotency4j-docs` | owner, before `git init` | done 2026-09-17 |
-| Create `josipmusa/idempotency4j-docs` on GitHub and push `main` | owner | open; local git only so far |
+| Create `josipmusa/idempotency4j-docs` on GitHub and push `main` | owner | done 2026-09-17; Pages live |
 | Display and mono typeface pairing | phase 6b spikes | on schedule |
 | Design language | phase 6a spikes | on schedule |
 | Whether "Execution model" and "Architecture" stay two homepage sections or merge | phase 6a; see the feeling-curve note in DESIGN.md | on schedule |
