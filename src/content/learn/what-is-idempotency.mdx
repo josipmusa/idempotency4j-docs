@@ -41,7 +41,7 @@ settled on retrying for exactly this reason.
 The duplicate is not a bug in the caller. It is the caller behaving correctly in a situation
 where correct behaviour is indistinguishable from the bug.
 
-This is worth being precise about, because it determines where the fix can live. The caller
+Being precise about this determines where the fix can live. The caller
 cannot fix it: no protocol gives it the information it would need. The network cannot fix it:
 a lost response is the thing networks do. **Only the receiver can fix it**, because only the
 receiver knows whether the work already ran.
@@ -82,10 +82,10 @@ that almost never happens.
 Anyone searching for this will find the HTTP specification's definition first, and it is a
 genuine source of confusion.
 
-RFC 9110 says that `GET`, `HEAD`, `PUT`, `DELETE` and `OPTIONS` are idempotent, while `POST`
-and `PATCH` are not. Read carefully, that sentence is a statement about what those methods
-are **defined to mean**, not a promise about what any particular server does when you call one
-twice.
+RFC 9110 says that `PUT` and `DELETE` are idempotent, along with the safe methods `GET`,
+`HEAD`, `OPTIONS` and `TRACE`, while `POST` and `PATCH` are not. Read carefully, that sentence
+is a statement about what those methods are **defined to mean**, not a promise about what any
+particular server does when you call one twice.
 
 The specification is telling intermediaries what they may safely do. A proxy is allowed to
 retry a `PUT` on a connection failure without asking, because the method's semantics say a
@@ -111,8 +111,8 @@ retry. What you need is a property of your **implementation**, and you have to b
 
 ## Naturally idempotent, and everything else
 
-Some operations are idempotent without help, and it is worth knowing which, because they are
-the ones you do not need to spend effort on.
+Some operations are idempotent without help, and knowing which is what tells you where not to
+spend the effort.
 
 ```sql
 -- Idempotent. Running it twice leaves the same row.
@@ -132,15 +132,10 @@ breakage comes from a change that turns an assignment into an accumulation. Addi
 `updated_by` audit trail to a naturally idempotent `PUT` handler converts it into a
 non-idempotent one, and nothing about the change looks dangerous in review.
 
-The unique constraint is the other source of natural protection, and the most reliable one:
-
-```sql
-ALTER TABLE payments ADD CONSTRAINT payments_request_id_key UNIQUE (request_id);
-```
-
-If the caller supplies an identifier and the database refuses the second insert, the duplicate
-cannot produce a second row no matter how many layers above it went wrong. This is a real
-technique with real limits, and the limits are the subject of the next article.
+A unique constraint on a caller-supplied identifier is the other source of natural
+protection, and the most reliable one, because the database refuses the second insert however
+many layers above it went wrong. It has real limits, and it is weighed against the alternatives
+in [idempotency in Spring Boot](/learn/idempotency-in-spring-boot/).
 
 ## "Once" needs a scope
 
@@ -151,14 +146,10 @@ arrives at both. It must be processed **once by each**, not once in total. A dup
 order service is a duplicate; the fulfilment service's first delivery is not.
 
 So "process this once" is incomplete. The real statement is "process this once **per
-consumer**", or per handler, or per workflow step. Whatever identifies the unit of work has to
-be part of how a duplicate is recognised, because two different pieces of work legitimately
-share an event id and must not be treated as the same thing.
-
-Get this wrong in the permissive direction and duplicates slip through. Get it wrong in the
-restrictive direction and you have a much worse bug: the second consumer's first delivery is
-suppressed as a duplicate, and work that was supposed to happen silently does not. That
-failure produces no error, no log line and no alert. It is discovered by a customer.
+consumer**", or per handler, or per workflow step, and whatever identifies the unit of work has
+to be part of how a duplicate is recognised. Both ways of getting it wrong are expensive, and
+one of them fails silently. What to name, and what naming it costs, is in
+[how idempotency keys work](/learn/how-idempotency-keys-work/).
 
 ## What happens to effects you do not own
 
@@ -176,7 +167,7 @@ every serious payment API accepts an idempotency key of its own, and why passing
 through is not an optional refinement. The same applies to any outbound call whose effect
 outlives your process.
 
-This generalises into a rule worth holding on to: making your own work safe to retry is
+The rule generalises. Making your own work safe to retry is
 achievable, and making someone else's endpoint safe to retry for you is not. Any library,
 framework or pattern that appears to promise the second is promising something it cannot
 deliver.
@@ -193,7 +184,9 @@ What is achievable is **at-least-once delivery combined with idempotent processi
 produces exactly one effect from possibly many deliveries. Some people call this
 effectively-once. The distinction matters because it tells you where to spend your effort: not
 on preventing duplicate delivery, which is impossible, but on making duplicate delivery
-harmless, which is ordinary engineering.
+harmless, which is ordinary engineering. Brokers and outboxes are where this gets concrete, and
+[idempotency in message-driven systems](/learn/idempotency-in-message-driven-systems/) works
+through it.
 
 ## What this actually requires
 

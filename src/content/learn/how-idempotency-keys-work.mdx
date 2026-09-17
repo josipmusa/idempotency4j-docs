@@ -40,6 +40,13 @@ The rule that holds all three together: **a new key means new work.** If a retry
 a fresh key, the mechanism is off. This is the most common implementation bug, and it usually
 appears as key generation living inside the retry loop rather than outside it.
 
+The header it arrives in has a name people already expect. Stripe shipped `Idempotency-Key`,
+the rest of the industry copied it, and an IETF httpapi working group draft,
+[The Idempotency-Key HTTP Header Field](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/),
+writes the convention down. That draft is not a standard: it expired without being published as
+an RFC. Use the name because every client library and every API your callers already integrate
+with uses it, not because a specification obliges you to.
+
 The two-layer version catches people out. A mobile client generates a key, sends the request,
 and an HTTP client library three layers down retries after a timeout. That retry reuses the
 key and is protected. But if the user gives up and presses the button again, the application
@@ -48,8 +55,8 @@ would be wrong.
 
 ## Business identifiers versus opaque keys
 
-Where a real identifier exists, it is often better than a UUID, and this is worth thinking
-about rather than defaulting.
+Where a real identifier exists, it is often better than a UUID, and the choice deserves a
+decision rather than a default.
 
 An opaque UUID protects against exactly one thing: the same request arriving twice. A business
 key such as `order-8891-refund` protects against something stronger, because it is derived
@@ -86,6 +93,14 @@ Scope also solves a problem in the other direction. It gives you a namespace, so
 one part of the system cannot collide with a key from another, and two teams can adopt the
 same convention without coordinating.
 
+Underneath "which unit of work" sits a second question: whose key is this? Keys live in one
+namespace in the store unless you do something about it, so two callers that both pick
+`order-1` collide, and the loser either gets the other's stored response replayed at it or has
+its own work silently suppressed. Put the caller into the identity, by prefixing the key
+(`userId:clientKey`) or by folding the tenant into the scope. Said plainly: a guessable key in
+a shared namespace is a way to read someone else's response body, and closing it costs one
+string concatenation.
+
 Choosing the scope is a small design decision with a long tail. Derive it from a class and
 method name and it is convenient and stable until someone renames the class, at which point
 every in-flight record is orphaned and every retry re-executes. Write it by hand and it
@@ -119,7 +134,7 @@ differently, the fingerprint changes between a request and its own retry, and yo
 legitimate retry as a mismatch. That failure is loud rather than silent, which is the right
 way round, but it is still an outage.
 
-One asymmetry is worth designing in deliberately: **a record without a fingerprint cannot be
+One asymmetry has to be designed in deliberately. **A record without a fingerprint cannot be
 contradicted.** If the original was stored before fingerprinting was added, or by a path that
 does not compute one, an incoming request that has a fingerprint should be treated as a
 duplicate rather than a mismatch. Two requests conflict only when both carry a fingerprint and

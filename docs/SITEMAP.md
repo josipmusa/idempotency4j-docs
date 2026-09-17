@@ -35,7 +35,7 @@ Eight sections, capped. Full rationale and feeling curve in DESIGN.md.
 | 4 | Architecture | The four layers and their boundaries |
 | 5 | Code | Three tabs: annotated listener, annotated endpoint, raw engine |
 | 6 | Integrations | The real module and store matrix |
-| 7 | Learn | Three articles |
+| 7 | Learn | Four articles |
 | 8 | Get started | The coordinate and the one action |
 
 Sections 3 and 4 are under review in phase 6a - see the adjacency check in DESIGN.md.
@@ -128,7 +128,12 @@ the sales pitch. It is not buried at the bottom of a reference page.
 
 ## `/learn` - Articles
 
-Custom layout, not Starlight. MDX collection. Three at launch.
+Custom layout, not Starlight. MDX collection. Four at launch.
+
+The route exists as a holding page, the same shape as `/`: the articles are routed and their
+cross-links resolve, and phase 7 owns the layout. Each article emits its `question` as
+schema.org `FAQPage` data, which is the only reason that frontmatter field is machine-read
+rather than documentation.
 
 ### At launch
 
@@ -137,6 +142,7 @@ Custom layout, not Starlight. MDX collection. Three at launch.
 | `what-is-idempotency` | What idempotency actually means | Why "the same request twice has the same effect once" is harder than it sounds, and why HTTP's definition of an idempotent method is not the property you need. Retries, at-least-once delivery, where duplicates actually come from. | "what is idempotency", "idempotent api", "idempotency meaning" |
 | `how-idempotency-keys-work` | How idempotency keys work | Who generates the key, what it must be scoped to, what happens on reuse with a different body, how long to keep records, what to store as the result. The design space, with the tradeoffs named. | "idempotency key", "idempotency-key header", "how to generate idempotency key" |
 | `idempotency-in-spring-boot` | Idempotency in Spring Boot | The options a Spring engineer actually has: a `processed_events` table, a unique constraint, `@Cacheable` (and why it fails under concurrency), a distributed lock, a library. What each costs and where each breaks. | "spring boot idempotency", "spring idempotent api", "kafka consumer duplicate spring" |
+| `idempotency-in-message-driven-systems` | Idempotency in message-driven systems | The outbox pattern, at-least-once delivery, and Udi Dahan's model in which a duplicate is a signal to finish what the first attempt started. Where Spring Modulith's event publication registry and a dedicated outbox fit. | "transactional outbox spring", "outbox pattern java", "idempotent consumer kafka spring" |
 
 The Spring Boot article is the one where the Docs/Learn rule is hardest to hold. It must
 survey the honest alternatives, including the ones that make the library unnecessary, and

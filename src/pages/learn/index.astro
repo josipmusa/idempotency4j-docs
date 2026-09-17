@@ -1,0 +1,52 @@
+---
+// Holding route, in the same spirit as src/pages/index.astro. Phase 7 builds the
+// real /learn - the layout, the typography, the reading experience. This exists so
+// the articles are routed and their cross-links resolve, and so check-links can
+// verify them rather than trusting that phase 7 will.
+import { getCollection } from 'astro:content';
+import { href, SITE_TITLE } from '../../consts';
+import FaqJsonLd from '../../components/FaqJsonLd.astro';
+
+const articles = (await getCollection('learn')).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const title = `Learn · ${SITE_TITLE}`;
+const description =
+  'Four articles about duplicate work: what idempotency means, how keys work, the options in Spring Boot, and how it fits with messaging.';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={href('/favicon.svg')} />
+    <link rel="icon" href={href('/favicon.ico')} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <FaqJsonLd
+      entries={articles.map((article) => ({
+        question: article.data.question,
+        answer: article.data.description,
+      }))}
+    />
+  </head>
+  <body>
+    <main>
+      <h1>Learn</h1>
+      <p>{description}</p>
+      <ol>
+        {
+          articles.map((article) => (
+            <li>
+              <a href={href(`/learn/${article.id}/`)}>{article.data.title}</a>
+              <p>{article.data.question}</p>
+            </li>
+          ))
+        }
+      </ol>
+      <p><a href={href('/docs/')}>Documentation</a></p>
+    </main>
+  </body>
+</html>

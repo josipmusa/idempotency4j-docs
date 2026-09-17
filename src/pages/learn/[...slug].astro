@@ -1,0 +1,44 @@
+---
+// Holding route. See src/pages/learn/index.astro - phase 7 owns the layout.
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import { href, SITE_TITLE } from '../../consts';
+import FaqJsonLd from '../../components/FaqJsonLd.astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const articles = await getCollection('learn');
+  return articles.map((article) => ({
+    params: { slug: article.id },
+    props: { article },
+  }));
+};
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={href('/favicon.svg')} />
+    <link rel="icon" href={href('/favicon.ico')} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{article.data.title} · {SITE_TITLE}</title>
+    <meta name="description" content={article.data.description} />
+    <FaqJsonLd
+      entries={[
+        { question: article.data.question, answer: article.data.description },
+      ]}
+    />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>{article.data.title}</h1>
+        <Content />
+      </article>
+      <p><a href={href('/learn/')}>All articles</a></p>
+    </main>
+  </body>
+</html>
