@@ -84,6 +84,11 @@ comes off the page. No photography, no stock, no AI-generated imagery.
 - **The name** is always lowercase, always one word: `idempotency4j`.
 - **`/docs` stays Starlight,** restyled to the Phase 1 tokens rather than themed. A
   default-looking `/docs` against a designed `/` is a failure.
+- **The logo's colours carry no authority.** `#2d3142` and `#eb6c36` are a stock diagram
+  palette, not a brand decision. Only the mark's geometry is a real material: two identical
+  chevrons, a request and its retry, running into a single stop bar. The mark is rendered in
+  the foreground colour, so the accent keeps its one meaning, unless Phase 5 shows a reason
+  to decide otherwise.
 - **The previous build is reference, not authority.** Its DESIGN.md, PRODUCT.md and
   homepage structure are recoverable from git at `b770e57`; nothing is inherited from them
   without being decided again.

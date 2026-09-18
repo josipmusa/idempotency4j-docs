@@ -16,3 +16,4 @@ Phase markers look like `2026-09-18, phase 0 done`. Claude reads the last marker
 2026-09-18, /docs stays Starlight, restyled to the Phase 1 tokens; redesigning 29 reference pages from scratch buys nothing the restyle does not.
 2026-09-18, the homepage is not inherited from the previous build; Phase 2 shapes it from nothing.
 2026-09-18, phase 0 done
+2026-09-18, the logo's colours carry no authority and the mark is rendered in the foreground colour; that keeps the accent free for its one meaning and leaves recolouring the library's artifacts as a phase 5 decision made against a real palette.
