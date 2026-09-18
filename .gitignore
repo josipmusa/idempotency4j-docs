@@ -1,44 +1,9 @@
-# build output
-dist/
-# generated types
-.astro/
-
-# dependencies
 node_modules/
-
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-
-# environment variables
-.env
-.env.production
-
-# macOS-specific files
+dist/
+.astro/
 .DS_Store
-
-# jetbrains setting folder
+*.log
+.env
+.env.*
 .idea/
-
-# playbook: spike harness output and reviewer scratch
-spikes/screenshots/*
-.playwright-mcp/
-
-# ...except the palette renders that D16 was decided from
-!spikes/screenshots/palette-*.png
-!spikes/screenshots/locked-*.png
-!spikes/screenshots/signature-*.png
-
-# Installed agent tooling is a restorable dependency, not project source.
-# `npx skills experimental_install` and `npx impeccable install --project`
-# write ~12MB across three duplicated trees, most of it a platform binary and a
-# font index. skills-lock.json pins the first set; the commands are in
-# AGENTS.md. Restore, do not commit.
-.agents/
-.github/skills/
-.github/agents/
-.claude/skills/
-.claude/agents/impeccable-*.md
+.vscode/
