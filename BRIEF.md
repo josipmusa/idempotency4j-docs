@@ -12,7 +12,7 @@ arrive from search, from Maven Central, or from a link in a discussion thread. T
 is mostly absent, so the real alternatives are hand-rolling a `processed_events` table,
 misusing `@Cacheable` in a way that does not survive concurrency, or committing to a
 platform like Temporal. Against those, idempotency4j is one dependency and one annotation:
-no framework types in the engine, a three-method storage SPI, and a published list of what
+no framework types in the engine, a five-method storage SPI, and a published list of what
 it does not do. A secondary audience, tech leads choosing between a small library and an
 in-house table, reads that list of limits first - for them the honesty is the pitch.
 

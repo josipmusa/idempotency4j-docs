@@ -27,3 +27,4 @@ Phase markers look like `2026-09-18, phase 0 done`. Claude reads the last marker
 2026-09-19, homepage structure: option A mechanism-first, over B problem-first; the visitor arrives already holding the problem, and B would have pushed the mechanism below the fold twice on a site whose Showpiece tier was justified by that mechanism.
 2026-09-19, three GitHub entry points were added to SITEMAP.md beyond what the boards drew (homepage closing, end of /learn/ index, end of article); the boards carried GitHub only in the footer and nav, and the amended brief makes the end of a read the lever for stars.
 2026-09-19, phase 2 done
+2026-09-19, the storage SPI is described as five methods with the three that carry the protocol named, not as "a three-method SPI"; the interface has five abstract methods and the tech lead the honesty pitch targets is exactly the reader who opens it and counts. Corrected in BRIEF.md, the carried-over docs prose and the library README.

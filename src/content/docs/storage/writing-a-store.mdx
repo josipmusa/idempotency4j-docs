@@ -1,14 +1,17 @@
 ---
 title: Writing a store
-description: The three-method SPI, the store contract, and why behaviour changes belong in the contract first.
+description: The store SPI, the store contract, and why behaviour changes belong in the contract first.
 sourceOf: README "Adding a backend"
 ---
 
 import { Steps } from '@astrojs/starlight/components';
 
-The store SPI is three methods. Everything difficult about idempotency that is not the
-engine's job lives behind them: all blocking, waiting, and stale-lease stealing happens
-inside `tryAcquire`.
+The store SPI is five methods, and three of them carry the protocol: `tryAcquire`,
+`complete` and `release`. The other two are mechanical - `extendLock` is the engine's
+heartbeat and `purgeExpired` is the garbage collection.
+
+Everything difficult about idempotency that is not the engine's job lives behind the first
+of the three: all blocking, waiting, and stale-lease stealing happens inside `tryAcquire`.
 
 That concentration is deliberate. A store can wait the way its technology actually waits - a
 Postgres advisory lock, a Redis blocking primitive, a condition variable - instead of the
