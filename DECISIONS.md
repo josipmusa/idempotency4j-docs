@@ -22,3 +22,4 @@ Phase markers look like `2026-09-18, phase 0 done`. Claude reads the last marker
 2026-09-18, the palette is two-mode: the dark bench for marketing and panels, a light bench at the same accent hue for /docs, because long-form reference reading is not the same task as looking at a panel.
 2026-09-18, a diagram stroke role was added to LOOK.md beyond what the design studio supplied, because the hairline sits below the 3:1 that WCAG requires of a stroke that is itself the content.
 2026-09-18, phase 1 done
+2026-09-19, CLAUDE.md and HANDOVER.md said Cloudflare Pages against the phase 0 hosting decision; corrected both to GitHub Pages so the build phase does not inherit the wrong base-path assumption.

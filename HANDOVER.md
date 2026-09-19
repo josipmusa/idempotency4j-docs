@@ -4,7 +4,7 @@ Phase 6. Written for the client, in their language, in plain words.
 
 ## Your site
 - Live at:
-- Hosted on: Cloudflare Pages
+- Hosted on: GitHub Pages
 - Source code:
 
 ## How to change text
