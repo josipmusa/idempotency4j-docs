@@ -2,7 +2,7 @@
 
 The documentation and articles site for idempotency4j, the Java library for making HTTP and message handlers safely repeatable.
 
-Stack: Astro, static output, deployed to GitHub Pages on the project subpath (no custom domain; the base path is a build constraint). Motion (if any) with GSAP + ScrollTrigger + Lenis, or three.js for 3D, as decided in MOTION.md.
+Stack: Astro, static output, deployed to GitHub Pages on the project subpath (no custom domain; the base path is a build constraint). Motion (if any) with GSAP + ScrollTrigger + Lenis, three.js for 3D, and our own scrub engine for image sequences, as decided in MOTION.md. A hero object from a photo is produced with the `img2threejs` skill (`/img2threejs`). threeui (github.com/MengTo/threeui) is a reference gallery only, never a dependency. No scroll-world, no PlayCanvas.
 
 ## How we work on this site
 

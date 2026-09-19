@@ -2,6 +2,9 @@
 
 Phase 3b. Only exists for Expressive and Showpiece sites. The only source of motion for the build: nothing animates that is not listed here.
 
+## Toolbox
+GSAP + ScrollTrigger · Lenis · three.js · own scrub engine for image sequences and video · img2threejs for a hero object from a photo. threeui is a reference gallery only. Not used: scroll-world, PlayCanvas.
+
 ## Concept
 <!-- Name, one paragraph, link to the reference (site or video), which section it lives in, asset it needs. -->
 
