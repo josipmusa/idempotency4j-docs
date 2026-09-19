@@ -33,15 +33,16 @@ second primary action.
      not run again. This is the section that makes this option A.
   3. the annotation in place: a service method with the annotation and its key expression,
      beside a two-line caption naming what changed
-  4. the storage SPI: the three named methods as three boxes, plus one line stating the
-     engine holds no framework types and any store implementing the three works
+  4. the storage SPI: the three methods that carry the protocol as three boxes, plus one
+     line naming the other two as mechanical and one stating the engine holds no framework
+     types
   5. the duplicate side effects this prevents: three named cases - payment charged twice ·
      order shipped twice · Kafka consumer reprocessing after a rebalance
-  6. what it does not do: the published list of non-goals, plainly stated. No numbers and
-     no comparison table against named vendors, only the boundary of the library
-  7. closing: the copyable coordinate again · **[Get started]** → `/docs/quickstart` ·
-     link to `/learn/` · link to the GitHub repository
+  6. closing: the copyable coordinate again · **[Get started]** → `/docs/quickstart` ·
+     link to `/learn/` · link to the GitHub repository · link to the limitations page
 - Pushes toward: copy the coordinate, or **[Get started]** → `/docs/quickstart`.
+- The published list of non-goals is **not** on the homepage. It lives only at
+  `/docs/operating/limitations/`, reached from the closing section and from the docs.
 - At 390: the four steps in section 2 stack vertically, one per row, in order. The
   coordinate block is full width and wraps, with the copy affordance on its own line. The
   button is full width. The code block in section 3 scrolls horizontally. Nothing is cut.
