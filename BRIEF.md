@@ -21,7 +21,12 @@ in-house table, reads that list of limits first - for them the honesty is the pi
 **Copy the dependency coordinate, or open the quickstart.** Worded "Get started" wherever
 it appears, leading to `/docs/quickstart`. The hero also carries the coordinate as copyable
 text, because for part of this audience copying it is the conversion. GitHub and Maven
-Central are secondary and visually subordinate. Not the job: stars, signups, time on page.
+Central are secondary and visually subordinate. GitHub stars are a real secondary goal, but
+they are earned downstream of the one job rather than competed for beside it: a visitor stars
+the repo after the quickstart worked or after the limitations page convinced them, never from
+the nav on arrival. The site's lever is therefore a GitHub entry point at the end of a read -
+the footer, the last homepage section, the end of the quickstart - and never a second hero
+button. Not the job: signups, time on page.
 
 ## 3. The feel
 
@@ -81,6 +86,10 @@ comes off the page. No photography, no stock, no AI-generated imagery.
 - **Never invent.** No download or user counts, no adoption claims, no benchmarks or "Nx
   faster", no logo wall, no claim of exactly-once, no invented roadmap. Version numbers and
   support matrices are copied from the library at a named version, never from memory.
+- **The star count is never displayed.** It is a real number rather than an invented one, so
+  the rule above does not cover it, but at its current size it argues against the library to
+  the tech lead who is the hardest visitor to convince. Revisit only if the count grows into
+  the high hundreds.
 - **The name** is always lowercase, always one word: `idempotency4j`.
 - **`/docs` stays Starlight,** restyled to the Phase 1 tokens rather than themed. A
   default-looking `/docs` against a designed `/` is a failure.

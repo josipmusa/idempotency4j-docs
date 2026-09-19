@@ -23,3 +23,4 @@ Phase markers look like `2026-09-18, phase 0 done`. Claude reads the last marker
 2026-09-18, a diagram stroke role was added to LOOK.md beyond what the design studio supplied, because the hairline sits below the 3:1 that WCAG requires of a stroke that is itself the content.
 2026-09-18, phase 1 done
 2026-09-19, CLAUDE.md and HANDOVER.md said Cloudflare Pages against the phase 0 hosting decision; corrected both to GitHub Pages so the build phase does not inherit the wrong base-path assumption.
+2026-09-19, GitHub stars added to BRIEF.md as a secondary goal earned downstream of the one job, not as a second action; the star count is never displayed, because 31 stars argues against the library to the tech lead the honesty pitch is aimed at.
