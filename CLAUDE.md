@@ -2,7 +2,7 @@
 
 The main website for idempotency4j, the idempotency engine for Java. Supersedes the earlier `idempotency4j-docs` attempt; its docs/learn content may be worth reusing but its site design and structure should not be.
 
-Stack: Astro (static output), Cloudflare Pages. GSAP + ScrollTrigger + Lenis for scroll work, three.js for 3D, Astro View Transitions for page transitions. Skills: the taste and animation skills from `skills-lock.json` (installed in `.claude/skills/`) and Impeccable; `img2threejs` when a hero object has to come from a photo.
+Stack: Astro (static output), Github Pages with no custom domain for hosting. GSAP + ScrollTrigger + Lenis for scroll work, three.js for 3D, Astro View Transitions for page transitions. Skills: the taste and animation skills from `skills-lock.json` (installed in `.claude/skills/`) and Impeccable; `img2threejs` when a hero object has to come from a photo.
 
 ## When Boss says "let's start", "continue", "status" or "where are we"
 
