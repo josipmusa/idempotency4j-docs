@@ -1,0 +1,1 @@
+One Markdown file per page (`home.md`, `services.md`, ...). Each file: front matter with title and meta description, then one `## section` per anatomy slot in order, each with headline, body, button label and image path. Stage 2 copy that is not from the client is marked `[mock]`; Stage 3 removes every `[mock]` or moves the fact to QUESTIONS.md.
