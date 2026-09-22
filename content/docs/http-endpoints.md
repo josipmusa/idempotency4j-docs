@@ -82,8 +82,11 @@ anyone intending it, make every failure permanent for its key. If you use one, l
 exceptions you want retried propagate past it, or map them to a throw rather than a return.
 :::
 
-The record is durable before the response body reaches the client, so a client that sees a
-response can rely on a retry replaying it.
+The engine records the completion before the response body is released, so normally a
+client that sees a response can rely on a retry replaying it. The exception is a store that
+fails at that moment: under the default `completion-failure-policy: log-and-return` the
+response still goes out and the failure is logged, and a retry after the lease expires runs
+the handler again. Set it to `propagate` if you would rather fail the request.
 
 ## The request body is buffered
 
@@ -107,5 +110,6 @@ them anyway - a retried upload is rarely the same bytes.
 ## Status codes and replay headers
 
 The full tables are in the [HTTP reference](/docs/reference/http/). In short: the filter can
-return `413`, `422` or `409` on its own, and a replay carries `Idempotent-Replayed: true` and
+return `413`, `422` or `409` (the in-flight status is configurable) on its own, and a replay
+carries `Idempotent-Replayed: true` and
 `Cache-Control: no-store`.

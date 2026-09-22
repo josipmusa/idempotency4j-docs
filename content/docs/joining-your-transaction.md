@@ -72,8 +72,9 @@ worth knowing because they decide what a crash leaves behind:
   retriable again.
 
 :::caution[A rollback does not delete the record by itself]
-It stays in progress until the lease is released or expires, and only then is the key free.
-A retry arriving in between is told the work is in flight rather than being allowed to run.
+At the store level the record returns to in progress. The engine releases it in its
+after-rollback hook, which is what frees the key; until that release lands, a retry is told
+the work is in flight rather than being allowed to run.
 :::
 
 ## What moves with the record

@@ -36,8 +36,10 @@ class OrderListener {
 )
 ```
 
-Every attribute except `key` and `scope` takes the application default from
-[configuration](/docs/reference/configuration/) when left empty.
+`ttl`, `lease`, `waitTimeout` and `completion` take the application default from
+[configuration](/docs/reference/configuration/) when left empty. `key` has no default, an
+empty `scope` means `<simple class name>.<method name>`, and `codec` is left empty only on a
+`void` method.
 
 ## Validation happens at startup
 

@@ -39,7 +39,7 @@ public IdempotencyLifecycleListener auditListener(AuditService audit) {
 deliberate: it lets a listener bind thread-local state that the guarded action then sees. A
 listener that blocks blocks the call.
 
-**Exceptions thrown by a listener are logged at WARN and swallowed.** They never change the
+**Exceptions thrown by a listener are logged at WARN and swallowed.** An `Error` is not. They never change the
 stored payload, the return value, or the exception the engine is propagating. Observation
 must not be able to break the thing being observed.
 

@@ -5,7 +5,7 @@ sourceOf: README "The engine"
 ---
 
 `IdempotencyEngine.execute` is the entire API. It acquires the lease, runs the action with a
-heartbeat, encodes and records the result, releases on any failure, and fires the
+heartbeat, encodes and records the result, releases the lease if the action throws, and fires the
 [lifecycle callbacks](/docs/lifecycle-callbacks/) around all of it. What comes back is a
 sealed [`Outcome`](/docs/concepts/outcomes/) you switch on.
 

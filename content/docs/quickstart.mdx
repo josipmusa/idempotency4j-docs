@@ -24,7 +24,7 @@ import Tab from '../../src/components/prose/Tab.astro';
 
 2. **Create the table, if you took the JDBC store.**
 
-   With `idempotency-jdbc` on the classpath and a `DataSource` in the context, the store
+   With `idempotency-jdbc` on the classpath and a single `DataSource` in the context, the store
    wires itself. The table does not - except on an embedded database.
 
    <Tabs sync="database">
