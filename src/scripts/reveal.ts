@@ -24,6 +24,11 @@ export function initReveal(): void {
     });
   });
 
+  // Anything on screen at load arrives at once, with its stagger. The observer only
+  // handles what is below the fold, and it fires as soon as an element crosses the
+  // bottom edge: with a margin cut off the bottom of the viewport, whatever sat in that
+  // band stayed invisible until the reader scrolled, so a short index on a tall screen
+  // looked like a page that ended after its first item.
   const io = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
@@ -32,8 +37,12 @@ export function initReveal(): void {
         io.unobserve(entry.target);
       }
     },
-    { rootMargin: '0px 0px -12% 0px', threshold: 0.05 },
+    { threshold: 0 },
   );
 
-  targets.forEach((el) => io.observe(el));
+  targets.forEach((el) => {
+    const box = el.getBoundingClientRect();
+    if (box.top < window.innerHeight && box.bottom > 0) el.classList.add('is-in');
+    else io.observe(el);
+  });
 }
