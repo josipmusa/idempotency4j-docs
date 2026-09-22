@@ -9,8 +9,8 @@
 // everything under it down - the largest layout shift on the site. The bundle is also
 // not something every reader of a reference page should be made to download.
 //
-// In dev there is no index, so the field removes itself on the failed load rather than
-// pretending - a box that returns nothing is worse than no box.
+// In dev there is no index, so the field says search is unavailable on the failed load
+// rather than returning nothing, which would look like no page matched.
 import { url } from '../../lib/links';
 
 const bundle = url('/pagefind/pagefind.js');
@@ -44,7 +44,7 @@ const bundle = url('/pagefind/pagefind.js');
     appearance: none;
     background: var(--bg-raised);
     border: 1px solid var(--line-strong);
-    border-radius: 0;
+    border-radius: var(--radius);
     padding: 0.55em 0.7em;
     font-family: var(--font-mono);
     font-size: var(--step--1);
@@ -52,6 +52,7 @@ const bundle = url('/pagefind/pagefind.js');
     transition: border-color var(--dur-hover) var(--ease);
   }
   .find__q::placeholder { color: var(--ink-3); }
+  .find__q:disabled { opacity: 0.6; cursor: not-allowed; }
   .find__q:focus-visible { border-color: var(--accent); outline: none; }
   .find__q::-webkit-search-cancel-button { filter: grayscale(1); }
 
@@ -117,8 +118,10 @@ const bundle = url('/pagefind/pagefind.js');
           engine = mod;
         })
         .catch(() => {
-          // No index: a dev build, or the indexer did not run. Say nothing, show nothing.
-          root.remove();
+          // No index: a dev server, or the indexer did not run. The field stays and says
+          // so - removing it under the reader's cursor read as the page breaking.
+          count.textContent = 'Search is not available here';
+          input.disabled = true;
         });
       return loading;
     };
