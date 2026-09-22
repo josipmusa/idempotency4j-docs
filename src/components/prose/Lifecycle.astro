@@ -1,0 +1,169 @@
+---
+// The record's state machine, drawn as a plate. The only diagram on the site, and it is
+// the only page that has a graph to draw: leases is a sequence, outcomes is a three-way
+// branch the homepage already animates, fingerprints is a rule. Three states and five
+// named edges are the one thing the prose below cannot hold all at once.
+//
+// The accent is spent on the release edge alone, the same discipline as the code plates.
+// That edge is the page's surprising claim - a failed attempt deletes the row - and drawn
+// it goes home to Absent with visibly no third box beside it, so "why there is no failed
+// state" is something the reader has already seen before they read the argument for it.
+//
+// Two layouts rather than one that shrinks: a 680-unit plate scaled into a 358px phone
+// puts the labels at six pixels. Each is drawn for the width it is shown at, and only one
+// is ever in the flow. Both are aria-hidden - the sections under the plate are the states
+// and the edges in full, so this is a second telling, not the only one.
+---
+<figure class="lc" data-reveal>
+  <!-- Wide: left to right, the two returns to Absent in their own lanes underneath. -->
+  <svg class="lc__svg lc__svg--wide" viewBox="0 0 680 292" aria-hidden="true">
+    <defs>
+      <marker id="lc-w-a" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+        <polygon class="lc__head" points="0 0, 9 3.5, 0 7" />
+      </marker>
+      <marker id="lc-w-r" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+        <polygon class="lc__head lc__head--acc" points="0 0, 9 3.5, 0 7" />
+      </marker>
+    </defs>
+
+    <!-- edges, under the states so a stroke never sits on a box -->
+    <path class="lc__edge" d="M 176,129 H 268" marker-end="url(#lc-w-a)" />
+    <path class="lc__edge" d="M 440,129 H 532" marker-end="url(#lc-w-a)" />
+    <path class="lc__edge lc__edge--time" d="M 312,96 C 312,50 400,50 400,92" marker-end="url(#lc-w-a)" />
+    <path class="lc__edge lc__edge--acc" d="M 356,162 V 208 Q 356,216 348,216 H 116 Q 108,216 108,208 V 166" marker-end="url(#lc-w-r)" />
+    <path class="lc__edge lc__edge--time" d="M 604,162 V 256 Q 604,264 596,264 H 28 Q 20,264 20,256 V 137 Q 20,129 28,129 H 36" marker-end="url(#lc-w-a)" />
+
+    <text class="lc__lbl" x="224" y="119" text-anchor="middle">ACQUIRE</text>
+    <text class="lc__lbl" x="486" y="119" text-anchor="middle">COMPLETE()</text>
+    <text class="lc__lbl" x="356" y="40" text-anchor="middle">STEAL · LEASE EXPIRED</text>
+    <text class="lc__lbl lc__lbl--acc" x="232" y="208" text-anchor="middle">RELEASE · ROW DELETED</text>
+    <text class="lc__lbl" x="308" y="256" text-anchor="middle">PURGE · TTL ELAPSED</text>
+
+    <rect class="lc__box" x="40" y="96" width="136" height="66" />
+    <text class="lc__name" x="108" y="125" text-anchor="middle">ABSENT</text>
+    <text class="lc__sub" x="108" y="145" text-anchor="middle">no record</text>
+
+    <rect class="lc__box" x="272" y="96" width="168" height="66" />
+    <text class="lc__name" x="356" y="125" text-anchor="middle">IN_PROGRESS</text>
+    <text class="lc__sub" x="356" y="145" text-anchor="middle">lease held</text>
+
+    <rect class="lc__box" x="536" y="96" width="136" height="66" />
+    <text class="lc__name" x="604" y="125" text-anchor="middle">COMPLETE</text>
+    <text class="lc__sub" x="604" y="145" text-anchor="middle">replayable</text>
+  </svg>
+
+  <!-- Narrow: the same machine top to bottom, the returns up the right-hand channel. -->
+  <svg class="lc__svg lc__svg--narrow" viewBox="0 0 320 386" aria-hidden="true">
+    <defs>
+      <marker id="lc-n-a" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+        <polygon class="lc__head" points="0 0, 9 3.5, 0 7" />
+      </marker>
+      <marker id="lc-n-r" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+        <polygon class="lc__head lc__head--acc" points="0 0, 9 3.5, 0 7" />
+      </marker>
+    </defs>
+
+    <path class="lc__edge" d="M 161,64 V 152" marker-end="url(#lc-n-a)" />
+    <path class="lc__edge" d="M 161,220 V 308" marker-end="url(#lc-n-a)" />
+    <path class="lc__edge lc__edge--time" d="M 86,170 Q 46,170 46,192 Q 46,214 82,214" marker-end="url(#lc-n-a)" />
+    <path class="lc__edge lc__edge--acc" d="M 236,204 H 258 Q 266,204 266,196 V 52 Q 266,44 258,44 H 240" marker-end="url(#lc-n-r)" />
+    <path class="lc__edge lc__edge--time" d="M 236,352 H 288 Q 296,352 296,344 V 32 Q 296,24 288,24 H 240" marker-end="url(#lc-n-a)" />
+
+    <text class="lc__lbl" x="151" y="112" text-anchor="end">ACQUIRE</text>
+    <text class="lc__lbl" x="151" y="268" text-anchor="end">COMPLETE()</text>
+    <text class="lc__lbl" x="56" y="148" text-anchor="middle">STEAL</text>
+    <text class="lc__lbl lc__lbl--acc" x="258" y="112" text-anchor="end">RELEASE</text>
+    <text class="lc__lbl lc__lbl--acc" x="258" y="126" text-anchor="end">ROW DELETED</text>
+    <text class="lc__lbl" x="286" y="268" text-anchor="end">PURGE</text>
+
+    <rect class="lc__box" x="86" y="12" width="150" height="52" />
+    <text class="lc__name" x="161" y="36" text-anchor="middle">ABSENT</text>
+    <text class="lc__sub" x="161" y="54" text-anchor="middle">no record</text>
+
+    <rect class="lc__box" x="86" y="156" width="150" height="64" />
+    <text class="lc__name" x="161" y="186" text-anchor="middle">IN_PROGRESS</text>
+    <text class="lc__sub" x="161" y="204" text-anchor="middle">lease held</text>
+
+    <rect class="lc__box" x="86" y="312" width="150" height="60" />
+    <text class="lc__name" x="161" y="340" text-anchor="middle">COMPLETE</text>
+    <text class="lc__sub" x="161" y="358" text-anchor="middle">replayable</text>
+  </svg>
+
+  <figcaption class="lc__cap">
+    A dashed edge is driven by time rather than by a caller. An abandoned <code>IN_PROGRESS</code> record is purged as well, once its TTL has elapsed <em>and</em> its lease has expired.
+  </figcaption>
+</figure>
+
+<style>
+  .lc {
+    margin-block: 1.8em;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-raised);
+  }
+  /* Height is reserved by the ratio, so the plate costs nothing when it paints. */
+  .lc__svg {
+    width: 100%;
+    height: auto;
+    padding: 1.1rem 1.1rem 0.6rem;
+  }
+  .lc__svg--narrow { display: none; max-width: 420px; margin-inline: auto; }
+
+  .lc__box {
+    fill: var(--bg-sunken);
+    stroke: var(--line-strong);
+    stroke-width: 1;
+  }
+  .lc__name {
+    fill: var(--ink);
+    font-family: var(--font-display);
+    font-weight: var(--weight-display);
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  /* 12 units, so at the smallest the plate is ever drawn - a 0.92 scale, which is
+     where the prose measure caps - it still lands on the site's smallest type size
+     rather than under it. */
+  .lc__sub {
+    fill: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .lc__edge {
+    fill: none;
+    stroke: var(--ink-3);
+    stroke-width: 1.2;
+  }
+  .lc__edge--time { stroke-dasharray: 5 4; stroke-width: 1; }
+  .lc__edge--acc { stroke: var(--accent); }
+  .lc__head { fill: var(--ink-3); }
+  .lc__head--acc { fill: var(--accent); }
+  .lc__lbl {
+    fill: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.07em;
+  }
+  .lc__lbl--acc { fill: var(--accent); }
+
+  .lc__cap {
+    padding: 0.9em 1.1rem 1em;
+    border-top: 1px solid var(--line);
+    font-size: var(--step--2);
+    line-height: 1.6;
+    color: var(--ink-3);
+  }
+  .lc__cap code {
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    color: var(--ink-2);
+  }
+
+  /* The wide plate scaled into a phone puts its labels at six pixels, so below the
+     measure it is the other drawing that runs, not a smaller version of this one. The
+     switch is at 720px because above it the prose measure has capped and the plate is
+     always drawn at the same 0.92; below it, it starts shrinking with the window. */
+  @media (max-width: 720px) {
+    .lc__svg--wide { display: none; }
+    .lc__svg--narrow { display: block; }
+  }
+</style>
