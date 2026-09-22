@@ -53,11 +53,12 @@ An action that dies without releasing leaves an expired lease, which the next
 
 ### The whole change
 
-**On a method**, name the key with a SpEL expression over the parameters:
+**On a method**, name the key with a SpEL expression over the parameters.
+`waitTimeout = "PT0S"` turns away a redelivery that arrives while the first is still
+running, instead of parking the consumer thread:
 
 ```java
-@Idempotent(key = "#event.id()",
-            waitTimeout = "PT0S")
+@Idempotent(key = "#event.id()", waitTimeout = "PT0S")
 @KafkaListener(topics = "orders")
 void on(OrderPlaced event) {
     // Runs once per event id, however

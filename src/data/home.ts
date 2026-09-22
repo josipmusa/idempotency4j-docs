@@ -52,17 +52,17 @@ export const change = {
   tabs: [
     {
       key: 'method',
+      // A span in backticks is set as code in the note.
       label: 'On a method',
       short: 'Method',
-      note: 'Name the key with a SpEL expression over the parameters.',
-      code: `@Idempotent(key = "#event.id()",
-            waitTimeout = "PT0S")
+      note: 'Name the key with a SpEL expression over the parameters. `waitTimeout = "PT0S"` turns away a redelivery that arrives while the first is still running, instead of parking the consumer thread.',
+      code: `@Idempotent(key = "#event.id()", waitTimeout = "PT0S")
 @KafkaListener(topics = "orders")
 void on(OrderPlaced event) {
     // Runs once per event id, however
     // often the broker redelivers.
 }`,
-      added: [0, 1],
+      added: [0],
     },
     {
       key: 'http',
