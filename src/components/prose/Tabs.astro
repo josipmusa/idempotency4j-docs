@@ -1,0 +1,156 @@
+---
+// Build-tool tabs, for the pages where the same step has a Maven and a Gradle form. The
+// same strip as the hero's coordinate panel, so a snippet in the docs and a snippet on
+// the homepage are recognisably the same object.
+//
+// Tabs with the same `sync` name move together, on the page and across pages: someone
+// reading the quickstart on Gradle should not have to say so again on the next page.
+interface Props { sync?: string }
+const { sync = 'build-tool' } = Astro.props;
+---
+<div class="tabs" data-tabs data-sync={sync}>
+  <div class="tabs__strip" role="tablist" aria-label="Alternatives"></div>
+  <div class="tabs__panels"><slot /></div>
+</div>
+
+<style>
+  /* The strip's buttons are built by the script from the panels, so they carry no scoped
+     class of their own: their rules are global, held inside .tabs. */
+  .tabs {
+    margin-block: 1.8em;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-raised);
+  }
+  .tabs__strip {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .tabs__strip:empty { display: none; }
+  .tabs :global(.tabs__tab) {
+    appearance: none;
+    background: none;
+    border: none;
+    border-right: 1px solid var(--line);
+    padding: 0.7em 1.1em;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition:
+      color var(--dur-hover) var(--ease),
+      background var(--dur-hover) var(--ease);
+  }
+  .tabs :global(.tabs__tab[aria-selected='true']) {
+    color: var(--ink);
+    background: var(--bg-sunken);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tabs :global(.tabs__tab:hover) { color: var(--ink); }
+  }
+
+  /* One box, not three. The panel is the inside of the plate, so a code block in it
+     carries no border, no surface and no margin of its own: the panel is inset on all
+     four sides and the gaps between blocks are the prose's. The top inset was missing,
+     which works for a code block carrying its own margin and fails for a paragraph -
+     the words sat on the strip's own rule. */
+  .tabs__panels { padding: 0 1.1em; }
+  .tabs__panels :global(.tab) { padding-block: 1.1em; }
+  .tabs__panels :global(.tab > *) { margin-block: 0; }
+  .tabs__panels :global(.tab > * + *) { margin-top: 1.1em; }
+  /* Once the strip exists the panel's own label is hidden, so the block after it is
+     the first thing in the panel and takes no gap above it. */
+  .tabs[data-wired] :global(.tab__label + *) { margin-top: 0; }
+  .tabs__panels :global(pre) {
+    padding: 0;
+    border: none;
+    background: none;
+  }
+  /* The panel's code carries no rule for the button to sit on, so here it is a box of
+     its own with the panel's own gap under it. */
+  .tabs__panels :global(.code__copy) {
+    border: 1px solid var(--line);
+    margin-bottom: 0.7em;
+  }
+</style>
+
+<script>
+  const KEY = 'i4j:tab';
+
+  function wire(root: HTMLElement) {
+    if (root.dataset.wired) return;
+    root.dataset.wired = 'true';
+    const sync = root.dataset.sync ?? 'build-tool';
+    const strip = root.querySelector<HTMLElement>('.tabs__strip');
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('.tab'));
+    if (!strip || panels.length === 0) return;
+
+    // The strip is built from the panels rather than authored twice: a tab whose label
+    // does not match a panel is the one bug this shape invites.
+    const tabs = panels.map((panel, i) => {
+      const label = panel.dataset.label ?? `Option ${i + 1}`;
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'tabs__tab';
+      tab.setAttribute('role', 'tab');
+      tab.dataset.label = label;
+      tab.textContent = label;
+      strip.append(tab);
+      return tab;
+    });
+
+    const select = (label: string, remember = true) => {
+      const known = tabs.some((t) => t.dataset.label === label);
+      const chosen = known ? label : (tabs[0].dataset.label as string);
+      tabs.forEach((tab) => {
+        const on = tab.dataset.label === chosen;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.label !== chosen;
+      });
+      if (remember && known) {
+        try {
+          localStorage.setItem(`${KEY}:${sync}`, chosen);
+        } catch {
+          /* private browsing; the choice simply does not survive the page */
+        }
+      }
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => {
+        const label = tab.dataset.label as string;
+        // Every strip with the same sync name follows, so the page does not disagree
+        // with itself about which build tool the reader uses.
+        document
+          .querySelectorAll<HTMLElement>(`[data-tabs][data-sync="${sync}"]`)
+          .forEach((other) => other.dispatchEvent(new CustomEvent('tab', { detail: label })));
+      });
+      tab.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        next.focus();
+        next.click();
+      });
+    });
+
+    root.addEventListener('tab', (e) => select((e as CustomEvent<string>).detail));
+
+    let remembered: string | null = null;
+    try {
+      remembered = localStorage.getItem(`${KEY}:${sync}`);
+    } catch {
+      /* same */
+    }
+    select(remembered ?? (tabs[0].dataset.label as string), false);
+  }
+
+  const init = () => document.querySelectorAll<HTMLElement>('[data-tabs]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

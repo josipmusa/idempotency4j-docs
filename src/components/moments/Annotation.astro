@@ -1,0 +1,394 @@
+---
+// Moment: the annotation lands.
+//
+// A plain method sits on the plate. The line that makes it idempotent arrives and the
+// method is done. The whole change, as one gesture, and then the press moves on to the
+// next way the library is used: a listener, an HTTP endpoint, the engine on its own.
+//
+// It cycles on its own. There is no selector, because a control strip in the hero asks
+// the visitor to operate a diagram before they have read a sentence, and every example
+// here is on the page in full further down under "The whole change".
+//
+// The change between plates is a press pass: an accent rule crosses the plate, the old
+// one is gone behind it and the new one is set in front of it. The same gesture, the
+// same hairline and the same linear timing as the sheet printing behind the hero.
+//
+// Every line is the library's own.
+
+type Line = { t: string; kind?: 'muted' | 'new' };
+type Plate = { label: string; lines: Line[]; caption: string };
+
+const plates: Plate[] = [
+  {
+    label: 'On a listener',
+    lines: [
+      { t: '@Component' },
+      { t: '@Idempotent(key = "#event.id()")', kind: 'new' },
+      { t: '@KafkaListener(topics = "orders")' },
+      { t: 'void on(OrderPlaced event) {' },
+      { t: '    // Runs once per event id.', kind: 'muted' },
+      { t: '}' },
+    ],
+    caption: 'A redelivery is handed the stored result instead of running again.',
+  },
+  {
+    label: 'On an HTTP endpoint',
+    lines: [
+      { t: '@PostMapping("/payments")' },
+      { t: '@Idempotent', kind: 'new' },
+      { t: 'public Payment pay(PaymentRequest req) {' },
+      { t: '    // A duplicate gets the stored response.', kind: 'muted' },
+      { t: '    return payments.charge(req);' },
+      { t: '}' },
+    ],
+    caption: "No key named: the client's Idempotency-Key header is already the key.",
+  },
+  {
+    label: 'Without Spring',
+    lines: [
+      { t: 'var ctx = IdempotencyContext' },
+      { t: '        .builder("orders", event.id())' },
+      { t: '        .waitTimeout(Duration.ZERO)' },
+      { t: '        .build();' },
+      { t: 'var outcome = engine.execute(ctx,', kind: 'new' },
+      { t: '        () -> handler.handle(event));', kind: 'new' },
+      { t: '// Executed, Replayed or InFlight.', kind: 'muted' },
+    ],
+    caption: 'No Spring anywhere. The engine is a plain object you call.',
+  },
+];
+
+// Every plate carries the same number of lines. The deck is one grid cell, so its
+// height is the tallest plate as currently laid out, and an uneven plate made the hero
+// grow and shrink by a row on every change.
+//
+// Consecutive arriving lines land together, as one block: on the plain-Java plate the
+// change is a call wrapped across two lines, and two separate accordions opening in a
+// row would read as two edits rather than one.
+type Block = { kind: 'new' | 'plain'; lines: Line[] };
+const blocked: Block[][] = plates.map((p) =>
+  p.lines.reduce<Block[]>((acc, line) => {
+    const kind = line.kind === 'new' ? 'new' : 'plain';
+    const last = acc[acc.length - 1];
+    if (last && last.kind === kind) last.lines.push(line);
+    else acc.push({ kind, lines: [line] });
+    return acc;
+  }, []),
+);
+---
+<figure class="ann" data-annotation>
+  <div class="ann__deck">
+    {plates.map((p, i) => (
+      <div class="ann__plate" data-plate={i} data-current={i === 0 ? '' : undefined}>
+        <p class="ann__label mono">{p.label}</p>
+        <div class="ann__frame"><pre class="ann__code mono"><code>{blocked[i].map((b) => (
+          b.kind === 'new'
+            ? <span class="ann__new"><span class="ann__reveal">{b.lines.map((l) => <span class="ann__line">{l.t}</span>)}</span></span>
+            : <Fragment>{b.lines.map((l) => <span class:list={['ann__line', l.kind === 'muted' && 'ann__line--muted']}>{l.t}</span>)}</Fragment>
+        ))}</code></pre></div>
+        <p class="ann__caption">{p.caption}</p>
+      </div>
+    ))}
+    <span class="ann__rule" data-rule aria-hidden="true"><i></i></span>
+  </div>
+</figure>
+
+<style>
+  .ann {
+    margin: 0;
+    background: var(--panel-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: clip;
+  }
+
+  /* Every plate in one cell, so the deck is as tall as the tallest of them and the
+     hero never resizes as they pass. */
+  .ann__deck { display: grid; position: relative; }
+  .ann__plate {
+    grid-area: 1 / 1;
+    display: grid;
+    align-content: start;
+    /* Parked off the left edge. The pass uncovers it left to right and, on its way
+       out, covers it again in the same direction. */
+    clip-path: inset(0 100% 0 0);
+    /* Hidden the instant it stops being the current or the leaving plate, so the
+       clip-path running back to its parked value is never seen. */
+    visibility: hidden;
+    transition: clip-path var(--wipe, 620ms) linear;
+  }
+  .ann__plate[data-current] {
+    clip-path: inset(0 0 0 0);
+    visibility: visible;
+  }
+  .ann__plate[data-leaving] {
+    clip-path: inset(0 0 0 100%);
+    visibility: visible;
+  }
+
+  .ann__label {
+    padding: 0.85em clamp(1.1rem, 3vw, 2rem);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--step--2);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .ann__frame {
+    padding: clamp(1.1rem, 3vw, 2rem) clamp(1.1rem, 3vw, 2rem) clamp(1.1rem, 3vw, 2rem)
+      clamp(2.2rem, 5vw, 3.4rem);
+    overflow-x: auto;
+  }
+
+  .ann__code {
+    margin: 0;
+    font-size: var(--code-size);
+    line-height: var(--code-lh);
+    color: var(--ink-2);
+    white-space: pre;
+  }
+  /* An empty line is a line: without a floor it collapses and the blank between two
+     statements disappears. */
+  .ann__line { display: block; min-height: calc(var(--code-size) * var(--code-lh)); }
+  .ann__line--muted { color: var(--ink-3); }
+
+  /* The one layout-property animation on the site. Lines inserting themselves and
+     pushing the method down have no transform equivalent; this is the accordion case.
+     It is at most two lines of text, so the reflow cost is two rows. */
+  .ann__new {
+    position: relative;
+    display: grid;
+    grid-template-rows: 0fr;
+    color: var(--accent);
+    transition: grid-template-rows var(--dur-section) var(--ease);
+  }
+  /* The change marker, in the margin where a diff puts it. */
+  .ann__new::before {
+    content: '+';
+    position: absolute;
+    left: -1.2em;
+    top: 0;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity var(--dur-reveal) var(--ease) 260ms;
+  }
+  .ann__reveal {
+    overflow: hidden;
+    min-height: 0;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 520ms linear 260ms;
+  }
+
+  .ann__plate[data-landed] .ann__new { grid-template-rows: 1fr; }
+  .ann__plate[data-landed] .ann__reveal { clip-path: inset(0 0 0 0); }
+  .ann__plate[data-landed] .ann__new::before { opacity: 1; }
+
+  .ann__caption {
+    padding: 0.85em clamp(1.1rem, 3vw, 2rem);
+    border-top: 1px solid var(--line);
+    font-size: var(--step--2);
+    color: var(--ink-3);
+  }
+
+  /* The pass itself: a full-width element carrying the rule on its right edge, so one
+     translation across its own width lands the rule at the far edge. Invisible between
+     passes; the script gives it its one crossing. */
+  .ann__rule {
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .ann__rule i { position: absolute; inset: 0; transform: translateX(-100%); }
+  .ann__rule i::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  /* Read, never seen: during a measure every plate is landed for one frame. */
+  .ann[data-measuring] .ann__plate,
+  .ann[data-measuring] .ann__new,
+  .ann[data-measuring] .ann__reveal { transition: none; }
+
+  /* A phone reads this by scrolling down, never sideways. */
+  @media (max-width: 620px) {
+    .ann__frame { padding-left: 2.2rem; padding-right: 1rem; }
+    .ann__code { font-size: 0.7rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .ann__line { padding-left: 2.5ch; text-indent: -2.5ch; }
+  }
+
+  /* The informative frame is one annotated method, landed, with nothing in motion. */
+  @media (prefers-reduced-motion: reduce) {
+    .ann__plate { transition: none; }
+    .ann__new { grid-template-rows: 1fr; }
+    .ann__reveal { clip-path: inset(0 0 0 0); }
+    .ann__new::before { opacity: 1; }
+    .ann__rule { display: none; }
+  }
+</style>
+
+<script>
+  const WIPE = 620;
+  const LAND = 260;
+  const HOLD = 3600;
+
+  function wire(root: HTMLElement) {
+    if (root.dataset.wired) return;
+    root.dataset.wired = 'true';
+
+    const plates = Array.from(root.querySelectorAll<HTMLElement>('[data-plate]'));
+    const deck = root.querySelector<HTMLElement>('.ann__deck');
+    const rule = root.querySelector<HTMLElement>('[data-rule]');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (plates.length === 0) return;
+
+    // The deck is one grid cell, so its height is the tallest plate as currently laid
+    // out - and a plate whose arriving lines are still collapsed is a row shorter.
+    // Every change resized the hero. Pin the cell to the tallest plate with all of
+    // them landed; equal line counts are not enough once a line wraps on a phone.
+    const pin = () => {
+      if (!deck) return;
+      root.setAttribute('data-measuring', '');
+      const landed = plates.map((p) => p.hasAttribute('data-landed'));
+      plates.forEach((p) => p.setAttribute('data-landed', ''));
+      deck.style.minHeight = '0px';
+      const tallest = Math.max(
+        ...plates.map((p) =>
+          Array.from(p.children).reduce(
+            (h, c) => h + c.getBoundingClientRect().height,
+            0,
+          ),
+        ),
+      );
+      plates.forEach((p, i) => {
+        if (!landed[i]) p.removeAttribute('data-landed');
+      });
+      deck.style.minHeight = `${Math.ceil(tallest)}px`;
+      root.removeAttribute('data-measuring');
+    };
+
+    pin();
+    let repin = 0;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(repin);
+      repin = window.setTimeout(pin, 200);
+    });
+
+    if (still) {
+      plates[0].setAttribute('data-landed', '');
+      return;
+    }
+
+    let at = 0;
+    let timers: number[] = [];
+    let running = false;
+    let held = false;
+    let visible = false;
+
+    const clear = () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      timers = [];
+    };
+    const after = (ms: number, fn: () => void) => {
+      timers.push(window.setTimeout(fn, ms));
+    };
+
+    // The rule crosses once per change, in the same direction and at the same constant
+    // speed as the sheet printing behind the hero.
+    const pass = () => {
+      rule?.animate(
+        [
+          { transform: 'translateX(-100%)', opacity: 1 },
+          { transform: 'translateX(0)', opacity: 1 },
+        ],
+        { duration: WIPE, easing: 'linear' },
+      );
+    };
+
+    // The landing is not on the same clock as the cycle. Holding the cycle - a pointer
+    // resting on it, the tab going away - must not cancel a change already under way,
+    // or the plate is left standing with its arriving lines still collapsed.
+    let landing = 0;
+    const land = (i: number) => {
+      window.clearTimeout(landing);
+      landing = window.setTimeout(() => plates[i].setAttribute('data-landed', ''), LAND);
+    };
+
+    const advance = () => {
+      if (!running) return;
+      const from = plates[at];
+      const to = plates[(at + 1) % plates.length];
+      pass();
+      from.removeAttribute('data-current');
+      from.setAttribute('data-leaving', '');
+      to.setAttribute('data-current', '');
+      after(WIPE, () => {
+        from.removeAttribute('data-leaving');
+        from.removeAttribute('data-landed');
+      });
+      at = (at + 1) % plates.length;
+      land(at);
+      after(HOLD, advance);
+    };
+
+    const start = () => {
+      if (running) return;
+      running = true;
+      land(at);
+      after(HOLD, advance);
+    };
+    const stop = () => {
+      running = false;
+      clear();
+    };
+
+    // It runs while it is on screen, the tab is in front, and nobody is reading it
+    // with a pointer resting on it.
+    const sync = () => {
+      const on = visible && !held && document.visibilityState === 'visible';
+      if (on) start();
+      else stop();
+    };
+
+    // A fraction of the element is the wrong gate. On a phone the plate sits low in
+    // the hero and is barely a quarter on screen while the hero is being read, so a
+    // 0.4 threshold meant the cycle never started at all. What matters is whether
+    // enough of it is on screen to read a change: the label and the first lines.
+    const ENOUGH = 150;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          visible =
+            entry.isIntersecting &&
+            entry.intersectionRect.height >=
+              Math.min(ENOUGH, entry.boundingClientRect.height);
+        }
+        sync();
+      },
+      { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] },
+    );
+    io.observe(root);
+
+    document.addEventListener('visibilitychange', sync);
+
+    // Holding for a reader only makes sense for a pointer that can rest on something.
+    // A touch fires pointerenter too, and a hold that is never released is a cycle
+    // that never runs again.
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      root.addEventListener('pointerenter', () => { held = true; sync(); });
+      root.addEventListener('pointerleave', () => { held = false; sync(); });
+    }
+  }
+
+  const init = () =>
+    document.querySelectorAll<HTMLElement>('[data-annotation]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

@@ -1,0 +1,338 @@
+---
+title: Idempotency in Spring Boot
+description: The options a Spring engineer actually has - a processed-events table, a unique constraint, @Cacheable, a distributed lock, Spring Integration, a library - and what each one costs.
+question: What are my options for handling duplicate work in a Spring application?
+order: 3
+---
+
+A `processed_events` table, a unique constraint, `@Cacheable` and a distributed lock are four
+real answers to duplicate work, and three of them are wrong under concurrency in a way that
+only shows up in production.
+
+This is a survey of what a Spring application can actually do about duplicate requests and
+redelivered messages, in rough order of how much machinery each one costs. Several of these
+are the right answer for a real system. The goal is to be able to tell which one is the right
+answer for yours, which mostly means knowing what each one fails at.
+
+## 0. Nothing, because the operation is already idempotent
+
+The option to check first, because it is free.
+
+```java
+@Transactional
+public void markShipped(long orderId) {
+    orderRepository.updateStatus(orderId, SHIPPED);
+}
+```
+
+Run this twice and the row is `SHIPPED` either way. Assignment is idempotent. So is deleting
+by primary key, and so is writing an object to a known key in object storage.
+
+What breaks it is accumulation. `balance = balance - 100` is not idempotent. Neither is
+inserting a row with a generated id, publishing an event, or calling a payment provider.
+
+The failure mode here is not choosing this option. It is **choosing it and then drifting off
+it**. A naturally idempotent handler acquires an audit row, or an outbound notification, six
+months later, and nothing in that pull request looks like a change to retry safety. If you
+rely on natural idempotency, say so in a comment on the method, because the next person cannot
+see the property you are depending on.
+
+## 1. A unique constraint
+
+The strongest cheap answer, and underused.
+
+```sql
+ALTER TABLE payments
+  ADD CONSTRAINT payments_request_id_key UNIQUE (request_id);
+```
+
+```java
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+
+    @Modifying
+    @Query(value = """
+            INSERT INTO payments (request_id, amount) VALUES (:requestId, :amount)
+            ON CONFLICT (request_id) DO NOTHING
+            """, nativeQuery = true)
+    int insertIfAbsent(@Param("requestId") String requestId, @Param("amount") BigDecimal amount);
+
+    Optional<Payment> findByRequestId(String requestId);
+}
+```
+
+```java
+@Transactional
+public Payment charge(PaymentRequest request) {
+    int inserted = paymentRepository.insertIfAbsent(request.requestId(), request.amount());
+    Payment payment = paymentRepository.findByRequestId(request.requestId()).orElseThrow();
+    if (inserted == 0) {
+        log.info("duplicate charge for {}, returning the stored row", request.requestId());
+    }
+    return payment;
+}
+```
+
+Note what this does **not** do, because the version it does not do is the one almost everyone
+writes first: save the entity, catch `DataIntegrityViolationException`, and look the row up in
+the catch block. That fails. A constraint violation marks the current transaction rollback-only,
+so the lookup after the catch runs inside a transaction that is already doomed, and the method
+dies at commit with `UnexpectedRollbackException`. The exception that reaches production is not
+the one you handled, and it arrives from a line that looks innocent.
+
+`INSERT ... ON CONFLICT DO NOTHING` sidesteps that by never raising the violation, so there is
+nothing to catch and nothing to poison. The affected-row count tells you which call did the
+insert, and anything that should happen only on the first attempt hangs off that branch.
+`INSERT IGNORE` is the MySQL spelling. If you want the exception shape rather than the row
+count, the insert has to run in a transaction of its own and the catch has to sit outside it,
+which is what option 2 ends up doing.
+
+What makes this good is that the guarantee lives in the database, where the concurrency
+actually is. Two threads on two instances racing on the same `request_id` do not both win.
+There is no window, no lock and no coordination, because serialising conflicting writes is
+what the database is for.
+
+Three limits decide whether it is enough.
+
+**It only protects the row it constrains.** If the handler also publishes an event or calls an
+external API, those already happened by the time the insert is refused, and the constraint does
+not undo them. It is idempotent for the row, not for the method.
+
+**It answers badly.** All the duplicate gets back is the constrained row and the knowledge that
+it lost the race. For a create-and-return that is enough. For a handler that did five things,
+reconstructing the original response out of the one row you constrained is not always possible.
+
+**It needs a column to constrain.** If the work does not produce exactly one row, or produces
+rows in several tables, there is nothing to hang the constraint on.
+
+Where it fits, take it. A create endpoint that writes one row and returns it is completely
+solved by this, and every other option on this page is more machinery for the same outcome.
+
+## 2. A `processed_events` table
+
+The most common homegrown answer, and the one with the interesting bug.
+
+```java
+@Transactional
+public void handle(OrderPlaced event) {
+    if (processedEventRepository.existsById(event.id())) {   // check
+        return;
+    }
+    doTheWork(event);
+    processedEventRepository.save(new ProcessedEvent(event.id()));   // act
+}
+```
+
+The window between the check and the save is as wide as `doTheWork` takes. A duplicate
+arriving inside it passes the check and executes. For a broker that redelivers after
+thirty seconds and work that takes forty, that is not a race condition, it is the normal path.
+
+`@Transactional` does not close it. Two concurrent transactions at `READ_COMMITTED` both see
+no row, both proceed, and both insert. Isolation prevents them seeing each other's
+uncommitted writes; it does not prevent them doing the same work.
+
+The fix is to **insert first and let the insert fail**, in a transaction that is not the one
+doing the work:
+
+```java
+@Component
+class ProcessedEvents {
+
+    private final ProcessedEventRepository repository;
+
+    /** Its own transaction, so a violation rolls back this insert and nothing else. */
+    @Transactional(propagation = REQUIRES_NEW)
+    public void claim(String eventId) {
+        repository.saveAndFlush(new ProcessedEvent(eventId));
+    }
+}
+```
+
+```java
+@Transactional
+public void handle(OrderPlaced event) {
+    try {
+        processedEvents.claim(event.id());
+    } catch (DataIntegrityViolationException e) {
+        return;   // someone else has it, or already had it
+    }
+    doTheWork(event);
+}
+```
+
+Two things about that shape are load-bearing. The catch sits **outside** the transaction that
+took the violation: `claim` rolls back its own insert and `handle`'s transaction, suspended for
+the duration, is untouched. Move the catch inside `claim` and you are back in the trap from
+option 1, because that transaction is marked rollback-only and throws
+`UnexpectedRollbackException` on its way out of the method whatever you caught. And `claim` has
+to live on a different bean, or the call never passes through the proxy and `REQUIRES_NEW` does
+nothing at all.
+
+Now the database arbitrates, and this version is correct as far as it goes. Two things it
+still does not do:
+
+**It cannot tell "in progress" from "done".** The claim commits the moment the first attempt
+starts, which is exactly what makes it arbitrate between two racing consumers. It also means
+that if the attempt then dies inside `doTheWork`, the row is still there and still reads as
+processed. Every redelivery after that is refused, the work never happens, and the key stays
+poisoned for as long as the row lives. Nothing in the table separates an execution that is
+running from one that finished, so nothing can decide the row is safe to reclaim. Making that
+distinction is what a lease is for, and a lease is meaningfully more code than this snippet.
+
+**It has no result.** A duplicate is refused, not answered. That is fine for a message
+consumer, which only needs to not run twice. It is not fine for an HTTP caller that retried
+because it never saw the response, because it still needs the response and you have nothing to
+give it.
+
+Keep an eye on one more thing: if the table is keyed on the event id alone, two different
+consumers of the same event will suppress each other. The identity has to include something
+naming the handler.
+
+## 3. `@Cacheable`
+
+This one comes up constantly and it does not work. The reason is not the obvious one, which is
+why it keeps coming up.
+
+```java
+@Cacheable(value = "payments", key = "#request.requestId()")
+public Payment charge(PaymentRequest request) {
+    return provider.charge(request);   // side effect
+}
+```
+
+The reason people reach for it is sound: a cache is a store keyed by something, and a hit
+returns a stored result instead of running the method. That is structurally what a duplicate
+needs.
+
+It fails on three counts.
+
+**The cache is populated after the method returns.** Two concurrent calls both miss, both
+execute, and both charge. `sync = true` fixes this on a single JVM by serialising callers on
+the key, and a second instance knows nothing about it.
+
+**A cache is allowed to forget.** Eviction on memory pressure, TTL expiry and a cold restart
+are all normal cache behaviour and all of them silently re-enable duplicate execution.
+Correctness cannot rest on a component whose contract permits it to drop entries.
+
+**Exceptions are not cached.** A failed call leaves no entry, which sounds convenient and
+means the failure path has no protection at all.
+
+The underlying mismatch is that a cache is an optimisation with permission to be wrong, and
+idempotency is a correctness property. The first is allowed to lose data; the second is not.
+
+## 4. A distributed lock
+
+Usually Redisson, ShedLock, or a hand-rolled `SET NX` on Redis.
+
+```java
+RLock lock = redisson.getLock("order:" + event.id());
+if (!lock.tryLock(0, 30, SECONDS)) {
+    return;
+}
+try {
+    doTheWork(event);
+} finally {
+    lock.unlock();
+}
+```
+
+This does close the concurrency window, which is a real improvement over option 2's naive
+form. It is the wrong tool anyway, because **a lock is about now and idempotency is about
+forever.**
+
+The lock is released when the work finishes. A duplicate arriving one second later acquires it
+cleanly and executes the work a second time. Preventing that means keeping a record after the
+lock is gone, at which point the lock is a component of the solution rather than the solution,
+and you are back to option 2 with extra infrastructure.
+
+There is also no result to replay, the same as option 2, and there is the standard caveat that
+a lease-based lock cannot distinguish a very slow holder from a dead one.
+
+Where a lock genuinely is the answer is a scheduled job that must run on one instance.
+ShedLock is good at that and is not trying to solve this problem.
+
+## 5. Spring Integration's idempotent receiver
+
+The answer already in the Spring ecosystem, and the one to rule out before writing anything.
+
+Spring Integration ships an `IdempotentReceiverInterceptor` backed by a `MetadataStore`, with
+implementations over JDBC, Redis and others. The `ConcurrentMetadataStore` interface offers
+`putIfAbsent`, which is the atomic primitive option 2 has to reconstruct by hand.
+
+If your application is already built on Spring Integration channels, this is the natural
+choice and nothing here beats it. If it is not, adopting Spring Integration to get an
+idempotent receiver is a large amount of framework for one property, and the interceptor is
+channel-shaped rather than method-shaped, so it does not map onto a plain `@KafkaListener` or
+a controller.
+
+It also stores a marker rather than a result, so it deduplicates without replaying, the same
+as options 2 and 4.
+
+## 6. A transactional outbox
+
+Frequently proposed in this conversation, and solving an adjacent problem, so it needs placing
+precisely.
+
+The outbox pattern writes the message you intend to publish into a table inside the same
+transaction as the business change, and a separate process publishes it. It exists because a
+database commit and a broker publish cannot be made atomic, and it removes the failure where
+the row is written but the event is never sent.
+
+That is the **producer** side. Idempotency is the **consumer** side. An outbox guarantees the
+message is eventually published, and a relay that crashes after publishing but before marking
+the row will publish again, which is exactly the at-least-once delivery the consumer has to
+survive. Adopting an outbox does not reduce the need for idempotent consumers; it is one of
+the things that produces duplicates for them.
+
+On Spring you rarely build one by hand. Spring Modulith's event publication registry is an
+outbox for application events, writing a row per listener in the publishing transaction and
+re-invoking the ones that never completed, and Namastack Outbox is a dedicated outbox that
+Spring Modulith 2.1 can delegate event externalization to. Kafka's exactly-once semantics are
+not a third option here: they cover Kafka-to-Kafka processing and reach neither your database
+writes nor your outbound calls.
+
+Both are correct, they are not alternatives, and a design that has one usually needs the other.
+[Idempotency in message-driven systems](/learn/idempotency-in-message-driven-systems/) covers
+how the two fit together, and what a duplicate is supposed to trigger on the consumer side.
+
+## 7. Building the full thing
+
+Putting together what the previous options are each missing: a record with three states rather
+than two, a lease so an abandoned execution does not poison the key, a heartbeat so a slow
+execution is not declared dead, a stored result so a duplicate can be answered, a fingerprint
+so key reuse with a different body is rejected, an expiry so the table does not grow forever,
+and a decision about whether a concurrent duplicate waits or is refused.
+
+Each piece is straightforward. There are seven of them, and they interact, and the
+interactions are where the bugs live. The commit ordering question alone is subtle: if the
+result is recorded in a separate transaction from the business change, there is a window where
+the work is committed and the record is not, and a duplicate landing in that window re-executes
+against a database that already has the first run's effects. Closing that means completing the
+record inside the caller's transaction, which means the store has to be the same database, and
+now the design has a constraint that came from a detail three levels down.
+
+Writing it is a week. Finding the bugs in it is the following quarter, in production, one
+silent duplicate at a time.
+
+## Choosing
+
+| Your situation | Take |
+|---|---|
+| The operation only assigns, deletes or overwrites | Nothing. Comment on the method saying why |
+| One row, one create endpoint, caller can handle a `409` | A unique constraint |
+| A consumer that must not run twice, no result needed | Insert-first `processed_events`, scoped per handler |
+| Already on Spring Integration channels | The idempotent receiver |
+| A scheduled job that must run on one instance | ShedLock, which is a different problem |
+| An HTTP API where the caller needs the original response back | The full mechanism |
+| Duplicates arrive while the original is still running | The full mechanism |
+| Several handlers, several teams, one convention | The full mechanism, as a dependency |
+
+The honest summary is that **the first four rows cover a lot of real systems**, and a team that
+lands in one of them should take the cheap answer and spend the time somewhere else. The line
+is crossed by needing to answer the duplicate rather than refuse it, and by duplicates arriving
+concurrently rather than afterwards. Both of those show up the moment a public HTTP API is
+involved, and neither has a three-line version.
+
+---
+
+idempotency4j is that mechanism as a dependency for Spring Boot. What it does, and what it
+does not do, is in [the documentation](/docs/what-it-does/).

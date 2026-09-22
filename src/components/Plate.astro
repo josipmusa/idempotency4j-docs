@@ -1,0 +1,140 @@
+---
+// The plate field: the sheet this catalogue is printed on.
+//
+// A drafting lattice at a fixed pitch, with a registration cross stamped at every
+// major intersection. In the hero it is printed once, left to right, by a single pass
+// of the press - linear, because it depicts a pass across a real sheet, and one-shot,
+// because a plate is printed once and then it is printed.
+//
+// Nothing here glows, gradates or blurs. The repeating "gradients" are hard colour
+// stops, so they render as hairlines, and the crosses are a mask over the accent, so
+// they are tied to the token and land exactly on the lattice at any width.
+---
+<div class="plate" data-plate aria-hidden="true">
+  <div class="plate__grid"></div>
+  <div class="plate__marks"></div>
+  <div class="plate__sweep"></div>
+</div>
+
+<style>
+  .plate {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: clip;
+
+    /* Brighter than the page-wide sheet: the hero is the plate in the press. */
+    --grid-minor: #1c1a17;
+    --grid-major: #2a2723;
+    --pass: 1100ms;
+  }
+
+  .plate__grid,
+  .plate__marks,
+  .plate__sweep { position: absolute; inset: 0; }
+
+  .plate__grid {
+    background-image:
+      repeating-linear-gradient(90deg, var(--grid-major) 0 1px, transparent 1px calc(var(--grid-pitch) * 4)),
+      repeating-linear-gradient(0deg, var(--grid-major) 0 1px, transparent 1px calc(var(--grid-pitch) * 4)),
+      repeating-linear-gradient(90deg, var(--grid-minor) 0 1px, transparent 1px var(--grid-pitch)),
+      repeating-linear-gradient(0deg, var(--grid-minor) 0 1px, transparent 1px var(--grid-pitch));
+  }
+
+  /* One cross per major intersection: the mark a press aligns a plate by. The tile is
+     drawn with the cross at its centre and then shifted by half a tile, so the crosses
+     sit exactly on the intersections rather than near them. */
+  .plate__marks {
+    --tile: calc(var(--grid-pitch) * 4);
+    /* The marks stay in the sheet's margin. Tiled across the whole field they landed on
+       the type in the hero copy - an accent cross struck through a word in the middle of
+       a sentence - and a mark a press aligns by sits outside the print anyway. The band
+       is the gutter plus whatever the shell leaves either side of the content column,
+       and it is a hard stop, so it has an edge rather than a fade. */
+    --bleed: calc((100% - min(100%, var(--shell))) / 2 + var(--gutter));
+    --band: linear-gradient(
+      90deg,
+      #000 0 var(--bleed),
+      transparent var(--bleed) calc(100% - var(--bleed)),
+      #000 calc(100% - var(--bleed)) 100%
+    );
+    background-color: var(--accent);
+    opacity: 0.55;
+    -webkit-mask-image: var(--cross), var(--band);
+    mask-image: var(--cross), var(--band);
+    -webkit-mask-size: var(--tile) var(--tile), 100% 100%;
+    mask-size: var(--tile) var(--tile), 100% 100%;
+    -webkit-mask-position: calc(var(--tile) / -2) calc(var(--tile) / -2), 0 0;
+    mask-position: calc(var(--tile) / -2) calc(var(--tile) / -2), 0 0;
+    -webkit-mask-repeat: repeat, no-repeat;
+    mask-repeat: repeat, no-repeat;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    /* Drawn at the tile's own size, so the cross keeps its proportion to the lattice
+       however the pitch is set. */
+    --cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='224' height='224'%3E%3Cpath d='M106.5 112h11M112 106.5v11' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path var(--pass) linear;
+  }
+
+  /* Insurance: without mask-composite the two layers would be added rather than
+     intersected, which paints the margin solid. Tiled marks are the better failure. */
+  @supports not (mask-composite: intersect) {
+    .plate__marks {
+      -webkit-mask-image: var(--cross);
+      mask-image: var(--cross);
+    }
+  }
+
+  /* The press pass. The element is the full width of the field and carries the rule on
+     its right edge, so translateX(-100%) parks the rule at the left edge and
+     translateX(0) lands it at the right: one field width, whatever the field is. */
+  .plate__sweep {
+    transform: translateX(-100%);
+    transition:
+      transform var(--pass) linear,
+      opacity 240ms var(--ease) var(--pass);
+  }
+  .plate__sweep::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 1px;
+    background: var(--accent);
+  }
+
+  .plate[data-printed] .plate__marks { clip-path: inset(0 0 0 0); }
+  .plate[data-printed] .plate__sweep { transform: translateX(0); opacity: 0; }
+
+  /* A phone sees the pass clearly because the sheet is narrow and the rule crosses it
+     quickly. On a wide screen the same 1px rule at the same duration reads as nothing,
+     so the desktop pass is given a heavier rule, a longer travel time and marks that
+     stamp harder - the intent is that it lands the same, not that the numbers match. */
+  @media (min-width: 900px) {
+    .plate { --pass: 1700ms; }
+    .plate__marks { opacity: 0.7; }
+    .plate__sweep::after { width: 2px; }
+  }
+
+  /* The informative frame is the printed plate: every mark stamped, no pass. */
+  @media (prefers-reduced-motion: reduce) {
+    .plate__marks { clip-path: none; }
+    .plate__sweep { display: none; }
+  }
+</style>
+
+<script>
+  const init = () => {
+    document.querySelectorAll<HTMLElement>('[data-plate]').forEach((el) => {
+      if (el.dataset.printed !== undefined) return;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.setAttribute('data-printed', '');
+      }));
+    });
+  };
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

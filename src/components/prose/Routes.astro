@@ -1,0 +1,72 @@
+---
+// A set of routes out of a page: a title, one line, and the whole cell is the link. Used
+// where a reference page fans out into the pages under it. Each cell is a part in the
+// catalogue, so it carries a rule along its top and nothing around it.
+import { url } from '../../lib/links';
+
+interface Route { href: string; title: string; note: string }
+interface Props { routes: Route[] }
+const { routes } = Astro.props;
+---
+<ul class="routes" data-reveal-group>
+  {routes.map((route) => (
+    <li class="route" data-reveal>
+      <a class="route__a" href={url(route.href)}>
+        <span class="route__t">{route.title}</span>
+        <span class="route__n">{route.note}</span>
+        <span class="route__arrow mono" aria-hidden="true">&#8594;</span>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .routes {
+    margin-block: 1.8em;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0;
+    list-style: none;
+    padding: 0;
+  }
+  /* One hairline between cells rather than a border on each: the grid is drawn once. */
+  .route { border-top: 2px solid var(--line-strong); }
+  .route::before { content: none; }
+  .route__a {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.75rem;
+    padding: 0.9rem 1rem 1.1rem 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  .route__t {
+    font-family: var(--font-display);
+    font-weight: var(--weight-display);
+    font-size: var(--step-1);
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    text-transform: uppercase;
+  }
+  .route__n {
+    grid-column: 1 / -1;
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    line-height: 1.5;
+  }
+  .route__arrow {
+    color: var(--ink-3);
+    transition:
+      transform var(--dur-hover) var(--ease),
+      color var(--dur-hover) var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .route__a:hover .route__t { color: var(--accent); }
+    .route__a:hover .route__arrow { transform: translateX(3px); color: var(--accent); }
+  }
+  /* The cells sit in a row, so the rule at the top of each one needs the gutter the
+     grid does not give it. */
+  @media (min-width: 640px) {
+    .routes { column-gap: clamp(1.25rem, 3vw, 2.5rem); }
+  }
+</style>

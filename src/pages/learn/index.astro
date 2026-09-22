@@ -1,0 +1,82 @@
+---
+// The four articles, as questions. Someone arriving here has a question in their head
+// already, so the question is the largest thing on each row and the title sits under it.
+import { getCollection, getEntry, render } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import { url } from '../../lib/links';
+
+const entry = await getEntry('learn', 'index');
+if (!entry) throw new Error('content/learn/index.md is missing');
+const { Content } = await render(entry);
+
+const articles = (await getCollection('learn'))
+  .filter((a) => a.data.order !== undefined)
+  .sort((a, b) => (a.data.order as number) - (b.data.order as number));
+---
+<Page title={entry.data.title} description={entry.data.description}>
+  <div class="prose"><Content /></div>
+
+  <ol class="arts" data-reveal-group>
+    {articles.map((article) => (
+      <li class="art" data-reveal>
+        <a class="art__a" href={url(`/learn/${article.id}`)}>
+          <span class="art__n mono">{String(article.data.order).padStart(2, '0')}</span>
+          <span class="art__q">{article.data.question}</span>
+          <span class="art__t">{article.data.title}</span>
+          <span class="art__d">{article.data.description}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</Page>
+
+<style>
+  .arts {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    display: grid;
+    list-style: none;
+    padding: 0;
+  }
+  .art { border-top: 2px solid var(--line-strong); }
+  .art:last-child { border-bottom: 2px solid var(--line-strong); }
+  .art__a {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0.4rem clamp(1rem, 3vw, 2rem);
+    padding: clamp(1.25rem, 3vw, 2rem) 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  .art__n {
+    grid-row: 1 / span 3;
+    font-size: var(--step--1);
+    color: var(--accent);
+    padding-top: 0.35em;
+  }
+  /* The question is set in sentence case: a question long enough to be worth asking is
+     too long to read in capitals, and this one is the row's largest text. */
+  .art__q {
+    font-family: var(--font-display);
+    font-weight: var(--weight-display);
+    font-size: var(--step-2);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    max-width: 30ch;
+    transition: color var(--dur-hover) var(--ease);
+  }
+  .art__t { font-size: var(--step--1); color: var(--ink-2); }
+  .art__d {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    line-height: 1.55;
+    max-width: 66ch;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .art__a:hover .art__q { color: var(--accent); }
+  }
+  @media (max-width: 620px) {
+    .art__a { grid-template-columns: minmax(0, 1fr); }
+    .art__n { grid-row: auto; padding-top: 0; }
+  }
+</style>

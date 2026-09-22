@@ -1,0 +1,109 @@
+---
+title: Quickstart
+description: The starter, a store you already run and one annotation - idempotency4j running in five minutes.
+sourceOf: README "Quick start"
+---
+
+import Steps from '../../src/components/prose/Steps.astro';
+import Install from '../../src/components/prose/Install.astro';
+import Tabs from '../../src/components/prose/Tabs.astro';
+import Tab from '../../src/components/prose/Tab.astro';
+
+<Steps>
+
+1. **Add the starter and one store.**
+
+   The starter brings the core, the AOP adapter and the HTTP filter. A store is a second
+   dependency, and it is the one decision here: pick the one you already run.
+
+   <Install />
+
+   More than one module? Import `idempotency-bom` once and drop the `<version>` from both
+   dependencies - the Gradle form above already does it. Two modules on two versions is the
+   failure worth avoiding when you upgrade.
+
+2. **Create the table, if you took the JDBC store.**
+
+   With `idempotency-jdbc` on the classpath and a `DataSource` in the context, the store
+   wires itself. The table does not - except on an embedded database.
+
+   <Tabs sync="database">
+   <Tab label="PostgreSQL">
+   Point Flyway, Liquibase or your own migration at `idempotency-schema-postgresql.sql`,
+   shipped inside the `idempotency-jdbc` jar.
+   </Tab>
+   <Tab label="MySQL">
+   Point Flyway, Liquibase or your own migration at `idempotency-schema-mysql.sql`, shipped
+   inside the `idempotency-jdbc` jar.
+   </Tab>
+   <Tab label="H2">
+   Nothing to do. `idempotency.jdbc.initialize-schema` defaults to `embedded`, which creates
+   the table on an embedded database and only there.
+   </Tab>
+   </Tabs>
+
+   See [JDBC](/docs/storage/jdbc/) for the full story, including `initialize-schema: always`.
+
+3. **Annotate the work.**
+
+   <Tabs sync="adapter">
+   <Tab label="On a method">
+   A method has no transport to take a key from, so name the key with a SpEL expression over
+   the parameters:
+
+   ```java
+   @Idempotent(key = "#event.id()", waitTimeout = "PT0S")
+   @KafkaListener(topics = "orders")
+   void on(OrderPlaced event) {
+       // Runs once per event id, however many times the broker redelivers.
+   }
+   ```
+
+   `waitTimeout = "PT0S"` is what you want on a consumer thread: declining a redelivery is
+   cheap, parking a consumer thread is not.
+   </Tab>
+   <Tab label="On an endpoint">
+   An HTTP request brings its own key in a header, so the annotation needs nothing:
+
+   ```java
+   @PostMapping("/payments")
+   @Idempotent
+   public ResponseEntity<Payment> createPayment(@RequestBody PaymentRequest request) {
+       // Duplicates get the stored response replayed.
+       // The payment provider should also receive its own idempotency key.
+       return ResponseEntity.ok(paymentService.charge(request));
+   }
+   ```
+   </Tab>
+   <Tab label="Without Spring">
+   The engine is a plain Java object you call directly:
+
+   ```java
+   IdempotencyEngine engine = new IdempotencyEngine(store, scheduler);
+   ```
+
+   See [the engine](/docs/the-engine/).
+   </Tab>
+   </Tabs>
+
+4. **Check it.**
+
+   Send the same request twice with the same `Idempotency-Key`:
+
+   ```bash
+   curl -i -X POST localhost:8080/payments \
+     -H 'Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000' \
+     -H 'Content-Type: application/json' \
+     -d '{"amount": 100, "currency": "USD"}'
+   ```
+
+   The second response carries `Idempotent-Replayed: true` and the handler did not run.
+
+</Steps>
+
+:::caution[Check the startup log before you trust this]
+Under the default `store-type: auto`, a missing provider or an absent `DataSource` is a
+warning, not a failure. The application starts, serves traffic, and deduplicates nothing.
+The selected store is logged at startup - confirm it is there. See
+[choosing a store](/docs/storage/choosing/).
+:::

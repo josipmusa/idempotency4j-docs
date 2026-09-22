@@ -1,0 +1,169 @@
+---
+// The shell every page that is mostly words uses: the reference, the articles, the specs
+// sheet, the 404. The homepage does not use it - its sections are components and own
+// their own composition.
+//
+// A page here is a printed sheet: a plate header carrying the page's number and name,
+// the prose set to one measure below it, and whatever navigation the page needs in the
+// margin beside it. There is no container drawn around any of it.
+//
+// The header reveals; the prose does not. A page of reference text is not a section
+// entrance, and a body taller than the screen never satisfies a fractional threshold
+// anyway - it would sit invisible until something else scrolled it into view.
+import '../styles/prose.css';
+import Base from './Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { url } from '../lib/links';
+
+interface Props {
+  title: string;
+  description: string;
+  // Where the page sits, as a trail you can walk back up. It is deliberately not a
+  // tracked-caps label above the headline: that shape is decoration, and this has a job.
+  trail?: { label: string; href?: string }[];
+  // Set when the page's words are the library's own, so a claim can be traced.
+  source?: string;
+  // What goes in the margins. `sheet` is the prose alone; `reference` puts the index of
+  // the reference in the left margin and the page's own sections in the right;
+  // `article` keeps the sections and drops the index, because an article is read
+  // through rather than looked things up in.
+  shape?: 'sheet' | 'reference' | 'article';
+}
+const { title, description, trail = [], source, shape = 'sheet' } = Astro.props;
+---
+<Base title={`${title} - idempotency4j`} description={description}>
+  <Nav />
+  <main id="main" class="page" data-shape={shape}>
+    <div class="shell page__inner">
+      <header class="page__head" data-reveal-group>
+        {trail.length > 0 && (
+          <nav class="page__trail mono" aria-label="Breadcrumb" data-reveal>
+            {trail.map((step, i) => (
+              <>
+                {i > 0 && <span class="page__sep" aria-hidden="true">/</span>}
+                {step.href
+                  ? <a class="page__crumb" href={url(step.href)}>{step.label}</a>
+                  : <span class="page__crumb">{step.label}</span>}
+              </>
+            ))}
+          </nav>
+        )}
+        <h1 class="page__h1" data-reveal>{title}</h1>
+        <p class="page__lede" data-reveal>{description}</p>
+        {source && (
+          <p class="page__src mono" data-reveal>Source: {source}</p>
+        )}
+      </header>
+      <div class="page__aside"><slot name="aside" /></div>
+      <div class="page__body">
+        <slot />
+      </div>
+      <div class="page__spine"><slot name="spine" /></div>
+    </div>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .page { padding-block: clamp(2.5rem, 6vh, 4.5rem) clamp(4rem, 10vh, 7rem); }
+
+  .page__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: start;
+  }
+
+  .page__head {
+    display: grid;
+    gap: clamp(0.6rem, 1.5vw, 1rem);
+    padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+    /* The one rule at the top of a printed sheet, under the sheet's own name. */
+    border-bottom: 2px solid var(--line-strong);
+    margin-bottom: clamp(1rem, 3vw, 2rem);
+  }
+  .page__trail {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .page__crumb { color: var(--ink-2); text-decoration: none; }
+  a.page__crumb { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 0.25em; }
+  @media (hover: hover) and (pointer: fine) {
+    a.page__crumb:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  }
+  .page__sep { color: var(--line-strong); }
+  .page__h1 {
+    font-family: var(--font-display);
+    font-size: var(--step-5);
+    line-height: var(--display-lh);
+    letter-spacing: var(--tracking-display);
+    font-weight: var(--weight-display);
+    text-transform: var(--display-case);
+    text-wrap: balance;
+    max-width: 28ch;
+  }
+  .page__lede {
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+  .page__src { font-size: var(--step--2); color: var(--ink-3); }
+
+  .page__aside { min-width: 0; }
+  .page__aside:empty { display: none; }
+  .page__body { min-width: 0; }
+  .page__spine { min-width: 0; }
+  .page__spine:empty { display: none; }
+
+  /* A margin holds something that sticks, and a sticky element can only travel inside its
+     own container: started at the top of the row, the column was as tall as its own
+     contents and the index scrolled away with the first screen. Stretched, the column is
+     as tall as the prose beside it and the index stays with the reader. */
+  .page__aside,
+  .page__spine { align-self: stretch; }
+
+  /* The margins appear as there is room for them: the reference's index first, then the
+     page's own sections. Below each threshold the margin folds away rather than
+     squeezing the prose, and the index becomes a strip above the page. */
+  @media (min-width: 1024px) {
+    .page[data-shape='reference'] .page__inner {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      column-gap: clamp(2rem, 4vw, 4rem);
+    }
+    .page[data-shape='reference'] .page__head { grid-column: 1 / -1; }
+    .page[data-shape='reference'] .page__aside { grid-column: 1; grid-row: 2; }
+    .page[data-shape='reference'] .page__body { grid-column: 2; grid-row: 2; }
+  }
+  @media (min-width: 1280px) {
+    .page[data-shape='reference'] .page__inner {
+      grid-template-columns: 15rem minmax(0, 1fr) 14rem;
+    }
+    .page[data-shape='reference'] .page__spine { grid-column: 3; grid-row: 2; }
+
+    .page[data-shape='article'] .page__inner {
+      grid-template-columns: minmax(0, 1fr) 14rem;
+      column-gap: clamp(2rem, 4vw, 4rem);
+    }
+    .page[data-shape='article'] .page__head { grid-column: 1 / -1; }
+    .page[data-shape='article'] .page__body { grid-column: 1; grid-row: 2; }
+    .page[data-shape='article'] .page__spine { grid-column: 2; grid-row: 2; }
+  }
+</style>
+
+<script>
+  import { initReveal } from '../scripts/reveal';
+  import { initCopyCode } from '../scripts/copy-code';
+
+  const init = () => {
+    initReveal();
+    initCopyCode();
+  };
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

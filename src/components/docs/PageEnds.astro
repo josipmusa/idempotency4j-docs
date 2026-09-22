@@ -1,0 +1,63 @@
+---
+// The two ends of the page: what came before it in the reading order and what comes
+// next. Every reference page here is a step in a sequence someone is working through,
+// so walking it forwards has to be possible without going back to the index.
+import { url } from '../../lib/links';
+
+interface End { href: string; title: string }
+interface Props { prev?: End; next?: End }
+const { prev, next } = Astro.props;
+---
+{(prev || next) && (
+  <nav class="ends" aria-label="Reference pages">
+    {prev ? (
+      <a class="end end--prev" href={url(prev.href)}>
+        <span class="end__k mono">Previous</span>
+        <span class="end__t">{prev.title}</span>
+      </a>
+    ) : <span class="end end--empty"></span>}
+    {next && (
+      <a class="end end--next" href={url(next.href)}>
+        <span class="end__k mono">Next</span>
+        <span class="end__t">{next.title}</span>
+      </a>
+    )}
+  </nav>
+)}
+
+<style>
+  .ends {
+    margin-top: clamp(3rem, 7vw, 5rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 3vw, 2rem);
+  }
+  .end {
+    display: grid;
+    gap: 0.3rem;
+    padding-top: 0.9rem;
+    border-top: 2px solid var(--line-strong);
+    text-decoration: none;
+    color: inherit;
+  }
+  .end--next { text-align: right; }
+  .end--empty { border-top-color: var(--line-faint); }
+  .end__k {
+    font-size: var(--step--2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .end__t {
+    font-family: var(--font-display);
+    font-weight: var(--weight-display);
+    font-size: var(--step-1);
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    color: var(--ink);
+    transition: color var(--dur-hover) var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .end:hover .end__t { color: var(--accent); }
+  }
+</style>

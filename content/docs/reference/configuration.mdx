@@ -1,0 +1,154 @@
+---
+title: Configuration
+description: Every key under idempotency.*, with defaults, and the two that surprise people.
+sourceOf: README "Configuration"
+---
+
+import Tabs from '../../../src/components/prose/Tabs.astro';
+import Tab from '../../../src/components/prose/Tab.astro';
+
+Everything is under the `idempotency` prefix. Transport-neutral settings sit at the top
+level; those that only make sense over HTTP live under `web`, and those that only apply to a
+JDBC store under `jdbc`, so an application that uses neither never has to read past the first
+group.
+
+<Tabs sync="config-format">
+<Tab label="YAML">
+```yaml
+idempotency:
+  default-ttl: PT24H              # How long a completed record stays replayable. Default: 24h
+  default-lease: PT30S            # How long an acquisition is protected. Default: 30s
+  default-wait: PT10S             # How long a second caller blocks. PT0S to not block. Default: 10s
+  completion-mode: autonomous     # autonomous | join-transaction. Default: autonomous
+  completion-failure-policy: log-and-return   # log-and-return | propagate. Default: log-and-return
+  store-type: auto                # auto | jdbc | in-memory | none. Default: auto
+
+  jdbc:
+    initialize-schema: embedded   # embedded | always | never. Default: embedded
+
+  web:
+    key-header: Idempotency-Key   # Header carrying the key. Default: Idempotency-Key
+    required: true                # Reject a request that carries no key with 422. Default: true
+    in-flight-status: 409         # Status when another caller holds the key. Default: 409
+    max-body-bytes: 1048576       # Largest body the filter will fingerprint. Default: 1 MiB
+    filter-order: 0               # Order of the filter in the chain. Default: 0
+
+  purge:
+    enabled: true                 # Register the purge scheduler. Default: true
+    cron: "0 0 * * * *"           # Cron for purging expired records. Default: hourly
+```
+</Tab>
+<Tab label="Properties">
+```properties
+idempotency.default-ttl=PT24H
+idempotency.default-lease=PT30S
+idempotency.default-wait=PT10S
+idempotency.completion-mode=autonomous
+idempotency.completion-failure-policy=log-and-return
+idempotency.store-type=auto
+
+idempotency.jdbc.initialize-schema=embedded
+
+idempotency.web.key-header=Idempotency-Key
+idempotency.web.required=true
+idempotency.web.in-flight-status=409
+idempotency.web.max-body-bytes=1048576
+idempotency.web.filter-order=0
+
+idempotency.purge.enabled=true
+idempotency.purge.cron=0 0 * * * *
+```
+</Tab>
+</Tabs>
+
+## Top level
+
+| Key | Default | What it sets |
+|---|---|---|
+| `default-ttl` | `PT24H` | How long a completed record stays replayable |
+| `default-lease` | `PT30S` | How long an acquisition is protected |
+| `default-wait` | `PT10S` | How long a second caller blocks. `PT0S` to not block |
+| `completion-mode` | `autonomous` | `autonomous` or `join-transaction` |
+| `completion-failure-policy` | `log-and-return` | `log-and-return` or `propagate` |
+| `store-type` | `auto` | `auto`, `jdbc`, `in-memory` or `none` |
+
+The three durations are per-method overridable on
+[`@Idempotent`](/docs/reference/annotation/).
+
+## JDBC settings
+
+| Key | Default | What it sets |
+|---|---|---|
+| `initialize-schema` | `embedded` | `embedded`, `always` or `never`. See [JDBC](/docs/storage/jdbc/) |
+
+## Web settings
+
+| Key | Default | What it sets |
+|---|---|---|
+| `key-header` | `Idempotency-Key` | Header carrying the key |
+| `required` | `true` | Reject a request with no key, with `422` |
+| `in-flight-status` | `409` | Status when another caller holds the key |
+| `max-body-bytes` | `1048576` | Largest body the filter will fingerprint |
+| `filter-order` | `0` | Order of the filter in the chain |
+
+## Purge settings
+
+| Key | Default | What it sets |
+|---|---|---|
+| `enabled` | `true` | Register the purge scheduler |
+| `cron` | `0 0 * * * *` | Cron for purging expired records. Hourly |
+
+## Precedence
+
+Three levels, nearest wins:
+
+1. **The annotation attribute**, when not empty - `@Idempotent(lease = "PT60S")`.
+2. **The property**, for every method that left the attribute empty -
+   `idempotency.default-lease`.
+3. **The built-in default**, shown in the tables above.
+
+`key` and `scope` have no property level: a key is per-method by nature, and an empty `scope`
+means "derive it" rather than "take the application default".
+
+## What is not configurable here
+
+The properties above are the whole Spring surface. Store-level tuning is not exposed through
+them, because it differs per backend and belongs to the store rather than to the application.
+
+That is not a gap - it is where those settings live. To change them, declare the store bean
+yourself and configure it:
+
+- **Redis** - poll interval, purge batch sizing and replica acknowledgement are on
+  `RedisIdempotencyStoreConfig`. See [Redis](/docs/storage/redis/).
+- **JDBC** - the `initSchema` flag and the connection resolver are constructor arguments when
+  you build the store by hand. See [JDBC](/docs/storage/jdbc/).
+
+A store bean you declare always wins; the starter never replaces one, so declaring it is also
+how you keep every property above working while changing what only the store knows about.
+
+## Validation
+
+Values are validated where they are bound, and the failure names the value it received rather
+than only the key - `defaultTtl must be at least 1ms, got: PT0S`. Durations are ISO-8601, so
+thirty seconds is `PT30S`. The cron expression is Spring's six-field form, seconds first.
+
+Malformed configuration fails the context at startup. See
+[troubleshooting](/docs/operating/troubleshooting/).
+
+## Two worth a second look
+
+:::caution[The starter's default differs from the engine's own]
+`completion-failure-policy` is `log-and-return` here; the engine on its own uses `propagate`.
+
+When the action succeeded but the store refused to record it, the result the action already
+produced still reaches the caller. The idempotency guarantee is lost for that one key, and a
+later duplicate re-executes.
+
+Set `propagate` where losing the guarantee silently is worse than failing the call.
+:::
+
+:::caution[Purging needs scheduling enabled on your application]
+Without `@EnableScheduling`, `purge.enabled` reads as on and nothing is ever purged. The
+starter warns at startup rather than staying quiet about it. See
+[purging and retention](/docs/operating/purging-and-retention/).
+:::

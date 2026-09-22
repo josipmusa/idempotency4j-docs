@@ -1,0 +1,230 @@
+---
+// The copyable coordinate. For part of this audience, copying it is the conversion,
+// so it gets the same weight as the button. Maven and Gradle, nothing else.
+import { GROUP_ID, ARTIFACT_ID, LIBRARY_VERSION } from '../lib/site';
+
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+
+const maven = `<dependency>
+    <groupId>${GROUP_ID}</groupId>
+    <artifactId>${ARTIFACT_ID}</artifactId>
+    <version>${LIBRARY_VERSION}</version>
+</dependency>`;
+
+const gradle = `implementation("${GROUP_ID}:${ARTIFACT_ID}:${LIBRARY_VERSION}")`;
+---
+<!-- impeccable-disable cramped-padding -- .coord's first child is a tab strip, which
+     is flush to the panel edge by design; the labels inside it carry 1.1em of inset.
+     The same shape in .change and .ann is not flagged, only this one, because its
+     surface differs from the page behind it. -->
+<div class="coord" class:list={[{ 'coord--compact': compact }]} data-coord>
+  <div class="coord__bar">
+    <div class="coord__tabs" role="tablist" aria-label="Build tool">
+      <button class="coord__tab" role="tab" aria-selected="true" data-tab="maven" id="tab-maven" aria-controls="panel-maven">Maven</button>
+      <button class="coord__tab" role="tab" aria-selected="false" data-tab="gradle" id="tab-gradle" aria-controls="panel-gradle" tabindex="-1">Gradle</button>
+    </div>
+    <button class="coord__copy" type="button" data-copy>
+      <span class="coord__tick" aria-hidden="true"><svg viewBox="0 0 12 12" focusable="false"><path d="M1.5 6.4 4.4 9.2 10.5 2.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></span>
+      <span class="coord__copy-label">Copy</span>
+      <span class="visually-hidden" role="status" data-copy-status></span>
+    </button>
+  </div>
+  <div class="coord__panel" role="tabpanel" id="panel-maven" aria-labelledby="tab-maven" data-panel="maven">
+    <pre class="coord__code"><code>{maven}</code></pre>
+  </div>
+  <div class="coord__panel" role="tabpanel" id="panel-gradle" aria-labelledby="tab-gradle" data-panel="gradle" hidden>
+    <pre class="coord__code"><code>{gradle}</code></pre>
+  </div>
+</div>
+
+<style>
+  .coord {
+    /* The same surface as the other plates on the page: this panel had its own
+       slightly lifted black for no reason the rest of the page shares. */
+    background: var(--panel-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-panel);
+  }
+  .coord__bar {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+  .coord__tabs { display: flex; }
+  .coord__tab {
+    appearance: none;
+    background: none;
+    border: none;
+    border-right: 1px solid var(--line);
+    padding: 0.7em 1.1em;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: color var(--dur-hover) var(--ease), background var(--dur-hover) var(--ease);
+  }
+  .coord__tab[aria-selected='true'] {
+    color: var(--ink);
+    background: var(--bg-sunken);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .coord__tab:hover { color: var(--ink); }
+  }
+  .coord__copy {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: none;
+    border: none;
+    border-left: 1px solid var(--line);
+    padding: 0.7em 1.1em 0.7em 0.9em;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: color var(--dur-hover) var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .coord__copy:hover { color: var(--accent); }
+  }
+
+  /* The confirmation is a stamped check, drawn on in place. Its slot is always there,
+     so the mark arriving moves nothing: the stroke draws and the button takes the
+     accent, and both hold for a moment before it resets. */
+  .coord__tick {
+    display: grid;
+    width: 1.35em;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity var(--dur-hover) var(--ease);
+  }
+  .coord__tick svg { width: 0.95em; height: 0.95em; display: block; }
+  .coord__tick path {
+    stroke-dasharray: 14;
+    stroke-dashoffset: 14;
+    transition: stroke-dashoffset 260ms var(--ease) 60ms;
+  }
+  .coord[data-copied] .coord__copy { color: var(--accent); }
+  .coord[data-copied] .coord__tick { opacity: 1; }
+  .coord[data-copied] .coord__tick path { stroke-dashoffset: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .coord__tick,
+    .coord__tick path { transition: none; }
+  }
+  .coord__code {
+    margin: 0;
+    padding: 1.1em 1.2em;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    line-height: 1.6;
+    color: var(--ink-2);
+    tab-size: 2;
+  }
+  .coord--compact .coord__code { padding: 0.9em 1em; font-size: var(--step--2); }
+
+  /* Same rule as the code on the rest of the page: a phone scrolls down, never
+     sideways. A coordinate is copied with the button, not read across. */
+  @media (max-width: 620px) {
+    .coord__code {
+      padding: 1em;
+      font-size: 0.7rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-x: hidden;
+    }
+  }
+</style>
+
+<script>
+  function wire(root: Element) {
+    if ((root as HTMLElement).dataset.wired) return;
+    (root as HTMLElement).dataset.wired = 'true';
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'));
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy]');
+    const label = root.querySelector<HTMLElement>('.coord__copy-label');
+    const status = root.querySelector<HTMLElement>('[data-copy-status]');
+
+    const select = (key: string) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === key;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((p) => { p.hidden = p.dataset.panel !== key; });
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => select(tab.dataset.tab!));
+      tab.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        const i = tabs.indexOf(tab);
+        const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        next.focus();
+        select(next.dataset.tab!);
+      });
+    });
+
+    // navigator.clipboard is undefined outside a secure context, which is every
+    // phone opening this over the LAN. The textarea path is the fallback, so the
+    // button confirms on a plain http origin too.
+    const write = async (text: string) => {
+      if (window.isSecureContext && navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          /* fall through */
+        }
+      }
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      ta.remove();
+      return ok;
+    };
+
+    let reset = 0;
+    copy?.addEventListener('click', async () => {
+      const open = panels.find((p) => !p.hidden);
+      const text = open?.querySelector('code')?.textContent ?? '';
+      if (!(await write(text))) return;
+      window.clearTimeout(reset);
+      (root as HTMLElement).dataset.copied = 'true';
+      if (label) label.textContent = 'Copied';
+      if (status) status.textContent = 'Copied to clipboard';
+      reset = window.setTimeout(() => {
+        delete (root as HTMLElement).dataset.copied;
+        if (label) label.textContent = 'Copy';
+        if (status) status.textContent = '';
+      }, 1800);
+    });
+  }
+
+  const init = () => document.querySelectorAll('[data-coord]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

@@ -1,0 +1,46 @@
+---
+// Every reference page. The words come from content/docs; the group it belongs to and
+// the pages either side of it come from the reading order in src/data/docs.ts.
+import { getCollection, render } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import Reference from '../../components/docs/Reference.astro';
+import Toc from '../../components/docs/Toc.astro';
+import PageEnds from '../../components/docs/PageEnds.astro';
+import { groups, order } from '../../data/docs';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('docs');
+  // index is the reference's front sheet and has its own route.
+  return pages
+    .filter((page) => page.id !== 'index')
+    .map((page) => ({ params: { id: page.id }, props: { page } }));
+}
+
+const { page } = Astro.props;
+const { Content, headings } = await render(page);
+
+const group = groups.find((g) => g.ids.includes(page.id));
+const pages = await getCollection('docs');
+const end = (id: string | undefined) => {
+  if (!id) return undefined;
+  const found = pages.find((p) => p.id === id);
+  return found ? { href: `/docs/${found.id}`, title: found.data.title } : undefined;
+};
+const at = order.indexOf(page.id);
+---
+<Page
+  title={page.data.title}
+  description={page.data.description}
+  trail={[{ label: 'Docs', href: '/docs' }, { label: group?.label ?? 'Reference' }]}
+  source={page.data.sourceOf}
+  shape="reference"
+>
+  <Reference slot="aside" current={page.id} />
+  <Toc slot="spine" headings={headings} />
+  <!-- Pagefind indexes the prose of the reference and the articles, and nothing else on
+       the page: the title comes with it so a hit can name the page it is in. -->
+  <article class="prose" data-pagefind-body data-pagefind-meta={`title:${page.data.title}`}>
+    <Content />
+  </article>
+  <PageEnds prev={end(order[at - 1])} next={end(order[at + 1])} />
+</Page>

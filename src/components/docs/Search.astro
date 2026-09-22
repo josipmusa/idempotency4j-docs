@@ -1,0 +1,178 @@
+---
+// Search over the reference and the articles. The index is built by Pagefind after the
+// site is built, from the pages themselves, so there is no service to run and nothing to
+// keep in sync: what is searchable is what is published.
+//
+// The field is only there when the index is. In dev there is no index yet, so the field
+// removes itself rather than pretending - a box that returns nothing is worse than no box.
+import { url } from '../../lib/links';
+
+const bundle = url('/pagefind/pagefind.js');
+---
+<div class="find" data-find data-bundle={bundle} hidden>
+  <label class="find__label mono" for="find-q">Search</label>
+  <input
+    class="find__q"
+    id="find-q"
+    type="search"
+    autocomplete="off"
+    placeholder="lease, fingerprint, 409…"
+    aria-describedby="find-count"
+  />
+  <p class="find__count mono" id="find-count" role="status"></p>
+  <ol class="find__hits"></ol>
+</div>
+
+<style>
+  .find { margin-bottom: 1.6rem; }
+  .find__label {
+    display: block;
+    font-size: var(--step--2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 0.45rem;
+  }
+  .find__q {
+    width: 100%;
+    appearance: none;
+    background: var(--bg-raised);
+    border: 1px solid var(--line-strong);
+    border-radius: 0;
+    padding: 0.55em 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink);
+    transition: border-color var(--dur-hover) var(--ease);
+  }
+  .find__q::placeholder { color: var(--ink-3); }
+  .find__q:focus-visible { border-color: var(--accent); outline: none; }
+  .find__q::-webkit-search-cancel-button { filter: grayscale(1); }
+
+  .find__count {
+    font-size: var(--step--2);
+    color: var(--ink-3);
+    margin-top: 0.45rem;
+  }
+  .find__count:empty { display: none; }
+
+  /* The hits are built by the script, so they carry no scoped class: their rules are
+     global, held inside .find. */
+  .find__hits { list-style: none; padding: 0; margin: 0.6rem 0 0; display: grid; }
+  .find__hits:empty { display: none; }
+  .find :global(.find__hit) { border-top: 1px solid var(--line-faint); }
+  .find :global(.find__hit a) {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.55rem 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  .find :global(.find__t) {
+    font-size: var(--step--1);
+    color: var(--ink);
+    line-height: 1.35;
+    transition: color var(--dur-hover) var(--ease);
+  }
+  .find :global(.find__x) {
+    font-size: var(--step--2);
+    color: var(--ink-3);
+    line-height: 1.45;
+  }
+  /* Pagefind marks the matched words; the accent is the marking on this plate too. */
+  .find :global(.find__x mark) { background: none; color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) {
+    .find :global(.find__hit a:hover .find__t) { color: var(--accent); }
+  }
+</style>
+
+<script>
+  type Hit = {
+    data: () => Promise<{ url: string; meta: { title?: string }; excerpt: string }>;
+  };
+
+  function wire(root: HTMLElement) {
+    if (root.dataset.wired) return;
+    root.dataset.wired = 'true';
+
+    const input = root.querySelector<HTMLInputElement>('.find__q');
+    const count = root.querySelector<HTMLElement>('.find__count');
+    const hits = root.querySelector<HTMLElement>('.find__hits');
+    const bundle = root.dataset.bundle;
+    if (!input || !count || !hits || !bundle) return;
+
+    let engine: { search: (q: string) => Promise<{ results: Hit[] }> } | null = null;
+    let loading: Promise<void> | null = null;
+
+    const load = () => {
+      loading ??= import(/* @vite-ignore */ bundle)
+        .then(async (mod) => {
+          await mod.init?.();
+          engine = mod;
+          root.hidden = false;
+        })
+        .catch(() => {
+          // No index: a dev build, or the indexer did not run. Say nothing, show nothing.
+          root.remove();
+        });
+      return loading;
+    };
+
+    // The field appears once the index answers, so it is never on screen without working.
+    load();
+
+    let run = 0;
+    const search = async (query: string) => {
+      const mine = ++run;
+      if (!engine || query.trim().length < 2) {
+        hits.replaceChildren();
+        count.textContent = '';
+        return;
+      }
+      const { results } = await engine.search(query);
+      if (mine !== run) return;
+
+      const top = await Promise.all(results.slice(0, 8).map((r) => r.data()));
+      if (mine !== run) return;
+
+      count.textContent =
+        results.length === 0
+          ? 'Nothing matches'
+          : `${results.length} page${results.length === 1 ? '' : 's'}`;
+
+      hits.replaceChildren(
+        ...top.map((page) => {
+          const li = document.createElement('li');
+          li.className = 'find__hit';
+          const a = document.createElement('a');
+          a.href = page.url;
+          const title = document.createElement('span');
+          title.className = 'find__t';
+          title.textContent = page.meta.title ?? page.url;
+          const excerpt = document.createElement('span');
+          excerpt.className = 'find__x';
+          excerpt.innerHTML = page.excerpt;
+          a.append(title, excerpt);
+          li.append(a);
+          return li;
+        }),
+      );
+    };
+
+    let debounce = 0;
+    input.addEventListener('input', () => {
+      window.clearTimeout(debounce);
+      const query = input.value;
+      debounce = window.setTimeout(() => search(query), 140);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      input.value = '';
+      search('');
+    });
+  }
+
+  const init = () => document.querySelectorAll<HTMLElement>('[data-find]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

@@ -1,0 +1,105 @@
+---
+// The reference's front sheet: what the docs are, the one route in, and the whole reading
+// order as a contents page. The words are content/docs/index.md; the order is
+// src/data/docs.ts, so this page cannot list a page that does not exist or miss one.
+import { getCollection, getEntry, render } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import Search from '../../components/docs/Search.astro';
+import { url } from '../../lib/links';
+import { groups } from '../../data/docs';
+
+const entry = await getEntry('docs', 'index');
+if (!entry) throw new Error('content/docs/index.md is missing');
+const { Content } = await render(entry);
+
+const pages = await getCollection('docs');
+const pageOf = (id: string) => {
+  const found = pages.find((p) => p.id === id);
+  if (!found) throw new Error(`docs.ts lists ${id}, which is not a file in content/docs`);
+  return found;
+};
+---
+<Page title={entry.data.title} description={entry.data.description}>
+  <div class="prose"><Content /></div>
+
+  <div class="find-wrap"><Search /></div>
+
+  <div class="start" data-reveal>
+    <a class="cta" href={url('/docs/quickstart')}>
+      Quickstart<span class="cta__arrow" aria-hidden="true">→</span>
+    </a>
+    <p class="start__n">Five minutes, one annotation, a store you already run.</p>
+  </div>
+
+  {groups.map((group, i) => (
+    <section class="sheet" data-reveal-group>
+      <header class="sheet__head" data-reveal>
+        <p class="sheet__n mono">{String(i + 1).padStart(2, '0')}</p>
+        <h2 class="sheet__h">{group.label}</h2>
+      </header>
+      <ul class="sheet__list">
+        {group.ids.map((id) => (
+          <li class="sheet__item" data-reveal>
+            <a class="sheet__a" href={url(`/docs/${id}`)}>
+              <span class="sheet__t">{pageOf(id).data.title}</span>
+              <span class="sheet__d">{pageOf(id).data.description}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Page>
+
+<style>
+  .find-wrap { margin-top: clamp(2rem, 5vw, 3rem); max-width: 32rem; }
+
+  .start {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 3vw, 2rem);
+    flex-wrap: wrap;
+    margin-top: clamp(2rem, 5vw, 3rem);
+  }
+  .start__n { font-size: var(--step--1); color: var(--ink-3); }
+
+  .sheet { margin-top: clamp(3rem, 7vw, 5rem); }
+  .sheet__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 2px solid var(--line-strong);
+  }
+  .sheet__n { font-size: var(--step--1); color: var(--accent); }
+  .sheet__h {
+    font-family: var(--font-display);
+    font-weight: var(--weight-display);
+    font-size: var(--step-2);
+    letter-spacing: var(--tracking-display);
+    text-transform: uppercase;
+  }
+  .sheet__list { display: grid; }
+  .sheet__item { border-bottom: 1px solid var(--line-faint); }
+  .sheet__a {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 0.2rem clamp(1rem, 3vw, 2.5rem);
+    padding: 0.9rem 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  .sheet__t {
+    color: var(--ink);
+    font-size: var(--step-0);
+    letter-spacing: -0.01em;
+    transition: color var(--dur-hover) var(--ease);
+  }
+  .sheet__d { color: var(--ink-3); font-size: var(--step--1); line-height: 1.5; }
+  @media (hover: hover) and (pointer: fine) {
+    .sheet__a:hover .sheet__t { color: var(--accent); }
+  }
+  @media (max-width: 720px) {
+    .sheet__a { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

@@ -1,0 +1,405 @@
+---
+import { Code } from 'astro:components';
+import Section from './Section.astro';
+import Coordinate from './Coordinate.astro';
+import Plate from './Plate.astro';
+import Outcomes from './moments/Outcomes.astro';
+import Annotation from './moments/Annotation.astro';
+import { url } from '../lib/links';
+import {
+  hero, mechanism, change, prevents, outcomes, compare, limits, closing,
+} from '../data/home';
+
+// Two moments, as the plan allows: the annotation landing in the hero, and the four
+// outcomes below. The support matrix lives on the specs sub-page.
+---
+<main id="main">
+  <!-- 02 hero -->
+  <section class="hero" data-section="hero">
+    <Plate />
+    <div class="shell hero__inner">
+      <div class="hero__copy" data-reveal-group>
+        <h1 class="hero__h1" data-reveal>{hero.headline}</h1>
+        <p class="hero__sub" data-reveal>{hero.sub}</p>
+        <div class="hero__actions" data-reveal>
+          <a class="cta" href={url(hero.cta.href)}>
+            {hero.cta.label}<span class="cta__arrow" aria-hidden="true">→</span>
+          </a>
+          <p class="hero__kicker">{hero.kicker}</p>
+        </div>
+        <div class="hero__coord" data-reveal>
+          <Coordinate />
+        </div>
+      </div>
+      <div class="hero__stage" data-reveal>
+        <Annotation />
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 the mechanism -->
+  <Section id={mechanism.id} heading={mechanism.heading}>
+    <ol class="steps" data-reveal-group>
+      {mechanism.steps.map((step) => (
+        <li class="step" data-reveal>
+          <p class="step__n mono">{step.n}</p>
+          <h3 class="step__t">{step.title}</h3>
+          <p class="step__b">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+    <p class="note" data-reveal>{mechanism.footnote}</p>
+  </Section>
+
+  <!-- 04 the whole change -->
+  <Section id={change.id} heading={change.heading}>
+    <div class="change" data-change>
+      <div class="change__tabs" role="tablist" aria-label="Where the annotation goes">
+        {change.tabs.map((tab, i) => (
+          <button
+            class="change__tab"
+            role="tab"
+            id={`ch-tab-${tab.key}`}
+            aria-controls={`ch-panel-${tab.key}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-tab={tab.key}
+          ><span class="change__tab-long">{tab.label}</span><span class="change__tab-short">{tab.short}</span></button>
+        ))}
+      </div>
+      {change.tabs.map((tab, i) => (
+        <div
+          class="change__panel"
+          role="tabpanel"
+          id={`ch-panel-${tab.key}`}
+          aria-labelledby={`ch-tab-${tab.key}`}
+          data-panel={tab.key}
+          hidden={i !== 0}
+        >
+          <p class="change__note">{tab.note}</p>
+          <Code code={tab.code} lang="java" theme="css-variables" />
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <!-- 05 what it prevents -->
+  <Section id={prevents.id} heading={prevents.heading} lede={prevents.lede}>
+    <ul class="cards" data-reveal-group>
+      {prevents.items.map((item) => (
+        <li class="card" data-reveal>
+          <h3 class="card__t">{item.title}</h3>
+          <p class="card__b">{item.body}</p>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  <!-- 06 the four outcomes -->
+  <Section id={outcomes.id} heading={outcomes.heading}>
+    <div class="stage" data-reveal><Outcomes /></div>
+    <p class="note" data-reveal>{outcomes.footnote}</p>
+  </Section>
+
+  <!-- 07 compare -->
+  <Section id={compare.id} heading={compare.heading}>
+    <ul class="compare" data-reveal-group>
+      {compare.items.map((item) => (
+        <li class="compare__item" data-reveal>
+          <h3 class="compare__t mono">{item.title}</h3>
+          <p class="compare__b">{item.body}</p>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  <!-- 08 limits -->
+  <Section id={limits.id} heading={limits.heading} lede={limits.lede} class="section--limits">
+    <ul class="limits" data-reveal-group>
+      {limits.items.map((item) => (
+        <li class="limit" data-reveal>
+          <h3 class="limit__t mono">{item.title}</h3>
+          <p class="limit__b">{item.body}</p>
+        </li>
+      ))}
+    </ul>
+    <p class="note" data-reveal>
+      {limits.footnote.text}{' '}
+      <a class="link" href={url(limits.footnote.link.href)}>{limits.footnote.link.label}</a>.
+    </p>
+  </Section>
+
+  <!-- 09 closing -->
+  <section class="close" id={closing.id} data-section="closing">
+    <div class="shell close__inner" data-reveal-group>
+      <h2 class="close__h" data-reveal>{closing.heading}</h2>
+      <div class="close__coord" data-reveal><Coordinate compact /></div>
+      <div class="close__actions" data-reveal>
+        <a class="cta" href={url(closing.cta.href)}>
+          {closing.cta.label}<span class="cta__arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="link" href={url('/learn')}>Learn</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<style>
+  /* Layout only. Everything with a colour or a face in it is a token, defined in
+     src/styles/tokens.css. */
+
+  .hero {
+    /* The plate field is absolute inside this section, so the hero is its container. */
+    position: relative;
+    padding-block: clamp(3rem, 9vh, 7rem) clamp(3rem, 8vh, 6rem);
+  }
+  .hero__inner {
+    /* Above the plate field, which is a positioned layer inside the hero and would
+       otherwise paint over static in-flow content. */
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: var(--hero-cols);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+  }
+  .hero__copy { display: grid; gap: clamp(1.1rem, 2.4vw, 1.75rem); align-content: start; }
+  .hero__h1 {
+    font-family: var(--font-display);
+    font-size: var(--step-7);
+    line-height: var(--display-lh);
+    letter-spacing: var(--tracking-display);
+    font-weight: var(--weight-display);
+    text-transform: var(--display-case);
+    text-wrap: balance;
+  }
+  .hero__sub {
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-2);
+    max-width: 44ch;
+  }
+  .hero__actions {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 2.5vw, 1.75rem);
+    flex-wrap: wrap;
+  }
+  .hero__kicker { font-size: var(--step--1); color: var(--ink-3); }
+  .hero__coord { max-width: 34rem; }
+  .hero__stage { min-width: 0; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+  }
+  .step { display: grid; gap: 0.5rem; align-content: start; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .step__n { font-size: var(--step--1); color: var(--accent); }
+  .step__t { font-size: var(--step-1); font-weight: 600; letter-spacing: -0.015em; }
+  .step__b { font-size: var(--step--1); color: var(--ink-2); line-height: 1.55; }
+
+  .note {
+    margin-top: clamp(1.25rem, 3vw, 2rem);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    /* ch counts the width of a zero, which a proportional face beats: 68ch measured
+       out at about 91 characters a line. */
+    max-width: 54ch;
+  }
+
+  .stage { margin-top: clamp(2rem, 5vw, 3.5rem); }
+
+  .change {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--panel-bg);
+    box-shadow: var(--shadow-panel);
+  }
+  /* One row, always: three tabs wrapping onto a second line read as two controls and
+     a stray, so on a phone the labels shorten instead of the strip breaking. */
+  .change__tabs { display: flex; border-bottom: 1px solid var(--line); background: var(--bg-raised); }
+  .change__tab-short { display: none; }
+  .change__tab {
+    appearance: none;
+    background: none;
+    border: none;
+    border-right: 1px solid var(--line);
+    padding: 0.85em 1.2em;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: color var(--dur-hover) var(--ease), background var(--dur-hover) var(--ease);
+  }
+  .change__tab[aria-selected='true'] { color: var(--ink); background: var(--panel-bg); }
+  @media (hover: hover) and (pointer: fine) { .change__tab:hover { color: var(--ink); } }
+  .change__panel { padding: clamp(1.1rem, 3vw, 2rem); }
+  .change__note { font-size: var(--step--1); color: var(--ink-3); margin-bottom: 1rem; }
+  .change__panel :global(pre) {
+    margin: 0;
+    overflow-x: auto;
+    font-size: var(--code-size);
+    line-height: var(--code-lh);
+    background: transparent !important;
+  }
+  /* Grid, so each Shiki .line is a real box that can take a transform. Whitespace-only
+     text nodes do not become grid items, so the newlines Shiki emits between lines do
+     not add a second empty row. */
+  .change__panel :global(code) { font-family: var(--font-mono); display: grid; }
+
+  /* The code sets into place when you arrive at a tab: the lines land in order, the
+     way type is set into a forme. Transform and opacity only; six lines carry a
+     stagger and the rest arrive together, per the motion language. */
+  .change__panel :global(.line) {
+    transition:
+      opacity 200ms var(--ease) var(--line-d, 300ms),
+      transform 200ms var(--ease) var(--line-d, 300ms);
+  }
+  .change__panel[data-setting] :global(.line) {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: none;
+  }
+  .change__panel :global(.line:nth-child(1)) { --line-d: 0ms; }
+  .change__panel :global(.line:nth-child(2)) { --line-d: 60ms; }
+  .change__panel :global(.line:nth-child(3)) { --line-d: 120ms; }
+  .change__panel :global(.line:nth-child(4)) { --line-d: 180ms; }
+  .change__panel :global(.line:nth-child(5)) { --line-d: 240ms; }
+  .change__panel :global(.line:nth-child(6)) { --line-d: 300ms; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: clamp(1rem, 2.5vw, 1.75rem);
+  }
+  .card {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+    padding: clamp(1.1rem, 2.5vw, 1.6rem);
+    background: var(--panel-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .card__t { font-size: var(--step-1); font-weight: 600; letter-spacing: -0.015em; }
+  .card__b { font-size: var(--step--1); color: var(--ink-2); }
+
+
+  .compare { display: grid; gap: clamp(1.25rem, 3vw, 2.25rem); }
+  .compare__item {
+    display: grid;
+    grid-template-columns: minmax(0, 22ch) minmax(0, 1fr);
+    gap: clamp(0.75rem, 2.5vw, 2.5rem);
+    padding-top: clamp(1rem, 2.5vw, 1.5rem);
+    border-top: 1px solid var(--line);
+    align-items: start;
+  }
+  .compare__t { font-size: var(--step-1); color: var(--ink); letter-spacing: -0.01em; }
+  .compare__b { font-size: var(--step--1); color: var(--ink-2); max-width: 54ch; }
+
+  .limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: clamp(1rem, 2.5vw, 2rem); }
+  .limit { display: grid; gap: 0.4rem; align-content: start; padding-top: 0.9rem; border-top: 1px solid var(--danger-line); }
+  .limit__t { font-size: var(--step-0); color: var(--ink); }
+  .limit__b { font-size: var(--step--1); color: var(--ink-3); }
+
+  .close { padding-block: clamp(4rem, 12vh, 9rem); }
+  /* The measure is set on the children, not on the shell: capping the shell would
+     re-centre this block and break its alignment with every section above it. */
+  .close__inner { display: grid; gap: clamp(1.25rem, 3vw, 2rem); justify-items: start; }
+  .close__h {
+    font-family: var(--font-display);
+    font-size: var(--step-5);
+    line-height: 1.02;
+    letter-spacing: var(--tracking-display);
+    font-weight: var(--weight-display);
+    text-transform: var(--display-case);
+  }
+  .close__h { max-width: 16ch; }
+  .close__coord { width: 100%; max-width: 44rem; }
+  .close__actions { display: flex; align-items: center; gap: 1.5rem; }
+
+  @media (max-width: 900px) {
+    .hero__inner { grid-template-columns: 1fr; }
+    .compare__item { grid-template-columns: 1fr; gap: 0.5rem; }
+  }
+
+  /* A phone reads code by scrolling down, never sideways. The samples are set to fit
+     at this size; a line that still runs long wraps with its continuation indented,
+     the way an editor with soft wrap on shows it. */
+  @media (max-width: 620px) {
+    .change__tab { padding: 0.8em 0.9em; font-size: var(--step--2); }
+    .change__tab-long { display: none; }
+    .change__tab-short { display: inline; }
+    .change__panel { padding: 1rem 0.9rem; }
+    .change__panel :global(pre) {
+      font-size: 0.7rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-x: hidden;
+    }
+    .change__panel :global(.line) { padding-left: 2.5ch; text-indent: -2.5ch; }
+  }
+</style>
+
+<script>
+  function wireTabs(root: HTMLElement) {
+    if (root.dataset.wired) return;
+    root.dataset.wired = 'true';
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'));
+
+    // Park the lines at their start state, then release them on the next frame so the
+    // transition has two values to run between.
+    const settle = (panel: HTMLElement) => {
+      panel.setAttribute('data-setting', '');
+      void panel.offsetWidth;
+      panel.removeAttribute('data-setting');
+    };
+
+    const select = (key: string) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === key;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((p) => {
+        const on = p.dataset.panel === key;
+        p.hidden = !on;
+        if (on) settle(p);
+      });
+    };
+
+    // The first panel sets itself once, when the section arrives.
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        io.disconnect();
+        const open = panels.find((p) => !p.hidden);
+        if (open) settle(open);
+      }
+    }, { threshold: 0.25 });
+    io.observe(root);
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => select(tab.dataset.tab!));
+      tab.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        const i = tabs.indexOf(tab);
+        const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        next.focus();
+        select(next.dataset.tab!);
+      });
+    });
+  }
+
+  import { initReveal } from '../scripts/reveal';
+
+  const init = () => {
+    document.querySelectorAll<HTMLElement>('[data-change]').forEach(wireTabs);
+    initReveal();
+  };
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

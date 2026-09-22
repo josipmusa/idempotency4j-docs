@@ -1,0 +1,249 @@
+---
+// The reference's own index, in the reading order: six groups, the current page marked.
+// Beside the prose on a wide screen; on a phone it collapses behind the page's own name,
+// because a column of 28 links is not a thing to scroll past to reach the prose.
+//
+// A group is a drawer. Every group name is always on screen and the one you are reading
+// in is open: listing all 28 titles at once made the column taller than the screen, and
+// the part that fell off the bottom was the last two groups.
+import { groups } from '../../data/docs';
+import { url } from '../../lib/links';
+import { getCollection } from 'astro:content';
+import Search from './Search.astro';
+
+interface Props { current?: string }
+const { current } = Astro.props;
+
+const pages = await getCollection('docs');
+const titleOf = (id: string) => {
+  const page = pages.find((p) => p.id === id);
+  if (!page) throw new Error(`docs.ts lists ${id}, which is not a file in content/docs`);
+  return page.data.title;
+};
+
+const label = current ? titleOf(current) : 'The reference';
+---
+<nav class="ref" aria-label="Reference" data-ref>
+  <button class="ref__sum" type="button" aria-expanded="true" aria-controls="ref-list">
+    <span class="ref__sum-k mono">Reference</span>
+    <span class="ref__sum-t">{label}</span>
+    <span class="ref__sum-i mono" aria-hidden="true">&#8595;</span>
+  </button>
+  <div class="ref__body" id="ref-list">
+    <Search />
+    {groups.map((group, i) => (
+      <div
+        class="ref__group"
+        data-group
+        data-here={group.ids.includes(current ?? '') ? '' : undefined}
+        data-shut={group.ids.includes(current ?? '') ? undefined : ''}
+      >
+        <button
+          class="ref__label mono"
+          type="button"
+          aria-expanded={group.ids.includes(current ?? '') ? 'true' : 'false'}
+          aria-controls={`ref-g${i}`}
+        >
+          {group.label}
+          <span class="ref__label-i" aria-hidden="true">&#8595;</span>
+        </button>
+        <ul class="ref__list" id={`ref-g${i}`}>
+          {group.ids.map((id) => (
+            <li>
+              <a
+                class="ref__link"
+                href={url(`/docs/${id}`)}
+                aria-current={id === current ? 'page' : undefined}
+              >{titleOf(id)}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</nav>
+
+<!-- The fold is the server's, so the column never opens to 1221px and snaps shut on a
+     script that arrives late. With no script at all there is nothing to open a drawer
+     with, so every drawer is open. -->
+<noscript>
+  <style>
+    .ref__group[data-shut] .ref__list { display: grid; }
+    .ref__group[data-shut] .ref__label-i { display: none; }
+  </style>
+</noscript>
+
+<style>
+  .ref__group + .ref__group { margin-top: 1.2rem; }
+  /* The group names are the index's own headings and every one of them stays on screen.
+     All twenty-eight titles at once ran 1221px tall in a 756px column, so the last two
+     groups - Operating among them - were only reachable by scrolling a column whose
+     scrollbar does not show itself. A group is a drawer now: the names are the index,
+     the open one is the part you are in. */
+  .ref__label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    appearance: none;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    padding: 0 0 0.5rem;
+    margin-bottom: 0.6rem;
+    text-align: left;
+    cursor: pointer;
+    font-size: var(--step--2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    transition: color var(--dur-hover) var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .ref__label:hover { color: var(--ink); }
+  }
+  /* A square box, so the quarter turn takes up the room the glyph did. */
+  .ref__label-i {
+    display: grid;
+    place-items: center;
+    width: 1.2em;
+    height: 1.2em;
+    margin-left: auto;
+    transition: transform var(--dur-hover) var(--ease);
+  }
+  .ref__group[data-shut] .ref__label-i { transform: rotate(-90deg); }
+  /* Shut by script, so with no script every group is simply open. */
+  .ref__group[data-shut] .ref__list { display: none; }
+  .ref__group[data-shut] .ref__label { margin-bottom: 0; }
+  /* A group holding the page you are on is named in the accent, so the index says where
+     you are even when its pages are folded away. */
+  .ref__group[data-here] .ref__label { color: var(--accent); }
+  .ref__list { display: grid; gap: 0.1rem; list-style: none; padding: 0; margin: 0; }
+  .ref__link {
+    display: block;
+    padding: 0.32rem 0 0.32rem 0.85rem;
+    font-size: var(--step--1);
+    line-height: 1.4;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: color var(--dur-hover) var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .ref__link:hover { color: var(--ink); }
+  }
+
+  /* The current page is marked the way a part is ticked off on a sheet: a stamp in the
+     margin, not a filled block behind the words. */
+  .ref__link[aria-current='page'] { color: var(--accent); position: relative; }
+  .ref__link[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.85em;
+    width: 0.45rem;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* The toggle exists only where the list collapses. */
+  .ref__sum { display: none; }
+
+  @media (min-width: 1024px) {
+    .ref {
+      position: sticky;
+      top: calc(var(--nav-h) + clamp(1.5rem, 4vh, 3rem));
+      max-height: calc(100vh - var(--nav-h) - 5rem);
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .ref { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .ref__sum {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      appearance: none;
+      background: none;
+      border: none;
+      padding: 0.9rem 0;
+      text-align: left;
+      cursor: pointer;
+    }
+    .ref__sum-k {
+      font-size: var(--step--2);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    /* The page's name is the only part that can be long, so it is the part that gives
+       way: the strip is a row, and a row that cannot shrink makes the whole page wider
+       than the phone. */
+    .ref__sum-k,
+    .ref__sum-i { flex: none; }
+    .ref__sum-t {
+      font-size: var(--step--1);
+      color: var(--ink);
+      margin-right: auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* A square box, so the quarter turn takes up the same room as the glyph did. */
+    .ref__sum-i {
+      display: grid;
+      place-items: center;
+      width: 1.2em;
+      height: 1.2em;
+      color: var(--ink-3);
+      transition: transform var(--dur-hover) var(--ease);
+    }
+    .ref[data-shut] .ref__sum-i { transform: rotate(-90deg); }
+    .ref__body { padding-bottom: 1.5rem; }
+    /* Shut by script, so with no script the list is simply open and usable. */
+    .ref[data-shut] .ref__body { display: none; }
+  }
+</style>
+
+<script>
+  const NARROW = '(max-width: 1023px)';
+
+  function wire(root: HTMLElement) {
+    if (root.dataset.wired) return;
+    root.dataset.wired = 'true';
+    const button = root.querySelector<HTMLButtonElement>('.ref__sum');
+    if (!button) return;
+
+    // The group holding this page is open and the rest are folded, both decided on the
+    // server. Here the drawers only become openable.
+    root.querySelectorAll<HTMLElement>('[data-group]').forEach((group) => {
+      const label = group.querySelector<HTMLButtonElement>('.ref__label');
+      if (!label) return;
+      label.addEventListener('click', () => {
+        const open = group.hasAttribute('data-shut');
+        group.toggleAttribute('data-shut', !open);
+        label.setAttribute('aria-expanded', String(open));
+      });
+    });
+
+    const narrow = window.matchMedia(NARROW);
+    const shut = (yes: boolean) => {
+      if (yes) root.setAttribute('data-shut', '');
+      else root.removeAttribute('data-shut');
+      button.setAttribute('aria-expanded', String(!yes));
+    };
+
+    // Open on a wide screen, where it is the column beside the prose; shut on a phone,
+    // where it sits between the reader and the page they came for.
+    shut(narrow.matches);
+    narrow.addEventListener('change', (e) => shut(e.matches));
+    button.addEventListener('click', () => shut(!root.hasAttribute('data-shut')));
+  }
+
+  const init = () => document.querySelectorAll<HTMLElement>('[data-ref]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

@@ -1,0 +1,125 @@
+---
+// On this page: the h2s only, which are the page's own sections. Deeper headings would
+// turn a spine into a second copy of the page.
+//
+// The mark travels with the reader. It is the one thing on these pages that moves
+// without being asked, and it moves because it is reporting where you are.
+interface Heading { depth: number; slug: string; text: string }
+interface Props { headings: Heading[] }
+const { headings } = Astro.props;
+const items = headings.filter((h) => h.depth === 2);
+---
+{items.length > 1 && (
+  <nav class="toc" aria-label="On this page" data-toc>
+    <p class="toc__label mono">On this page</p>
+    <ul class="toc__list">
+      {items.map((h) => (
+        <li>
+          <a class="toc__link" href={`#${h.slug}`} data-toc-link={h.slug}>{h.text}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  .toc__label {
+    font-size: var(--step--2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 0.6rem;
+  }
+  .toc__list { display: grid; gap: 0.1rem; list-style: none; padding: 0; margin: 0; }
+  .toc__link {
+    display: block;
+    padding: 0.3rem 0 0.3rem 0.85rem;
+    position: relative;
+    font-size: var(--step--1);
+    line-height: 1.4;
+    color: var(--ink-3);
+    text-decoration: none;
+    transition: color var(--dur-hover) var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .toc__link:hover { color: var(--ink); }
+  }
+  .toc__link[data-here] { color: var(--ink); }
+  .toc__link[data-here]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.8em;
+    width: 0.45rem;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* Third column on a wide screen only. Below that the page's own headings are close
+     enough together to scroll, and the reference index is the navigation that matters. */
+  @media (max-width: 1279px) {
+    .toc { display: none; }
+  }
+  @media (min-width: 1280px) {
+    .toc {
+      position: sticky;
+      top: calc(var(--nav-h) + clamp(1.5rem, 4vh, 3rem));
+      max-height: calc(100vh - var(--nav-h) - 5rem);
+      overflow-y: auto;
+    }
+  }
+</style>
+
+<script>
+  function wire(root: HTMLElement) {
+    if (root.dataset.wired) return;
+    root.dataset.wired = 'true';
+    const links = new Map<string, HTMLElement>();
+    root.querySelectorAll<HTMLElement>('[data-toc-link]').forEach((link) => {
+      links.set(link.dataset.tocLink as string, link);
+    });
+
+    const headings = Array.from(links.keys())
+      .map((slug) => document.getElementById(slug))
+      .filter((el): el is HTMLElement => el !== null);
+    if (headings.length === 0) return;
+
+    const mark = (slug: string) => {
+      links.forEach((link, key) => {
+        if (key === slug) link.setAttribute('data-here', '');
+        else link.removeAttribute('data-here');
+      });
+    };
+
+    // The section you are reading is the last heading that has passed the top of the
+    // page, which is a different question from which heading is on screen.
+    const line = () => {
+      const top = window.innerHeight * 0.25;
+      let here = headings[0];
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top <= top) here = heading;
+      }
+      mark(here.id);
+    };
+
+    let queued = false;
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        line();
+      });
+    };
+
+    line();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+  }
+
+  const init = () => document.querySelectorAll<HTMLElement>('[data-toc]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

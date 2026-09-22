@@ -1,0 +1,67 @@
+---
+import Logo from './Logo.astro';
+import { url } from '../lib/links';
+import { REPO_URL, MAVEN_CENTRAL_URL } from '../lib/site';
+
+const home = url('/');
+---
+<header class="nav" data-nav data-pagefind-ignore>
+  <div class="shell nav__inner">
+    <a class="nav__brand" href={home} aria-label="idempotency4j, home">
+      <Logo height={20} />
+    </a>
+    <nav class="nav__links" aria-label="Main">
+      <a class="link" href={url('/docs')}>Docs</a>
+      <a class="link" href={url('/learn')}>Learn</a>
+      <a class="link link--out" href={REPO_URL} rel="noopener">
+        GitHub<span class="link__out" aria-hidden="true">&#8599;</span>
+      </a>
+      <a class="link link--out nav__hide-sm" href={MAVEN_CENTRAL_URL} rel="noopener">
+        Maven Central<span class="link__out" aria-hidden="true">&#8599;</span>
+      </a>
+    </nav>
+    <a class="cta cta--sm" href={url('/docs/quickstart')}>
+      Get started<span class="cta__arrow" aria-hidden="true">→</span>
+    </a>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav__inner {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 4vw, 2.5rem);
+    height: var(--nav-h);
+  }
+  .nav__brand { text-decoration: none; flex: none; }
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.9rem, 2.4vw, 1.75rem);
+    margin-left: auto;
+    font-size: var(--step--1);
+  }
+  .cta--sm {
+    padding: 0.62em 1em;
+    font-size: var(--step--1);
+    flex: none;
+  }
+  @media (max-width: 720px) {
+    .nav__hide-sm { display: none; }
+    .nav__links { gap: 0.9rem; }
+  }
+  /* On a phone the hero's own Get started is a thumb's reach away, so the bar drops
+     its duplicate and keeps the links instead - a nav with nothing in it is worse
+     than a second button missing. */
+  @media (max-width: 460px) {
+    .cta--sm { display: none; }
+    .nav__links { gap: 1.1rem; }
+  }
+</style>

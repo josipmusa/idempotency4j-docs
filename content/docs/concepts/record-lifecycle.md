@@ -1,0 +1,55 @@
+---
+title: Record lifecycle
+description: The state machine - absent, IN_PROGRESS, COMPLETE - and why there is no failed state.
+sourceOf: README "How it works"
+---
+
+A record is absent, `IN_PROGRESS`, or `COMPLETE`. There is no failed state.
+
+## The states
+
+**Absent.** No caller has acquired this scope and key, or a previous attempt released it.
+
+**`IN_PROGRESS`.** A caller acquired a lease and is running the action. The lease is kept
+alive by a heartbeat.
+
+**`COMPLETE`.** The action returned and its result was stored. Duplicates now replay that
+stored result for as long as the record's TTL lasts.
+
+## The edges
+
+**Acquire.** A caller with no existing record creates one `IN_PROGRESS` and takes a lease.
+
+**Complete.** The action returned. The record moves to `COMPLETE` carrying a replayable
+payload.
+
+**Release.** The action threw. Releasing **deletes the row**, so a failed attempt leaves no
+trace at all and the next caller sees a key that was never used.
+
+**Steal.** An action that dies without releasing leaves an expired lease, which the next
+`tryAcquire` steals atomically. See [leases and waiting](/docs/concepts/leases-and-waiting/).
+
+**Purge.** A completed record is purged once its TTL elapses. An abandoned `IN_PROGRESS`
+record is purged only once its TTL has elapsed *and* its lease has expired too, so a
+long-running action is never purged out from under itself. See
+[purging and retention](/docs/operating/purging-and-retention/).
+
+## Why there is no failed state
+
+A failed attempt is an attempt that did not happen. Recording it would mean deciding how long
+a failure stays authoritative and what a later caller should do about it, and every answer to
+that is wrong for someone. Deleting the row instead makes the rule short enough to hold in
+your head: **if you want a failed request to be retriable, throw.**
+
+:::caution[A handler that returns a `500` has that `500` replayed for the full TTL]
+Returning an error status tells the library that error is the final answer for that key.
+This is the consequence of the rule above that surprises people most.
+[HTTP endpoints](/docs/http-endpoints/) covers it in full.
+:::
+
+## Fencing
+
+Every acquisition carries a lease, and `complete`, `release` and the heartbeat all have to
+present a matching lease. That is what fences a stale owner out after its lease has been
+stolen: a process that wakes up from a long pause and tries to complete a record whose lease
+now belongs to someone else is refused rather than overwriting the new owner's work.

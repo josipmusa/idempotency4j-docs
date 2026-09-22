@@ -1,0 +1,320 @@
+---
+// The first step of the quickstart: the two coordinates you actually paste. It used to
+// print the JDBC dependency and say "pick one storage backend" in a comment, which asks
+// the reader to go and find the artifact id for the store they run. There are two
+// questions here - which build tool, which store - so there are two strips, and the
+// panel is the answer to both.
+//
+// The six snippets are generated from the group id and the version, so nothing here can
+// drift from site.config.mjs when the library is released again.
+import { Code } from 'astro:components';
+import { url } from '../../lib/links';
+import { GROUP_ID, ARTIFACT_ID, LIBRARY_VERSION } from '../../lib/site';
+
+const BOM = 'idempotency-bom';
+
+// Two, because every other build-tool strip in the reference is Maven and Gradle, and a
+// label that matches nothing over there is a choice that cannot travel. A third tab for
+// the BOM also made the strip one the phone had to wrap: the BOM is one line of the Maven
+// form, not a build tool of its own, so it is a note under the block instead.
+const tools = [
+  { id: 'maven', label: 'Maven', lang: 'xml' },
+  { id: 'gradle', label: 'Gradle', lang: 'groovy' },
+];
+
+const stores = [
+  {
+    id: 'jdbc',
+    label: 'JDBC',
+    artifact: 'idempotency-jdbc',
+    note: 'Autoconfigured from a single DataSource, and the only store that can join your transaction.',
+    href: '/docs/storage/jdbc',
+    link: 'JDBC',
+  },
+  {
+    id: 'redis',
+    label: 'Redis',
+    artifact: 'idempotency-redis',
+    note: 'The dependency is not enough: the client, the connection and the store are three beans you declare.',
+    href: '/docs/storage/redis',
+    link: 'Redis',
+  },
+  {
+    id: 'in-memory',
+    label: 'In-memory',
+    artifact: 'idempotency-inmemory',
+    note: 'One JVM, lost on restart. Asked for by name with store-type: in-memory, never selected by auto.',
+    href: '/docs/storage/in-memory',
+    link: 'In-memory',
+  },
+];
+
+const mavenDep = (artifact: string, version = true) =>
+  [
+    '<dependency>',
+    `    <groupId>${GROUP_ID}</groupId>`,
+    `    <artifactId>${artifact}</artifactId>`,
+    ...(version ? [`    <version>${LIBRARY_VERSION}</version>`] : []),
+    '</dependency>',
+  ].join('\n');
+
+const snippet = (tool: string, artifact: string) =>
+  tool === 'maven'
+    ? `${mavenDep(ARTIFACT_ID)}\n\n${mavenDep(artifact)}`
+    : [
+        'dependencies {',
+        `    implementation platform('${GROUP_ID}:${BOM}:${LIBRARY_VERSION}')`,
+        `    implementation '${GROUP_ID}:${ARTIFACT_ID}'`,
+        `    implementation '${GROUP_ID}:${artifact}'`,
+        '}',
+      ].join('\n');
+---
+<div class="install" data-install data-tabs data-sync="build-tool">
+  <div class="install__bar">
+    <span class="install__k mono" id="install-build">Build</span>
+    <div class="install__strip" role="tablist" aria-labelledby="install-build">
+      {tools.map((tool, i) => (
+        <button
+          class="install__tab"
+          type="button"
+          role="tab"
+          data-tool={tool.id}
+          data-label={tool.label}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+        >{tool.label}</button>
+      ))}
+    </div>
+  </div>
+  <div class="install__bar" data-tabs data-sync="store">
+    <span class="install__k mono" id="install-store">Store</span>
+    <div class="install__strip" role="tablist" aria-labelledby="install-store">
+      {stores.map((store, i) => (
+        <button
+          class="install__tab"
+          type="button"
+          role="tab"
+          data-store={store.id}
+          data-label={store.label}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+        >{store.label}</button>
+      ))}
+    </div>
+  </div>
+
+  <div class="install__panels">
+    {tools.map((tool) =>
+      stores.map((store) => (
+        <div
+          class="code install__panel"
+          data-tool={tool.id}
+          data-store={store.id}
+          hidden={!(tool.id === 'maven' && store.id === 'jdbc')}
+        >
+          <Code code={snippet(tool.id, store.artifact)} lang={tool.lang} theme="css-variables" />
+        </div>
+      )),
+    )}
+    {stores.map((store, i) => (
+      <p class="install__note" data-store={store.id} hidden={i !== 0}>
+        {store.note} <a class="link" href={url(store.href)}>{store.link}</a>.
+      </p>
+    ))}
+  </div>
+</div>
+
+<!-- Without script the strips cannot change anything, so every combination is printed
+     and labelled rather than one being shown and the other eight lost. -->
+<noscript>
+  <style>
+    .install__bar { display: none; }
+    .install__panel[hidden] { display: flex; }
+    .install__note[hidden] { display: block; }
+    .install__panel::before {
+      content: attr(data-tool) ' / ' attr(data-store);
+      display: block;
+      padding-bottom: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: var(--step--2);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+  </style>
+</noscript>
+
+<style>
+  /* The same plate as the tab strips in the rest of the reference: one box, the choices
+     along the top, the answer inside. Two rows because there are two questions. */
+  .install {
+    margin-block: 1.8em;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-raised);
+  }
+  .install__bar {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .install__k {
+    display: grid;
+    align-items: center;
+    flex: none;
+    /* The same vertical inset the choices carry: a label sitting flush on the rule below
+       it reads as part of the rule. */
+    padding: 0.7em 1.1em;
+    border-right: 1px solid var(--line);
+    font-size: var(--step--2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .install__strip { display: flex; min-width: 0; }
+  .install__tab {
+    appearance: none;
+    background: none;
+    border: none;
+    border-right: 1px solid var(--line);
+    padding: 0.7em 1.1em;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition:
+      color var(--dur-hover) var(--ease),
+      background var(--dur-hover) var(--ease);
+  }
+  .install__tab[aria-selected='true'] { color: var(--ink); background: var(--bg-sunken); }
+  @media (hover: hover) and (pointer: fine) {
+    .install__tab:hover { color: var(--ink); }
+  }
+
+  .install__panels { padding: 1.1em; }
+  .install__panels :global(.code) { margin-block: 0; }
+  .install__panels :global(pre) { padding: 0; border: none; background: none; }
+  .install__panels :global(.code__copy) { border: 1px solid var(--line); }
+  .install__note {
+    margin-top: 1.1em;
+    font-size: var(--step--1);
+    line-height: 1.6;
+    /* Body-sized prose, so it takes body-sized contrast. --ink-3 is for the labels. */
+    color: var(--ink-2);
+    max-width: 58ch;
+  }
+
+  /* A question and its answers stay on one line at 360px: the label above its own strip
+     read as two separate things, and the strip wrapping read as a broken row. The insets
+     give way instead, which is the only part of this with room to spare. */
+  @media (max-width: 560px) {
+    .install__k { padding-inline: 0.8em; letter-spacing: 0.1em; }
+    .install__tab { padding-inline: 0.8em; letter-spacing: 0.04em; }
+  }
+</style>
+
+<script>
+  const KEY = 'i4j:tab';
+
+  function wire(root: HTMLElement) {
+    if (root.dataset.installWired) return;
+    root.dataset.installWired = 'true';
+
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('.install__panel'));
+    const notes = Array.from(root.querySelectorAll<HTMLElement>('.install__note'));
+    const strips = {
+      tool: Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tool]')).filter(
+        (el) => el.tagName === 'BUTTON',
+      ),
+      store: Array.from(root.querySelectorAll<HTMLButtonElement>('[data-store]')).filter(
+        (el) => el.tagName === 'BUTTON',
+      ),
+    };
+    if (panels.length === 0) return;
+
+    const chosen = { tool: strips.tool[0].dataset.tool!, store: strips.store[0].dataset.store! };
+
+    const paint = () => {
+      strips.tool.forEach((b) => {
+        const on = b.dataset.tool === chosen.tool;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
+      strips.store.forEach((b) => {
+        const on = b.dataset.store === chosen.store;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((p) => {
+        p.hidden = !(p.dataset.tool === chosen.tool && p.dataset.store === chosen.store);
+      });
+      notes.forEach((n) => {
+        n.hidden = n.dataset.store !== chosen.store;
+      });
+    };
+
+    const remember = (sync: string, label: string) => {
+      try {
+        localStorage.setItem(`${KEY}:${sync}`, label);
+      } catch {
+        /* private browsing; the choice simply does not survive the page */
+      }
+    };
+
+    // The build-tool choice is the one the rest of the reference also asks about, so it
+    // travels the same way a tab strip's does: every strip with that sync name follows.
+    const announce = (sync: string, label: string) => {
+      document
+        .querySelectorAll<HTMLElement>(`[data-tabs][data-sync="${sync}"]`)
+        .forEach((other) => other.dispatchEvent(new CustomEvent('tab', { detail: label })));
+    };
+
+    const bind = (
+      buttons: HTMLButtonElement[],
+      dimension: 'tool' | 'store',
+      sync: string,
+      key: (b: HTMLButtonElement) => string,
+    ) => {
+      buttons.forEach((button, i) => {
+        button.addEventListener('click', () => announce(sync, button.dataset.label!));
+        button.addEventListener('keydown', (e) => {
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+          e.preventDefault();
+          const next = buttons[(i + (e.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length];
+          next.focus();
+          next.click();
+        });
+      });
+
+      // Both the click above and a strip elsewhere on the page arrive here, so the two
+      // paths cannot disagree about what is selected.
+      const bar = buttons[0].closest('[data-sync]') ?? root;
+      bar.addEventListener('tab', (e) => {
+        const label = (e as CustomEvent<string>).detail;
+        const match = buttons.find((b) => b.dataset.label === label);
+        if (!match) return;
+        chosen[dimension] = key(match);
+        remember(sync, label);
+        paint();
+      });
+
+      let stored: string | null = null;
+      try {
+        stored = localStorage.getItem(`${KEY}:${sync}`);
+      } catch {
+        /* same */
+      }
+      const match = buttons.find((b) => b.dataset.label === stored);
+      if (match) chosen[dimension] = key(match);
+    };
+
+    bind(strips.tool, 'tool', 'build-tool', (b) => b.dataset.tool!);
+    bind(strips.store, 'store', 'store', (b) => b.dataset.store!);
+    paint();
+  }
+
+  const init = () => document.querySelectorAll<HTMLElement>('[data-install]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

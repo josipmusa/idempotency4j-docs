@@ -1,0 +1,37 @@
+---
+title: Requirements
+description: Supported Java, Spring Boot, database and Redis versions, what is not supported, and the licence.
+sourceOf: README "Requirements"
+---
+
+import SupportMatrix from '../../src/components/prose/SupportMatrix.astro';
+
+<SupportMatrix />
+
+## The core has no framework
+
+`idempotency-core` is plain Java plus SLF4J. If you are not on Spring, that module and a
+store are all you need - see [the engine](/docs/the-engine/).
+
+## What is not supported
+
+:::caution[WebFlux fails silently]
+Nothing registers and no error is raised, so a WebFlux application gets no idempotency from
+the HTTP adapter and no warning that this is the case. The engine's `execute` is blocking.
+:::
+
+**Redis Cluster.** Standalone and Sentinel master-replica connections work.
+
+The full list is on [limitations](/docs/operating/limitations/).
+
+## Spring Boot 3
+
+0.4.0 moved to Spring Boot 4 and Spring Framework 7. Boot 3 applications should stay on
+**0.3.0** - see [upgrading](/docs/operating/upgrading/).
+
+## Licence
+
+Apache 2.0. See
+[LICENSE](https://github.com/josipmusa/idempotency4j/blob/main/LICENSE) and
+[NOTICE](https://github.com/josipmusa/idempotency4j/blob/main/NOTICE) in the library
+repository.

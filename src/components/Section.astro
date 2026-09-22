@@ -1,0 +1,29 @@
+---
+interface Props {
+  id: string;
+  heading?: string;
+  lede?: string;
+  class?: string;
+}
+const { id, heading, lede, class: klass } = Astro.props;
+---
+<section class:list={['section', klass]} id={id} data-section={id}>
+  <div class="shell">
+    {(heading || lede) && (
+      <header class="section__head" data-reveal-group>
+        {heading && <h2 class="h2" data-reveal>{heading}</h2>}
+        {lede && <p class="lede" data-reveal>{lede}</p>}
+      </header>
+    )}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .section__head {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.85rem, 1.6vw, 1.25rem);
+    margin-bottom: clamp(2.25rem, 5vw, 4rem);
+  }
+</style>

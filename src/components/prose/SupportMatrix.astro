@@ -1,0 +1,85 @@
+---
+// The support matrix as a plate: three groups, every row a part, the column that says
+// what is supported set in mono like a part number. The rows that say No are marked,
+// because for the reader deciding whether this library fits, those are the rows.
+//
+// Rendered from src/data/specs.ts, which is the library's README at a named version, so
+// the specs page and the reference page cannot drift apart.
+import { matrix, ci } from '../../data/specs';
+
+interface Props { caption?: boolean }
+const { caption = true } = Astro.props;
+---
+<div class="mx">
+  {matrix.map((group) => (
+    <section class="mx__group" data-reveal-group>
+      <h2 class="mx__label mono" data-reveal>{group.label}</h2>
+      <ul class="mx__rows">
+        {group.rows.map((row) => (
+          <li class="mx__row" data-reveal data-no={row.no ? '' : undefined}>
+            <p class="mx__item" class:list={[{ mono: row.code }]}>{row.item}</p>
+            <p class="mx__yes mono">{row.supported}</p>
+            <p class="mx__note">{row.note}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+  {caption && <p class="mx__ci">{ci}</p>}
+</div>
+
+<style>
+  .mx { margin-block: 2em; max-width: 68rem; }
+  .mx__group + .mx__group { margin-top: clamp(2rem, 4vw, 3rem); }
+
+  /* The prose's own h2 carries a rule above it and a lot of space; a group label on a
+     spec sheet is neither, so the inherited shape is undone here. */
+  .mx__label {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    line-height: 1.4;
+    font-size: var(--step--2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--line-strong);
+  }
+
+  .mx__rows { list-style: none; padding: 0; margin: 0; }
+
+  .mx__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr) minmax(0, 1.4fr);
+    gap: 0.35rem clamp(1rem, 3vw, 2rem);
+    align-items: baseline;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--line-faint);
+  }
+  .mx__row::before { content: none; }
+  .mx__item { color: var(--ink); font-size: var(--step-0); letter-spacing: -0.01em; }
+  .mx__item.mono { font-size: var(--step--1); }
+  .mx__yes { color: var(--ink); font-size: var(--step--1); }
+  .mx__note { color: var(--ink-3); font-size: var(--step--1); line-height: 1.5; }
+
+  /* The one marking on the plate: this row is the answer no. */
+  .mx__row[data-no] .mx__yes { color: var(--accent); }
+
+  .mx__ci {
+    margin-top: clamp(1.5rem, 3vw, 2rem);
+    max-width: 62ch;
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+
+  @media (max-width: 720px) {
+    .mx__row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.3rem 1rem;
+    }
+    .mx__note { grid-column: 1 / -1; }
+  }
+</style>

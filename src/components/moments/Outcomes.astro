@@ -1,0 +1,243 @@
+---
+// Moment: the four outcomes.
+//
+// One request with an Idempotency-Key, routed by the state the record already holds.
+// The four paths and their status codes are the library's own; the existing
+// request-outcomes diagram is the source of truth for the logic.
+import { outcomes } from '../../data/home';
+
+const paths = [
+  {
+    key: 'new',
+    state: 'New key',
+    detail: 'The handler runs and its response is stored',
+    code: '200',
+    tone: 'run',
+    header: 'none',
+  },
+  {
+    key: 'match',
+    state: 'Completed, body matches',
+    detail: 'The stored response is replayed',
+    code: '200',
+    tone: 'replay',
+    header: 'Idempotent-Replayed: true',
+  },
+  {
+    key: 'differs',
+    state: 'Completed, body differs',
+    detail: 'Key reused with a different request body',
+    code: '422',
+    tone: 'refuse',
+    header: 'Unprocessable Entity',
+  },
+  {
+    key: 'held',
+    state: 'Still held past waitTimeout',
+    detail: 'Another request has the key',
+    code: '409',
+    tone: 'refuse',
+    header: 'Retry-After: 30',
+  },
+];
+---
+<figure class="out" data-outcomes>
+  <div class="out__req">
+    <p class="out__req-label mono">Request</p>
+    <pre class="out__req-code mono"><code>POST /payments
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000</code></pre>
+  </div>
+
+  <ol class="out__paths">
+    {paths.map((path, i) => (
+      <li class="out__path" data-path data-tone={path.tone}>
+        <button type="button" class="out__btn">
+          <span class="out__idx mono">{String(i + 1).padStart(2, '0')}</span>
+          <span class="out__body">
+            <span class="out__state">{path.state}</span>
+            <span class="out__detail">{path.detail}</span>
+          </span>
+          <span class="out__wire" aria-hidden="true"><span class="out__pulse"></span></span>
+          <span class="out__code mono">{path.code}</span>
+        </button>
+        <p class="out__header mono">{path.header === 'none' ? 'the handler’s own response' : path.header}</p>
+      </li>
+    ))}
+  </ol>
+
+  <figcaption class="out__caption">{outcomes.lede}</figcaption>
+</figure>
+
+<style>
+  .out {
+    margin: 0;
+    display: grid;
+    gap: 0;
+    background: var(--panel-bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+    overflow: hidden;
+  }
+
+  .out__req {
+    padding: clamp(1rem, 2.5vw, 1.6rem);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+  .out__req-label {
+    font-size: var(--step--2);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 0.5rem;
+  }
+  .out__req-code {
+    margin: 0;
+    font-size: var(--step--2);
+    line-height: 1.6;
+    color: var(--ink-2);
+    overflow-x: auto;
+  }
+
+  .out__paths { display: grid; }
+
+  /* Every row is readable before it lights: dimming the whole row put its header line
+     under 1.5:1, and the row already says it is lit three other ways - the status
+     code's colour, the wire, and the panel behind it. */
+  .out__path {
+    border-bottom: 1px solid var(--line-faint);
+    transition: background var(--dur-reveal) var(--ease);
+  }
+  .out__path:last-child { border-bottom: none; }
+  .out__path[data-active] { background: var(--bg-raised); }
+
+  .out__btn {
+    display: grid;
+    grid-template-columns: 2.6rem minmax(0, 1fr) minmax(2rem, 6rem) 3.2rem;
+    align-items: center;
+    gap: clamp(0.6rem, 2vw, 1.2rem);
+    width: 100%;
+    padding: clamp(0.8rem, 2vw, 1.15rem) clamp(1rem, 2.5vw, 1.6rem) 0.35rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .out__idx { font-size: var(--step--2); color: var(--ink-3); }
+  .out__body { display: grid; gap: 0.15rem; }
+  .out__state { font-size: var(--step-0); color: var(--ink); letter-spacing: -0.01em; }
+  .out__detail { font-size: var(--step--1); color: var(--ink-3); }
+
+  .out__wire {
+    position: relative;
+    height: 1px;
+    background: var(--line-strong);
+    overflow: hidden;
+  }
+  /* A transition rather than keyframes: a visitor can fire a path twice in a second,
+     and a transition retargets from where it is instead of restarting from zero. */
+  .out__pulse {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 420ms var(--ease);
+  }
+  .out__path[data-active] .out__pulse { transform: scaleX(1); }
+
+  .out__code {
+    justify-self: end;
+    font-size: var(--step-1);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-3);
+    transition: color var(--dur-reveal) var(--ease);
+  }
+  .out__path[data-lit][data-tone='run'] .out__code { color: var(--ink); }
+  .out__path[data-lit][data-tone='replay'] .out__code { color: var(--accent); }
+  .out__path[data-lit][data-tone='refuse'] .out__code { color: var(--danger); }
+
+  .out__header {
+    padding: 0 clamp(1rem, 2.5vw, 1.6rem) clamp(0.8rem, 2vw, 1.1rem) calc(2.6rem + clamp(0.6rem, 2vw, 1.2rem) + clamp(1rem, 2.5vw, 1.6rem));
+    font-size: var(--step--2);
+    color: var(--ink-3);
+  }
+
+  .out__caption {
+    padding: 0.9em clamp(1rem, 2.5vw, 1.6rem) 1.1em;
+    border-top: 1px solid var(--line);
+    background: var(--bg-raised);
+    font-size: var(--step--2);
+    color: var(--ink-3);
+  }
+
+  /* The same rule as every other code panel: a phone reads down, never sideways. The
+     key is the one line here long enough to need it, and its tail was being clipped
+     with no way to reach it. */
+  @media (max-width: 620px) {
+    .out__req-code {
+      font-size: 0.7rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-x: hidden;
+    }
+    .out__btn { grid-template-columns: 2.2rem minmax(0, 1fr) 3rem; }
+    .out__wire { display: none; }
+    .out__header { padding-left: clamp(1rem, 2.5vw, 1.6rem); }
+  }
+</style>
+
+<script>
+  function wire(root: HTMLElement) {
+    if (root.dataset.wired) return;
+    root.dataset.wired = 'true';
+    const paths = Array.from(root.querySelectorAll<HTMLElement>('[data-path]'));
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let timers: number[] = [];
+
+    const light = (el: HTMLElement) => {
+      paths.forEach((p) => p.removeAttribute('data-active'));
+      el.setAttribute('data-active', '');
+      el.setAttribute('data-lit', '');
+    };
+
+    paths.forEach((p) => {
+      p.querySelector('button')?.addEventListener('click', () => {
+        timers.forEach((t) => window.clearTimeout(t));
+        timers = [];
+        light(p);
+      });
+    });
+
+    if (still) {
+      // The static frame is all four paths drawn at once: the diagram.
+      paths.forEach((p) => p.setAttribute('data-lit', ''));
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          io.disconnect();
+          paths.forEach((p, i) => {
+            timers.push(window.setTimeout(() => light(p), i * 520));
+          });
+          timers.push(
+            window.setTimeout(() => {
+              paths.forEach((p) => p.removeAttribute('data-active'));
+            }, paths.length * 520 + 600),
+          );
+        }
+      },
+      { threshold: 0.3 },
+    );
+    io.observe(root);
+  }
+
+  const init = () =>
+    document.querySelectorAll<HTMLElement>('[data-outcomes]').forEach(wire);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>

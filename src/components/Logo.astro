@@ -1,0 +1,61 @@
+---
+// The mark: two identical chevrons - a request and its retry - running into one stop
+// bar. Geometry is taken from the library's own logo.svg; the colours come from the
+// approach's tokens, not from the file.
+interface Props { height?: number; class?: string }
+const { height = 22, class: klass } = Astro.props;
+---
+<span class:list={['logo', klass]} style={`--logo-h:${height}px`}>
+  <svg class="logo__mark" viewBox="0 0 56 40" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
+      <polyline points="6,8 22,20 6,32" />
+      <polyline class="logo__dup" points="22,8 38,20 22,32" />
+    </g>
+    <rect x="46" y="6" width="6" height="28" fill="currentColor" />
+  </svg>
+  <span class="logo__word">idempotency<span class="logo__four">4j</span></span>
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    font-size: var(--logo-h);
+    line-height: 1;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .logo__mark {
+    height: 0.82em;
+    width: auto;
+    color: var(--accent);
+    flex: none;
+  }
+  /* The mark is a request and its retry running into a stop bar, so it can say what
+     the library says: the retry slides into the first chevron and is gone, and one
+     request reaches the bar. It comes back when the pointer leaves. Transform and
+     opacity only, and nothing moves unless someone points at it. */
+  .logo__dup {
+    transition:
+      transform 420ms var(--ease),
+      opacity 240ms var(--ease) 180ms;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .logo:hover .logo__dup {
+      transform: translateX(-16px);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .logo__dup { transition: none; }
+    .logo:hover .logo__dup { transform: none; opacity: 1; }
+  }
+  .logo__word {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.86em;
+    letter-spacing: -0.02em;
+  }
+  .logo__four { color: var(--ink-3); }
+</style>

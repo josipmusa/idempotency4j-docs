@@ -1,0 +1,300 @@
+/* The printed page: everything Markdown renders, set on the same plate as the homepage.
+   Loaded by the pages that render content, not by the site, because the homepage's
+   sections are components and own their own type.
+
+   The rule from tokens.css holds here too: a line describes something. Headings are
+   marked by a rule because a rule is where a section starts on a printed sheet; tables
+   are plates; there is nothing that only frames. */
+
+.prose {
+  /* ch undercounts a proportional face: 74ch measured out at 88 characters a line, which
+     is past the point where the eye loses the line it is on. 58ch reads as about 72. */
+  --measure: 58ch;
+  color: var(--ink-2);
+  font-size: var(--step-0);
+  line-height: 1.65;
+}
+
+/* The rhythm and the measure belong to the flow, not to the top level. Prose set inside
+   a step, a tab panel or an aside is still prose: written as `.prose > * + *` alone it
+   lost both, so a paragraph in a tab panel sat flush against the strip above it and ran
+   the full width of the box - the same words, set twice as wide as the page's own. */
+.prose > * + *,
+.prose li > * + *,
+.prose .tab > * + * { margin-top: 1.15em; }
+.prose > p,
+.prose > ul,
+.prose > ol,
+.prose > blockquote,
+.prose li > p,
+.prose .tab > p,
+.prose .tab > ul,
+.prose .tab > ol { max-width: var(--measure); }
+
+/* --- headings ------------------------------------------------------------ */
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.1;
+  text-wrap: balance;
+  /* The anchor clears the sticky bar when a heading is jumped to. */
+  scroll-margin-top: calc(var(--nav-h) + 1.5rem);
+}
+
+.prose h2 {
+  margin-top: 2.6em;
+  padding-top: 0.8em;
+  border-top: 2px solid var(--line-strong);
+  font-size: var(--step-2);
+  text-transform: uppercase;
+}
+.prose h3 {
+  margin-top: 2.2em;
+  font-size: var(--step-1);
+  letter-spacing: -0.015em;
+}
+.prose h4 {
+  margin-top: 1.8em;
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.prose > h2:first-child,
+.prose > h3:first-child { margin-top: 0; }
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+/* --- links -------------------------------------------------------------- */
+
+/* In a paragraph of reference prose a link has to be visible standing still, so it is
+   underlined rather than relying on a hover. */
+.prose a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color var(--dur-hover) var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .prose a:hover { color: var(--accent); }
+}
+
+/* --- lists -------------------------------------------------------------- */
+
+.prose ul,
+.prose ol { padding-left: 1.6em; }
+.prose ul { list-style: none; }
+.prose ol { list-style: decimal; }
+.prose li + li { margin-top: 0.5em; }
+.prose li::marker { color: var(--ink-3); font-family: var(--font-mono); font-size: 0.9em; }
+
+/* A part mark, not a bullet: the same stamped cross the plate is registered by, drawn
+   with two hard-stop rules the way every other line on this site is drawn. */
+.prose ul > li { position: relative; }
+.prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: -1.35em;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  background-image:
+    linear-gradient(var(--accent) 0 0),
+    linear-gradient(var(--accent) 0 0);
+  background-size: 7px 1px, 1px 7px;
+  background-position: center, center;
+  background-repeat: no-repeat;
+}
+
+.prose ul ul,
+.prose ol ol,
+.prose ul ol,
+.prose ol ul { margin-top: 0.5em; }
+
+/* --- code --------------------------------------------------------------- */
+
+.prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-faint);
+  padding: 0.1em 0.34em;
+  white-space: nowrap;
+}
+
+.prose pre {
+  position: relative;
+  margin-block: 1.6em;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-raised);
+  overflow-x: auto;
+  font-size: var(--code-size);
+  line-height: var(--code-lh);
+  tab-size: 4;
+}
+.prose pre code { font-family: var(--font-mono); }
+
+/* The copy button on every snippet: a must-have, because most of what these pages are
+   for is getting a block of this into someone's own project.
+
+   It is a tab on the plate's top edge and not a chip laid over the corner. Over the
+   corner it covered the first two lines of every snippet: on a touch screen the button
+   cannot wait for a hover, and the code it sat on is wider than the column anyway, so it
+   read as a block cut off at the top right. Above the code it covers nothing, and it is
+   on screen whether or not the device has a pointer. */
+.code {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-block: 1.6em;
+}
+.code > pre { margin-block: 0; align-self: stretch; }
+/* A laid-out display beats the browser's own [hidden] rule, and a tab panel is hidden by
+   that attribute. */
+.code[hidden] { display: none; }
+.code__copy {
+  /* The script appends it after the block it copies; it belongs above it. */
+  order: -1;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  background: var(--bg-raised);
+  border: 1px solid var(--line-strong);
+  border-bottom: none;
+  /* It shares the plate's top rule rather than drawing a second one beside it. */
+  margin-bottom: -1px;
+  padding: 0.35em 0.7em;
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* A control that is always on screen is read, not just glanced at, so it takes the
+     contrast the body does rather than the labels'. */
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color var(--dur-hover) var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .code__copy:hover { color: var(--ink); }
+}
+.code__copy[data-copied] { color: var(--accent); }
+
+/* A phone reads down, never sideways. An identifier like IdempotencyInFlightException is
+   wider than the column, so inline code breaks where it has to rather than pushing the
+   page out, and a code block wraps rather than scrolling: a snippet you have to drag
+   sideways to finish reading is a snippet you read half of. The line's own indent is
+   kept, so the shape of the block survives the wrap. */
+@media (max-width: 620px) {
+  .prose :not(pre) > code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .prose td code { white-space: normal; }
+  .prose pre {
+    white-space: pre-wrap;
+    /* A coordinate like io.github.josipmusa:idempotency-spring-boot-starter is longer
+       than the whole column, so it has to be allowed to break inside. */
+    overflow-wrap: anywhere;
+  }
+}
+
+/* --- tables ------------------------------------------------------------- */
+
+/* A table is a plate: the head is stamped, every row is a part, and the whole thing can
+   be read across on a phone by scrolling the plate rather than the page. The rules are
+   the head's and the rows' own - a border around the outside would be framing, and it put
+   the first cell flush against a line for no reason. */
+.prose .table {
+  margin-block: 1.8em;
+  overflow-x: auto;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+.prose th,
+.prose td {
+  padding: 0.7em 0.9em;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line-faint);
+}
+.prose th {
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.prose tbody tr:last-child td { border-bottom: none; }
+.prose td code { white-space: nowrap; }
+
+/* --- asides ------------------------------------------------------------- */
+
+/* Two registers, marked by their own words rather than by an icon: something worth
+   knowing, and something that will bite. The rule down the left is the callout leader
+   from the plate, which is why it is on one edge and not four. */
+.prose .aside {
+  margin-block: 1.8em;
+  max-width: var(--measure);
+  padding: 0.9em 1.1em;
+  border-left: 2px solid var(--line-strong);
+  background: var(--bg-raised);
+  font-size: var(--step--1);
+}
+.prose .aside--warn { border-left-color: var(--accent); }
+.prose .aside__label {
+  color: var(--ink);
+  font-weight: 600;
+}
+.prose .aside__label + * { margin-top: 0.5em; }
+.prose .aside > * + * { margin-top: 0.7em; }
+.prose .aside :not(pre) > code { background: var(--bg-sunken); }
+
+/* --- rules and images --------------------------------------------------- */
+
+.prose hr {
+  margin-block: 2.5em;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+.prose img { margin-block: 1.8em; }
+.prose blockquote {
+  padding-left: 1.1em;
+  border-left: 2px solid var(--line-strong);
+  color: var(--ink-2);
+}
+
+/* --- scrollbars ---------------------------------------------------------- */
+
+/* Anything that scrolls inside the page scrolls quietly. A rail down the side of a
+   sticky column is a line that describes nothing, which is the one thing these pages are
+   not allowed to draw, so the margins' own scrollbars appear only under the pointer. */
+.prose pre,
+.prose .table,
+.ref,
+.toc {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.ref,
+.toc { scrollbar-color: transparent transparent; }
+.ref:hover,
+.ref:focus-within,
+.toc:hover,
+.toc:focus-within { scrollbar-color: var(--line-strong) transparent; }

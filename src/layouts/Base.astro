@@ -1,0 +1,51 @@
+---
+// Every page's shell. The faces and the tokens are loaded here rather than per page, so
+// a sub-page cannot be built that is missing them.
+import '@fontsource-variable/instrument-sans/wght.css';
+import '@fontsource-variable/jetbrains-mono/wght.css';
+import '@fontsource-variable/archivo/wght.css';
+import '../styles/base.css';
+import '../styles/tokens.css';
+import { ClientRouter } from 'astro:transitions';
+import { url } from '../lib/links';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang="en" data-world="plate">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <meta name="color-scheme" content="dark" />
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <slot />
+    <script>
+      // Lenis, off on touch and off under reduced motion. Nothing else on the page
+      // depends on it; without it the page simply scrolls natively.
+      const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (fine && !still) {
+        const { default: Lenis } = await import('lenis');
+        const lenis = new Lenis({ duration: 0.9, smoothWheel: true });
+        window.__lenis = lenis;
+        const raf = (time: number) => {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        };
+        requestAnimationFrame(raf);
+      }
+    </script>
+  </body>
+</html>

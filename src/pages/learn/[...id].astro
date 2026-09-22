@@ -1,0 +1,40 @@
+---
+// One article. The reference's index would be the wrong spine here - these are read
+// through, not looked things up in - so the margin carries the article's own sections and
+// the end carries the next question.
+import { getCollection, render } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import Toc from '../../components/docs/Toc.astro';
+import PageEnds from '../../components/docs/PageEnds.astro';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('learn');
+  return articles
+    .filter((article) => article.id !== 'index')
+    .map((article) => ({ params: { id: article.id }, props: { article } }));
+}
+
+const { article } = Astro.props;
+const { Content, headings } = await render(article);
+
+const order = (await getCollection('learn'))
+  .filter((a) => a.data.order !== undefined)
+  .sort((a, b) => (a.data.order as number) - (b.data.order as number));
+const at = order.findIndex((a) => a.id === article.id);
+const end = (i: number) => {
+  const found = order[i];
+  return found ? { href: `/learn/${found.id}`, title: found.data.title } : undefined;
+};
+---
+<Page
+  title={article.data.title}
+  description={article.data.description}
+  trail={[{ label: 'Learn', href: '/learn' }]}
+  shape="article"
+>
+  <Toc slot="spine" headings={headings} />
+  <article class="prose" data-pagefind-body data-pagefind-meta={`title:${article.data.title}`}>
+    <Content />
+  </article>
+  <PageEnds prev={end(at - 1)} next={end(at + 1)} />
+</Page>

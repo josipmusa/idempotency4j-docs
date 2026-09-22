@@ -1,0 +1,25 @@
+---
+// One panel of a Tabs strip. The label is carried on the panel and the strip is built
+// from it, so a tab can never name something that is not there.
+//
+// The panel also prints its own label above itself. The strip hides it once the script
+// has wired the tabs up; until then, and if the script never runs, the page is a set of
+// labelled sections and every alternative is readable.
+interface Props { label: string }
+const { label } = Astro.props;
+---
+<div class="tab" data-label={label}>
+  <p class="tab__label mono">{label}</p>
+  <slot />
+</div>
+
+<style>
+  .tab__label {
+    margin: 0;
+    font-size: var(--step--2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  :global([data-tabs][data-wired]) .tab__label { display: none; }
+</style>
