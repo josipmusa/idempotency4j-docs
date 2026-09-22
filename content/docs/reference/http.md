@@ -21,7 +21,8 @@ These come from the filter itself, before or instead of your handler. Each carri
 | `409 Conflict` | Another request still holds the key after the annotation's [`waitTimeout`](/docs/reference/annotation/); carries `Retry-After`. Configurable through `idempotency.web.in-flight-status` |
 
 :::note[Any other status your client sees came from your handler]
-Including a replayed one. The five above are the only statuses the filter produces itself.
+Including a replayed one. Apart from the `204` described below, the five above are the only
+statuses the filter produces itself.
 :::
 
 ## Response headers on a replay
@@ -31,7 +32,8 @@ Including a replayed one. The five above are the only statuses the filter produc
 | `Idempotent-Replayed` | `true` |
 | `Cache-Control` | `no-store` |
 
-The stored status code and headers are replayed as they were captured.
+The stored status code and headers are replayed as they were captured, minus hop-by-hop
+headers such as `Connection` and `Transfer-Encoding`; `Content-Length` is recomputed.
 
 ## A key completed through a non-HTTP path
 

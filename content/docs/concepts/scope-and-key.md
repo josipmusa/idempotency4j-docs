@@ -53,9 +53,12 @@ isolation.
 :::caution[Two callers using the same key in the same scope share idempotency state]
 On a public API this matters: a client generating keys from a sequence rather than a UUID
 will collide with another tenant's keys, and the second tenant gets the first tenant's
-stored response replayed to them.
+stored response replayed to them, or a `422` if their request body differs.
 
-Prefix the key at the application level, for example `userId:clientKey`. It is a
+Prefix the key at the application level, for example `userId:clientKey`. On an annotated
+method that is the `key` expression; over HTTP the filter uses the header exactly as sent, so
+the prefix has to be in the key the client sends, or added by a filter of your own that runs
+ahead of it. It is a
 [documented limitation](/docs/operating/limitations/) rather than an oversight, and the fix
 is yours to apply.
 :::

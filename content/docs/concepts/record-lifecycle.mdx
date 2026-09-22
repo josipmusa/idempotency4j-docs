@@ -36,7 +36,8 @@ caller's acquisition steals atomically. See [leases and waiting](/docs/concepts/
 **Purge.** A completed record is purged once its TTL elapses. An abandoned `IN_PROGRESS`
 record is purged only once its TTL has elapsed *and* its lease has expired too, so a
 long-running action is never purged out from under itself. See
-[purging and retention](/docs/operating/purging-and-retention/).
+[purging and retention](/docs/operating/purging-and-retention/). A completed record whose TTL
+has elapsed is also treated as absent by the next acquisition, even before a purge has run.
 
 ## Why there is no failed state
 

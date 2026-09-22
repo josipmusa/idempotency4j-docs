@@ -18,8 +18,9 @@ A `Payload` is three things:
 - **`attributes`** - flat string key-value pairs the store returns verbatim.
 
 Here the action, `handler.handle(event)`, returns a `Handled` - your own type, carrying a
-`publicationId()` - and `objectMapper` is your Jackson `ObjectMapper`. `engine` and
-`context` are built as on [the engine](/docs/the-engine/) page.
+`publicationId()` - and `objectMapper` is your Jackson 3 `ObjectMapper`, the one Spring
+Boot 4 provides, whose exceptions are unchecked. `engine` and `context` are built as on
+[the engine](/docs/the-engine/) page.
 
 ```java
 PayloadCodec<Handled> codec = new PayloadCodec<>() {

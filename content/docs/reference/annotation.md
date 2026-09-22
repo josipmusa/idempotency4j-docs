@@ -28,7 +28,7 @@ sourceOf: README "Annotated methods", "HTTP endpoints"
 | `completion` | `idempotency.completion-mode` | `autonomous` or `join-transaction`. Rejected on an endpoint |
 | `codec` | - | `PayloadCodec` bean name. Required on a value-returning method, rejected on a `void` one and on an endpoint |
 
-Every attribute except `key` and `scope` takes the application default from
+Every attribute except `key`, `scope` and `codec` takes the application default from
 [configuration](/docs/reference/configuration/) when left empty.
 
 ## Rejected on an endpoint, and why

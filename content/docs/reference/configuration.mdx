@@ -107,8 +107,9 @@ Three levels, nearest wins:
    `idempotency.default-lease`.
 3. **The built-in default**, shown in the tables above.
 
-`key` and `scope` have no property level: a key is per-method by nature, and an empty `scope`
-means "derive it" rather than "take the application default".
+`key`, `scope` and `codec` have no property level: a key is per-method by nature, a codec
+belongs to the method's return type, and an empty `scope` means "derive it" rather than "take
+the application default".
 
 ## What is not configurable here
 
@@ -120,11 +121,12 @@ yourself and configure it:
 
 - **Redis** - poll interval, purge batch sizing and replica acknowledgement are on
   `RedisIdempotencyStoreConfig`. See [Redis](/docs/storage/redis/).
-- **JDBC** - the `initSchema` flag and the connection resolver are constructor arguments when
-  you build the store by hand. See [JDBC](/docs/storage/jdbc/).
+- **JDBC** - the `initSchema` flag, the poll interval and the connection resolver are
+  constructor arguments when you build the store by hand. See [JDBC](/docs/storage/jdbc/).
 
-A store bean you declare always wins; the starter never replaces one, so declaring it is also
-how you keep every property above working while changing what only the store knows about.
+A store bean you declare always wins; the starter never replaces one. Every property above
+keeps working when you do, except `store-type` and `jdbc.initialize-schema`, which only apply
+to a store the starter builds.
 
 ## Validation
 
