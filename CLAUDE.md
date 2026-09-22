@@ -51,4 +51,4 @@ Dev server on an explicit port: `npm run dev -- --port 4399 --host 127.0.0.1`, u
 - Sub-pages from the anatomy's default set, in `content/<page>.md` first, then the page. Reveal language everywhere, at most one lighter moment per sub-page.
 - Replace every `[mock]`; missing facts go to `QUESTIONS.md`.
 - Honesty pass: AVIF/WebP sized and lazy, fonts subset and preloaded, metadata + OG image, heading order, alt text, focus states, contrast, Lighthouse > 90 all categories, zero console errors.
-- Deploy to Cloudflare Pages, connect the domain, redirects, legal footer, `HANDOVER.md` in the client's language.
+- Deploy to GitHub Pages under the repo's own path, no custom domain (the kit's runbook says Cloudflare and a domain; this site does not use either). Legal footer, `HANDOVER.md`.
