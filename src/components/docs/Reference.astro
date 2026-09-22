@@ -24,7 +24,7 @@ const titleOf = (id: string) => {
 const label = current ? titleOf(current) : 'The reference';
 ---
 <nav class="ref" aria-label="Reference" data-ref>
-  <button class="ref__sum" type="button" aria-expanded="true" aria-controls="ref-list">
+  <button class="ref__sum" type="button" aria-expanded="false" aria-controls="ref-list">
     <span class="ref__sum-k mono">Reference</span>
     <span class="ref__sum-t">{label}</span>
     <span class="ref__sum-i mono" aria-hidden="true">&#8595;</span>
@@ -63,13 +63,17 @@ const label = current ? titleOf(current) : 'The reference';
   </div>
 </nav>
 
-<!-- The fold is the server's, so the column never opens to 1221px and snaps shut on a
-     script that arrives late. With no script at all there is nothing to open a drawer
-     with, so every drawer is open. -->
+<!-- With no script there is nothing to open a drawer with, so every drawer is open and
+     the column itself is too - on a phone the summary button is the thing that would have
+     opened it, so it goes as well rather than sitting there doing nothing. -->
 <noscript>
   <style>
     .ref__group[data-shut] .ref__list { display: grid; }
     .ref__group[data-shut] .ref__label-i { display: none; }
+    @media (max-width: 1023px) {
+      .ref__body { display: block; }
+      .ref__sum { display: none; }
+    }
   </style>
 </noscript>
 
@@ -201,10 +205,16 @@ const label = current ? titleOf(current) : 'The reference';
       color: var(--ink-3);
       transition: transform var(--dur-hover) var(--ease);
     }
-    .ref[data-shut] .ref__sum-i { transform: rotate(-90deg); }
+    .ref:not([data-open]) .ref__sum-i { transform: rotate(-90deg); }
     .ref__body { padding-bottom: 1.5rem; }
     /* Shut by script, so with no script the list is simply open and usable. */
-    .ref[data-shut] .ref__body { display: none; }
+    /* Shut is the narrow default in CSS, not something a script does after the page has
+       painted. The script used to render the column open - the search field and every
+       group name - and then collapse it on a phone once it had measured the viewport,
+       which pulled the whole page up under the reader's eye. It was the largest layout
+       shift on the site and the only thing keeping the reference pages off 90. */
+    .ref__body { display: none; }
+    .ref[data-open] .ref__body { display: block; }
   }
 </style>
 
@@ -229,18 +239,22 @@ const label = current ? titleOf(current) : 'The reference';
       });
     });
 
+    // Open on a wide screen, shut on a phone: both are the stylesheet's, so the column
+    // is in its right state in the very first frame. All the script does is let the
+    // reader change it, and keep the button's aria in step - an attribute, which moves
+    // nothing. Above 1024px the button is display:none and the body is always shown, so
+    // only the narrow state is worth reporting.
     const narrow = window.matchMedia(NARROW);
-    const shut = (yes: boolean) => {
-      if (yes) root.setAttribute('data-shut', '');
-      else root.removeAttribute('data-shut');
-      button.setAttribute('aria-expanded', String(!yes));
-    };
-
-    // Open on a wide screen, where it is the column beside the prose; shut on a phone,
-    // where it sits between the reader and the page they came for.
-    shut(narrow.matches);
-    narrow.addEventListener('change', (e) => shut(e.matches));
-    button.addEventListener('click', () => shut(!root.hasAttribute('data-shut')));
+    const sync = () => button.setAttribute(
+      'aria-expanded',
+      String(!narrow.matches || root.hasAttribute('data-open')),
+    );
+    sync();
+    narrow.addEventListener('change', sync);
+    button.addEventListener('click', () => {
+      root.toggleAttribute('data-open');
+      sync();
+    });
   }
 
   const init = () => document.querySelectorAll<HTMLElement>('[data-ref]').forEach(wire);

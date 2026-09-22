@@ -9,6 +9,37 @@
    Selectors are prefixed `html[data-world='plate']` so they outrank Astro's scoped
    component styles, which compile to a `:where()` class of equal weight. */
 
+/* Metrics-matched fallbacks. Until a face arrives the browser sets the text in a local
+   one, and the two occupy different amounts of space, so the text re-wraps when the real
+   face lands - 273px of a reference page moving at once, which was the largest layout
+   shift on the site and the only thing keeping the docs pages off 90.
+
+   Each fallback is the local face the browser would have reached for anyway, scaled so
+   its advance widths and its ascent and descent match the real one. Nothing is
+   downloaded. The numbers are measured, not guessed: `size-adjust` is the real face's
+   advance width over the fallback's for a mixed sample, and the two overrides are the
+   real face's ascent and descent divided by that same factor.
+
+   There is no such entry for the mono face. `local()` is not dependable - the lookup
+   resolved to nothing in testing and the face went to `error`, leaving the stack to fall
+   through unadjusted - and mono was the face actually causing the shift, so it is handled
+   in fonts.css by not swapping at all. */
+@font-face {
+  font-family: 'Archivo fallback';
+  src: local('Helvetica'), local('Arial');
+  size-adjust: 100.57%;
+  ascent-override: 87.30%;
+  descent-override: 20.88%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Instrument Sans fallback';
+  src: local('Helvetica'), local('Arial');
+  size-adjust: 104.80%;
+  ascent-override: 92.56%;
+  descent-override: 23.86%;
+  line-gap-override: 0%;
+}
 :root {
   --bg: #000000;
   --bg-raised: #0a0a0a;
@@ -17,7 +48,11 @@
 
   --ink: #f4f1ea;
   --ink-2: #b6b2a9;
-  --ink-3: #78756e;
+  /* The quietest level still carries text - unselected tab labels, the mono captions -
+     and most of it sits on --bg-raised rather than on the sheet, where #78756e measured
+     4.31:1 and missed the bar. This clears it on both grounds, 4.82:1 raised and 5.11:1
+     on black, without moving the level's character. */
+  --ink-3: #807d76;
 
   --line: #2a2924;
   --line-faint: #1a1917;
@@ -36,8 +71,8 @@
   --grid-minor: #131210;
   --grid-major: #1e1c19;
 
-  --font-display: 'Archivo Variable', 'Instrument Sans Variable', system-ui, sans-serif;
-  --font-body: 'Instrument Sans Variable', system-ui, sans-serif;
+  --font-display: 'Archivo Variable', 'Archivo fallback', system-ui, sans-serif;
+  --font-body: 'Instrument Sans Variable', 'Instrument Sans fallback', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
   --weight-display: 700;
   --tracking-display: -0.025em;

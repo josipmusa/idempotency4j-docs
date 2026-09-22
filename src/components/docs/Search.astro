@@ -3,13 +3,19 @@
 // site is built, from the pages themselves, so there is no service to run and nothing to
 // keep in sync: what is searchable is what is published.
 //
-// The field is only there when the index is. In dev there is no index yet, so the field
-// removes itself rather than pretending - a box that returns nothing is worse than no box.
+// The field is on the page from the first paint and the index is fetched when someone
+// first reaches for it. It used to ship hidden and appear once a 45 KB bundle answered,
+// which inserted the label and the box at the top of the column a second late and pushed
+// everything under it down - the largest layout shift on the site. The bundle is also
+// not something every reader of a reference page should be made to download.
+//
+// In dev there is no index, so the field removes itself on the failed load rather than
+// pretending - a box that returns nothing is worse than no box.
 import { url } from '../../lib/links';
 
 const bundle = url('/pagefind/pagefind.js');
 ---
-<div class="find" data-find data-bundle={bundle} hidden>
+<div class="find" data-find data-bundle={bundle}>
   <label class="find__label mono" for="find-q">Search</label>
   <input
     class="find__q"
@@ -109,7 +115,6 @@ const bundle = url('/pagefind/pagefind.js');
         .then(async (mod) => {
           await mod.init?.();
           engine = mod;
-          root.hidden = false;
         })
         .catch(() => {
           // No index: a dev build, or the indexer did not run. Say nothing, show nothing.
@@ -118,17 +123,21 @@ const bundle = url('/pagefind/pagefind.js');
       return loading;
     };
 
-    // The field appears once the index answers, so it is never on screen without working.
-    load();
+    // Reaching for the field is what fetches the index, so a reader who never searches
+    // never pays for it. Focus comes before the first keystroke, so by the time there are
+    // two characters to search on the engine is usually already there.
+    input.addEventListener('focus', load, { once: true });
 
     let run = 0;
     const search = async (query: string) => {
       const mine = ++run;
-      if (!engine || query.trim().length < 2) {
+      if (query.trim().length < 2) {
         hits.replaceChildren();
         count.textContent = '';
         return;
       }
+      await load();
+      if (mine !== run || !engine) return;
       const { results } = await engine.search(query);
       if (mine !== run) return;
 

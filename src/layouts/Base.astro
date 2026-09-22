@@ -1,13 +1,20 @@
 ---
 // Every page's shell. The faces and the tokens are loaded here rather than per page, so
 // a sub-page cannot be built that is missing them.
-import '@fontsource-variable/instrument-sans/wght.css';
-import '@fontsource-variable/jetbrains-mono/wght.css';
-import '@fontsource-variable/archivo/wght.css';
+import '../styles/fonts.css';
 import '../styles/base.css';
 import '../styles/tokens.css';
 import { ClientRouter } from 'astro:transitions';
 import { url } from '../lib/links';
+// All three faces are asked for in the head. A stylesheet is discovered before the
+// @font-face files inside it are, so without this the face arrives after the first paint
+// and the text reflows under it. The mono face is in this list for the same reason as the
+// other two and not as an afterthought: the reference is full of inline code, and it
+// landing late was the largest layout shift on the site - a whole 5300px docs page
+// jumping once the face swapped in.
+import archivo from '@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2?url';
+import instrument from '@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url';
+import mono from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
 
 interface Props {
   title: string;
@@ -15,6 +22,7 @@ interface Props {
 }
 const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, '');
+const og = new URL(url('/og.png'), Astro.site).href;
 ---
 <!doctype html>
 <html lang="en" data-world="plate">
@@ -25,7 +33,23 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href.replace(/\/$/, ''
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <link rel="sitemap" type="application/xml" href={url('/sitemap-index.xml')} />
     <meta name="color-scheme" content="dark" />
+
+    <link rel="preload" as="font" type="font/woff2" href={archivo} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={instrument} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={mono} crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="idempotency4j" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={og} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="idempotency4j - it runs once. An idempotency engine for Java." />
+    <meta name="twitter:card" content="summary_large_image" />
     <ClientRouter />
   </head>
   <body>

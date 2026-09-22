@@ -1,0 +1,43 @@
+/* The three faces, declared here rather than imported from Fontsource's stylesheets.
+
+   Two reasons. The content is English, so only the latin subset is wanted, and the
+   stylesheets pull latin-ext, vietnamese, cyrillic and greek with it. And the mono face
+   needs `font-display: optional`, which a stylesheet in node_modules cannot be told.
+
+   `optional` on the mono face is the fix for the site's largest layout shift. The
+   reference is full of inline code, and with `swap` the whole page re-wrapped when the
+   face landed - 273px of a 5000px page moving at once, which no amount of fallback
+   metric matching fixed, because a fallback declared with `local()` cannot be relied on
+   to resolve. With `optional` there is no swap at all: the face is either ready in time,
+   which the preload in the head makes true on any ordinary connection, or that one view
+   is set in the reader's own monospace and stays there.
+
+   The two sans faces keep `swap`. Their fallbacks below do match, so a swap costs
+   nothing, and unlike code a missing display face would be the more visible loss. */
+
+@font-face {
+  font-family: 'Archivo Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: 'Instrument Sans Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url('@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono Variable';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 100 800;
+  src: url('@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
