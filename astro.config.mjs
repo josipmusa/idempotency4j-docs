@@ -5,6 +5,7 @@ import sitemap from '@astrojs/sitemap';
 import { satteri } from '@astrojs/markdown-satteri';
 import { BASE, SITE } from './site.config.mjs';
 import { asides, baseLinks, versionToken, wrapBlocks } from './src/plugins/markdown.mjs';
+import { hangingIndent } from './src/plugins/shiki.mjs';
 
 export default defineConfig({
   site: SITE,
@@ -26,6 +27,6 @@ export default defineConfig({
       mdastPlugins: [asides, baseLinks, versionToken],
       hastPlugins: [wrapBlocks],
     }),
-    shikiConfig: { theme: 'css-variables' },
+    shikiConfig: { theme: 'css-variables', transformers: [hangingIndent] },
   },
 });

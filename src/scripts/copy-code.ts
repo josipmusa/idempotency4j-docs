@@ -1,6 +1,6 @@
-// A copy button on every code block. The button is added by script rather than authored,
-// because it is useless without script anyway; a page with JavaScript off is a page of
-// selectable code, which is the honest fallback.
+// The copy button on every code block. It is in the markup but hidden, because it is
+// useless without script; a page with JavaScript off is a page of selectable code, which
+// is the honest fallback.
 //
 // The same clipboard path as the coordinate panel: navigator.clipboard is undefined
 // outside a secure context, which is every phone opening this over the LAN.
@@ -38,10 +38,11 @@ export function initCopyCode(): void {
     const pre = block.querySelector('pre');
     if (!pre) return;
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'code__copy mono';
-    button.textContent = 'Copy';
+    // The bar and its button are in the markup from the build (src/plugins/code-bar.mjs);
+    // the button is hidden until there is a script to make it do something.
+    const button = block.querySelector<HTMLButtonElement>('.code__copy');
+    if (!button) return;
+    button.hidden = false;
 
     const status = document.createElement('span');
     status.className = 'visually-hidden';
@@ -61,6 +62,6 @@ export function initCopyCode(): void {
       }, 1800);
     });
 
-    block.append(button, status);
+    block.append(status);
   });
 }

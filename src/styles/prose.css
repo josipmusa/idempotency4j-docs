@@ -120,92 +120,123 @@
 
 /* --- code --------------------------------------------------------------- */
 
+/* Inline code is a quiet tint of the ink, not a boxed chip: it sits on any ground - the
+   page, a tab panel, an aside - without a second border fighting the text around it, and
+   it wraps like a word. It used to be nowrap, which threw a long file name like
+   idempotency-schema-postgresql.sql onto a line of its own and left a ragged gap behind. */
 .prose :not(pre) > code {
   font-family: var(--font-mono);
-  font-size: 0.86em;
+  font-size: 0.85em;
   color: var(--ink);
-  background: var(--bg-raised);
-  border: 1px solid var(--line-faint);
-  padding: 0.1em 0.34em;
-  white-space: nowrap;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 4px;
+  padding: 0.12em 0.36em;
+  overflow-wrap: break-word;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
-.prose pre {
-  position: relative;
+/* A code block is one box: a bar on top naming the language and carrying the Copy
+   button, and the code set in a well darker than anything it sits inside, so there is
+   never a question of what Copy copies. The bar is added by the copy script; without
+   script the box is simply the code. */
+.code,
+.prose pre:not(.code > pre) {
   margin-block: 1.6em;
-  padding: 1.15rem 1.25rem;
   border: 1px solid var(--line-strong);
-  background: var(--bg-raised);
-  overflow-x: auto;
-  font-size: var(--code-size);
-  line-height: var(--code-lh);
-  tab-size: 4;
+  border-radius: var(--radius-lg);
+  background: var(--code-bg);
+  overflow: hidden;
 }
-.prose pre code { font-family: var(--font-mono); }
-
-/* The copy button on every snippet: a must-have, because most of what these pages are
-   for is getting a block of this into someone's own project.
-
-   It is a tab on the plate's top edge and not a chip laid over the corner. Over the
-   corner it covered the first two lines of every snippet: on a touch screen the button
-   cannot wait for a hover, and the code it sat on is wider than the column anyway, so it
-   read as a block cut off at the top right. Above the code it covers nothing, and it is
-   on screen whether or not the device has a pointer. */
 .code {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  margin-block: 1.6em;
 }
-.code > pre { margin-block: 0; align-self: stretch; }
 /* A laid-out display beats the browser's own [hidden] rule, and a tab panel is hidden by
    that attribute. */
 .code[hidden] { display: none; }
-.code__copy {
-  /* The script appends it after the block it copies; it belongs above it. */
+.prose pre,
+.code pre {
+  margin: 0;
+  padding: 1rem 1.25rem 1.1rem;
+  background: none;
+  font-size: var(--code-size);
+  line-height: var(--code-lh);
+  tab-size: 4;
+  /* Nothing scrolls sideways. A long line wraps, and the continuation hangs two
+     characters in from the line's own indent (set per line at build time as --i), so
+     the shape of the block survives the wrap. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.prose pre code,
+.code pre code {
+  font-family: var(--font-mono);
+  /* Grid, so each Shiki line is a box that can hang its own indent. Whitespace-only
+     text between lines does not become a grid item, so no blank rows appear. */
+  display: grid;
+}
+.prose pre .line,
+.code pre .line {
+  min-height: calc(1em * var(--code-lh));
+  padding-left: calc(var(--i, 0ch) + 2ch);
+  text-indent: calc(-1 * (var(--i, 0ch) + 2ch));
+}
+/* A line's indent and its first character, kept on one row (src/plugins/shiki.mjs). */
+.line .lead { white-space: pre; }
+
+/* The bar comes after the code in the markup (the build wraps the block and appends it)
+   and is moved to the top here. */
+.code__bar {
   order: -1;
+  /* The button is switched on by script; the bar keeps the same height either way, so
+     nothing moves when it appears. */
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.4rem 0.35rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-raised);
+}
+.code__lang {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+.code__copy {
   appearance: none;
   display: flex;
   align-items: center;
   gap: 0.4em;
-  background: var(--bg-raised);
+  background: none;
   border: 1px solid var(--line-strong);
-  border-bottom: none;
-  /* It shares the plate's top rule rather than drawing a second one beside it. */
-  margin-bottom: -1px;
-  padding: 0.35em 0.7em;
+  border-radius: var(--radius);
+  padding: 0.35em 0.75em;
   font-family: var(--font-mono);
   font-size: var(--step--2);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
   /* A control that is always on screen is read, not just glanced at, so it takes the
      contrast the body does rather than the labels'. */
   color: var(--ink-2);
   cursor: pointer;
-  transition: color var(--dur-hover) var(--ease);
+  transition:
+    color var(--dur-hover) var(--ease),
+    border-color var(--dur-hover) var(--ease);
 }
 @media (hover: hover) and (pointer: fine) {
-  .code__copy:hover { color: var(--ink); }
+  .code__copy:hover { color: var(--ink); border-color: var(--ink-3); }
 }
-.code__copy[data-copied] { color: var(--accent); }
+.code__copy[hidden] { display: none; }
+.code__copy[data-copied] { color: var(--accent); border-color: var(--accent); }
 
-/* A phone reads down, never sideways. An identifier like IdempotencyInFlightException is
-   wider than the column, so inline code breaks where it has to rather than pushing the
-   page out, and a code block wraps rather than scrolling: a snippet you have to drag
-   sideways to finish reading is a snippet you read half of. The line's own indent is
-   kept, so the shape of the block survives the wrap. */
 @media (max-width: 620px) {
-  .prose :not(pre) > code {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
+  .prose pre,
+  .code pre { padding-inline: 0.9rem; }
+  .code__bar { padding-left: 0.9rem; }
   .prose td code { white-space: normal; }
-  .prose pre {
-    white-space: pre-wrap;
-    /* A coordinate like io.github.josipmusa:idempotency-spring-boot-starter is longer
-       than the whole column, so it has to be allowed to break inside. */
-    overflow-wrap: anywhere;
-  }
 }
 
 /* --- tables ------------------------------------------------------------- */
@@ -264,7 +295,6 @@
 }
 .prose .aside__label + * { margin-top: 0.5em; }
 .prose .aside > * + * { margin-top: 0.7em; }
-.prose .aside :not(pre) > code { background: var(--bg-sunken); }
 
 /* --- rules and images --------------------------------------------------- */
 
@@ -285,7 +315,6 @@
 /* Anything that scrolls inside the page scrolls quietly. A rail down the side of a
    sticky column is a line that describes nothing, which is the one thing these pages are
    not allowed to draw, so the margins' own scrollbars appear only under the pointer. */
-.prose pre,
 .prose .table,
 .ref,
 .toc {

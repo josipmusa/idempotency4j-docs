@@ -6,6 +6,7 @@ import Plate from './Plate.astro';
 import Outcomes from './moments/Outcomes.astro';
 import Annotation from './moments/Annotation.astro';
 import { url } from '../lib/links';
+import { hangingIndent } from '../plugins/shiki.mjs';
 import {
   hero, mechanism, change, prevents, outcomes, compare, limits, closing,
 } from '../data/home';
@@ -17,6 +18,7 @@ import {
 // as a diff marks them - the accent and a `+` in the margin, the same language the hero
 // plate uses when a line arrives. Shiki numbers lines from one; `added` is an index.
 const marks = (added: number[]) => [
+  hangingIndent,
   {
     line(node: { properties: Record<string, unknown> }, n: number) {
       if (added.includes(n - 1)) node.properties['data-add'] = '';
@@ -87,7 +89,7 @@ const marks = (added: number[]) => [
           data-panel={tab.key}
           hidden={i !== 0}
         >
-          <p class="change__note">{tab.note}</p>
+          <p class="change__note">{tab.note.split('`').map((part, n) => (n % 2 ? <code>{part}</code> : part))}</p>
           <Code code={tab.code} lang="java" theme="css-variables" transformers={marks(tab.added)} />
         </div>
       ))}
@@ -252,18 +254,36 @@ const marks = (added: number[]) => [
   }
   @media (hover: hover) and (pointer: fine) { .change__tab:hover { color: var(--ink); } }
   .change__panel { padding: clamp(1.1rem, 3vw, 2rem); }
-  .change__note { font-size: var(--step--1); color: var(--ink-3); margin-bottom: 1rem; }
+  .change__note { font-size: var(--step--1); color: var(--ink-2); margin-bottom: 1rem; max-width: 72ch; }
+  /* A name from the code, quoted in the note, is set the way inline code is in the docs. */
+  .change__note code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+    border-radius: 4px;
+    padding: 0.12em 0.36em;
+  }
+  /* The code sits in the same darker well every code block on the site does, so the
+     note above it reads as prose about the code and the well as the code itself. It
+     wraps rather than scrolling sideways, hanging each continuation from the line's own
+     indent (--i, set at build time). */
   .change__panel :global(pre) {
     margin: 0;
-    overflow-x: auto;
+    padding: 1rem 1.25rem 1.1rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--code-bg) !important;
     font-size: var(--code-size);
     line-height: var(--code-lh);
-    background: transparent !important;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   /* Grid, so each Shiki .line is a real box that can take a transform. Whitespace-only
      text nodes do not become grid items, so the newlines Shiki emits between lines do
      not add a second empty row. */
-  .change__panel :global(code) { font-family: var(--font-mono); display: grid; }
+  .change__panel :global(pre code) { font-family: var(--font-mono); display: grid; }
+  .change__panel :global(.line .lead) { white-space: pre; }
 
   /* The code sets into place when you arrive at a tab: the lines land in order, the
      way type is set into a forme. Transform and opacity only; six lines carry a
@@ -289,13 +309,30 @@ const marks = (added: number[]) => [
      line that makes the method idempotent is the one thing the eye lands on. The marker
      sits in the margin a diff puts it in, and the panel reserves that margin on every
      line so a marked line does not shift its own text sideways. */
-  .change__panel :global(.line) { padding-left: 1.6ch; }
-  .change__panel :global(.line[data-add]),
-  .change__panel :global(.line[data-add] span) { color: var(--accent); }
+  .change__panel :global(.line) {
+    min-height: calc(1em * var(--code-lh));
+    padding-left: calc(var(--i, 0ch) + 2ch + 1.6ch);
+    text-indent: calc(-1 * (var(--i, 0ch) + 2ch));
+  }
+  /* Shiki colours each span inline through a token variable, which a class rule cannot
+     beat, so the marked line redefines the variables themselves. */
+  .change__panel :global(.line[data-add]) {
+    --astro-code-foreground: var(--accent);
+    --astro-code-token-keyword: var(--accent);
+    --astro-code-token-constant: var(--accent);
+    --astro-code-token-function: var(--accent);
+    --astro-code-token-parameter: var(--accent);
+    --astro-code-token-string: var(--accent);
+    --astro-code-token-string-expression: var(--accent);
+    --astro-code-token-punctuation: var(--accent);
+    color: var(--accent);
+  }
   .change__panel :global(.line[data-add])::before {
     content: '+';
     position: absolute;
     left: 0;
+    /* The line's negative indent is inherited and would pull the marker onto the edge. */
+    text-indent: 0;
     color: var(--accent);
   }
   .change__panel :global(.line[data-add]) { position: relative; }
@@ -356,24 +393,14 @@ const marks = (added: number[]) => [
     .compare__item { grid-template-columns: 1fr; gap: 0.5rem; }
   }
 
-  /* A phone reads code by scrolling down, never sideways. The samples are set to fit
-     at this size; a line that still runs long wraps with its continuation indented,
-     the way an editor with soft wrap on shows it. */
+  /* On a phone the tabs shorten to one word each and the code steps down a size, so
+     fewer lines need the wrap. */
   @media (max-width: 620px) {
     .change__tab { padding: 0.8em 0.9em; font-size: var(--step--2); }
     .change__tab-long { display: none; }
     .change__tab-short { display: inline; }
     .change__panel { padding: 1rem 0.9rem; }
-    .change__panel :global(pre) {
-      font-size: 0.7rem;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      overflow-x: hidden;
-    }
-    /* Wrapped on a phone, the continuation is indented by the line's own hanging
-       indent; the diff margin is added to it rather than replacing it. */
-    .change__panel :global(.line) { padding-left: 4.1ch; text-indent: -2.5ch; }
-    .change__panel :global(.line[data-add])::before { left: 1.6ch; }
+    .change__panel :global(pre) { font-size: 0.75rem; padding-right: 0.8rem; }
   }
 </style>
 

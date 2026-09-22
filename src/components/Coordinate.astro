@@ -73,6 +73,7 @@ const gradle = `implementation("${GROUP_ID}:${ARTIFACT_ID}:${LIBRARY_VERSION}")`
   .coord__tab[aria-selected='true'] {
     color: var(--ink);
     background: var(--bg-sunken);
+    box-shadow: inset 0 -2px 0 var(--accent);
   }
   @media (hover: hover) and (pointer: fine) {
     .coord__tab:hover { color: var(--ink); }
@@ -122,10 +123,15 @@ const gradle = `implementation("${GROUP_ID}:${ARTIFACT_ID}:${LIBRARY_VERSION}")`
     .coord__tick,
     .coord__tick path { transition: none; }
   }
+  /* The code is set in the same darker well as every code block on the site, under the
+     bar that carries Copy, so the box is plainly the thing being copied. It wraps rather
+     than scrolling sideways. */
   .coord__code {
     margin: 0;
     padding: 1.1em 1.2em;
-    overflow-x: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: var(--code-bg);
     font-family: var(--font-mono);
     font-size: var(--step--1);
     line-height: 1.6;
@@ -134,16 +140,8 @@ const gradle = `implementation("${GROUP_ID}:${ARTIFACT_ID}:${LIBRARY_VERSION}")`
   }
   .coord--compact .coord__code { padding: 0.9em 1em; font-size: var(--step--2); }
 
-  /* Same rule as the code on the rest of the page: a phone scrolls down, never
-     sideways. A coordinate is copied with the button, not read across. */
   @media (max-width: 620px) {
-    .coord__code {
-      padding: 1em;
-      font-size: 0.7rem;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      overflow-x: hidden;
-    }
+    .coord__code { padding: 1em; font-size: 0.75rem; }
   }
 </style>
 

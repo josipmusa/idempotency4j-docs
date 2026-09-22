@@ -9,6 +9,7 @@
 // drift from site.config.mjs when the library is released again.
 import { Code } from 'astro:components';
 import { url } from '../../lib/links';
+import { hangingIndent } from '../../plugins/shiki.mjs';
 import { GROUP_ID, ARTIFACT_ID, LIBRARY_VERSION } from '../../lib/site';
 
 const BOM = 'idempotency-bom';
@@ -112,7 +113,11 @@ const snippet = (tool: string, artifact: string) =>
           data-store={store.id}
           hidden={!(tool.id === 'maven' && store.id === 'jdbc')}
         >
-          <Code code={snippet(tool.id, store.artifact)} lang={tool.lang} theme="css-variables" />
+          <div class="code__bar">
+            <span class="code__lang">{tool.label}</span>
+            <button type="button" class="code__copy" hidden>Copy</button>
+          </div>
+          <Code code={snippet(tool.id, store.artifact)} lang={tool.lang} theme="css-variables" transformers={[hangingIndent]} />
         </div>
       )),
     )}
@@ -150,6 +155,8 @@ const snippet = (tool: string, artifact: string) =>
   .install {
     margin-block: 1.8em;
     border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
     background: var(--bg-raised);
   }
   .install__bar {
@@ -209,9 +216,9 @@ const snippet = (tool: string, artifact: string) =>
   }
 
   .install__panels { padding: 1.1em; }
+  /* The code is its own box inside the panel - the well with the bar and Copy on it -
+     and the note under it is prose, outside the box, so it is plain what gets copied. */
   .install__panels :global(.code) { margin-block: 0; }
-  .install__panels :global(pre) { padding: 0; border: none; background: none; }
-  .install__panels :global(.code__copy) { border: 1px solid var(--line); }
   .install__note {
     margin-top: 1.1em;
     font-size: var(--step--1);

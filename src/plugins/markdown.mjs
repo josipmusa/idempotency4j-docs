@@ -6,6 +6,7 @@
 // to node types and mutates through the context rather than walking the tree itself.
 import { defineHastPlugin, defineMdastPlugin } from 'satteri';
 import { BASE, LIBRARY_VERSION } from '../../site.config.mjs';
+import { codeBar } from './code-bar.mjs';
 
 const base = BASE.replace(/\/$/, '');
 
@@ -89,8 +90,8 @@ export const asides = defineMdastPlugin({
 
 /* A code block and a table both need a box around them: the table so it can be read
    across on a phone by scrolling the plate rather than the page, the code block so the
-   copy button has a plate to sit on the edge of. Both are structural, so they are added
-   here and not by the script that wires the button up. */
+   bar naming it and carrying its Copy button is inside the same box as the code. Both
+   are structural, so they are added here and not by the script that wires the button. */
 export const wrapBlocks = defineHastPlugin({
   name: 'idempotency4j:wrap-blocks',
   element: {
@@ -109,7 +110,7 @@ export const wrapBlocks = defineHastPlugin({
         type: 'element',
         tagName: 'div',
         properties: { class: klass },
-        children: [],
+        children: node.tagName === 'pre' ? [codeBar(node.properties?.dataLanguage)] : [],
       });
     },
   },

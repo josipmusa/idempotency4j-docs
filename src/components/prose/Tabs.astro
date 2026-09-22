@@ -19,6 +19,8 @@ const { sync = 'build-tool' } = Astro.props;
   .tabs {
     margin-block: 1.8em;
     border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
     background: var(--bg-raised);
   }
   .tabs__strip {
@@ -55,11 +57,9 @@ const { sync = 'build-tool' } = Astro.props;
     .tabs :global(.tabs__tab:hover) { color: var(--ink); }
   }
 
-  /* One box, not three. The panel is the inside of the plate, so a code block in it
-     carries no border, no surface and no margin of its own: the panel is inset on all
-     four sides and the gaps between blocks are the prose's. The top inset was missing,
-     which works for a code block carrying its own margin and fails for a paragraph -
-     the words sat on the strip's own rule. */
+  /* The panel is inset on all four sides and the gaps between blocks are the prose's.
+     The top inset matters for a paragraph, which would otherwise sit on the strip's own
+     rule. */
   .tabs__panels { padding: 0 1.1em; }
   .tabs__panels :global(.tab) { padding-block: 1.1em; }
   .tabs__panels :global(.tab > *) { margin-block: 0; }
@@ -67,17 +67,6 @@ const { sync = 'build-tool' } = Astro.props;
   /* Once the strip exists the panel's own label is hidden, so the block after it is
      the first thing in the panel and takes no gap above it. */
   .tabs[data-wired] :global(.tab__label + *) { margin-top: 0; }
-  .tabs__panels :global(pre) {
-    padding: 0;
-    border: none;
-    background: none;
-  }
-  /* The panel's code carries no rule for the button to sit on, so here it is a box of
-     its own with the panel's own gap under it. */
-  .tabs__panels :global(.code__copy) {
-    border: 1px solid var(--line);
-    margin-bottom: 0.7em;
-  }
 </style>
 
 <script>
