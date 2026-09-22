@@ -11,7 +11,7 @@ different instructions, and most deduplication code follows only the first one.
 
 The model that takes the second one seriously is Udi Dahan's, from
 [Reliable Messaging Without Distributed Transactions](https://vimeo.com/111998645). It is the
-design behind the NServiceBus outbox and behind most outbox implementations written since. What
+design behind the NServiceBus outbox. What
 follows explains it, then says where a Java application actually gets the pieces.
 
 ## The problem two resources create
@@ -100,7 +100,7 @@ solved.
 
 That constraint arrives from a detail several levels down, which is why it tends to be
 discovered late.
-[Building the full thing](/learn/idempotency-in-spring-boot/) reaches the same place from the
+[Building the full thing](/learn/idempotency-in-spring-boot/#7-building-the-full-thing) reaches the same place from the
 other direction: the commit ordering question forces the record into the caller's transaction,
 which forces the store to be the caller's database.
 
@@ -174,7 +174,7 @@ a restart and can be re-invoked, and since 2.0 a publication carries an explicit
 `FailedEventPublications` has a `resubmit` for the failed subset, and the options carry a batch
 size, a minimum age and a filter.
 
-`@ApplicationModuleListener` is the annotation that puts a listener in that registry, and the
+`@ApplicationModuleListener` is the usual way to declare a listener in that registry, and the
 same mechanism carries **event externalization**: an event annotated `@Externalized` is
 published to Kafka, AMQP, JMS or a Spring Messaging channel by a transactional listener, so an
 externalized event gets the registry's guarantees rather than a bare publish inside a

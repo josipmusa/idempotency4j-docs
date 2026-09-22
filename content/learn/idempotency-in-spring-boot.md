@@ -6,8 +6,8 @@ order: 3
 ---
 
 A `processed_events` table, a unique constraint, `@Cacheable` and a distributed lock are four
-real answers to duplicate work, and three of them are wrong under concurrency in a way that
-only shows up in production.
+real answers to duplicate work, and three of them fail in a way that only shows up in
+production.
 
 This is a survey of what a Spring application can actually do about duplicate requests and
 redelivered messages, in rough order of how much machinery each one costs. Several of these
@@ -127,8 +127,10 @@ arriving inside it passes the check and executes. For a broker that redelivers a
 thirty seconds and work that takes forty, that is not a race condition, it is the normal path.
 
 `@Transactional` does not close it. Two concurrent transactions at `READ_COMMITTED` both see
-no row, both proceed, and both insert. Isolation prevents them seeing each other's
-uncommitted writes; it does not prevent them doing the same work.
+no row and both run `doTheWork`. The primary key refuses the second insert only after its
+work has run, and anything that work did outside the database has already happened.
+Isolation prevents them seeing each other's uncommitted writes; it does not prevent them
+doing the same work.
 
 The fix is to **insert first and let the insert fail**, in a transaction that is not the one
 doing the work:
@@ -254,8 +256,9 @@ ShedLock is good at that and is not trying to solve this problem.
 
 The answer already in the Spring ecosystem, and the one to rule out before writing anything.
 
-Spring Integration ships an `IdempotentReceiverInterceptor` backed by a `MetadataStore`, with
-implementations over JDBC, Redis and others. The `ConcurrentMetadataStore` interface offers
+Spring Integration ships an `IdempotentReceiverInterceptor` backed by a `MessageSelector` - normally a
+`MetadataStoreSelector` over a `ConcurrentMetadataStore`, with implementations over JDBC,
+Redis and others. The `ConcurrentMetadataStore` interface offers
 `putIfAbsent`, which is the atomic primitive option 2 has to reconstruct by hand.
 
 If your application is already built on Spring Integration channels, this is the natural
@@ -269,7 +272,7 @@ as options 2 and 4.
 
 ## 6. A transactional outbox
 
-Frequently proposed in this conversation, and solving an adjacent problem, so it needs placing
+Frequently proposed as the answer to duplicates, and solving an adjacent problem, so it needs placing
 precisely.
 
 The outbox pattern writes the message you intend to publish into a table inside the same
@@ -318,7 +321,7 @@ silent duplicate at a time.
 | Your situation | Take |
 |---|---|
 | The operation only assigns, deletes or overwrites | Nothing. Comment on the method saying why |
-| One row, one create endpoint, caller can handle a `409` | A unique constraint |
+| One row, one create endpoint, the row is the whole answer | A unique constraint |
 | A consumer that must not run twice, no result needed | Insert-first `processed_events`, scoped per handler |
 | Already on Spring Integration channels | The idempotent receiver |
 | A scheduled job that must run on one instance | ShedLock, which is a different problem |

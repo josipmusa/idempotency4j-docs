@@ -33,7 +33,7 @@ What works is an identifier created **at the point where the intent is formed**,
 first attempt, and reused unchanged by every retry of that intent:
 
 - A UUID generated when the user opens the checkout form, not when they press the button.
-- The message id assigned by the broker, for a consumer.
+- The message id the producer assigned, for a consumer.
 - A composite of stable business identifiers, where one genuinely exists.
 
 The rule that holds all three together: **a new key means new work.** If a retry can generate
@@ -166,7 +166,8 @@ Three answers, all legitimate:
 
 - **Wait**, briefly, for the first to finish, then replay its result. Best for an HTTP caller
   that wants an answer.
-- **Refuse immediately**, with `409` and a `Retry-After`. Best for a message consumer, where
+- **Refuse immediately**: for HTTP, a `409` with a `Retry-After`; for a consumer, decline the
+  delivery. Best for a message consumer, where
   blocking a thread from a small pool is how a consumer group stops making progress.
 - **Fail the second outright.** Simplest, and correct when duplicates are genuinely rare.
 

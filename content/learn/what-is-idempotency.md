@@ -54,8 +54,8 @@ often they cause an incident:
 **At-least-once delivery.** Every mainstream message broker delivers at least once, by
 design. Kafka redelivers on consumer group rebalance, on a failed commit of a consumer
 offset, and whenever a consumer is considered dead by a coordinator that has not heard from
-it. SQS redelivers after a visibility timeout. RabbitMQ redelivers on an unacknowledged
-message. None of this is a malfunction. It is the guarantee you agreed to when you chose the
+it. SQS redelivers after a visibility timeout. RabbitMQ redelivers any message still
+unacknowledged when a consumer's channel or connection closes. None of this is a malfunction. It is the guarantee you agreed to when you chose the
 broker.
 
 **Client retries.** HTTP clients, service meshes, and API gateways retry. Some retry on
@@ -83,7 +83,7 @@ Anyone searching for this will find the HTTP specification's definition first, a
 genuine source of confusion.
 
 RFC 9110 says that `PUT` and `DELETE` are idempotent, along with the safe methods `GET`,
-`HEAD`, `OPTIONS` and `TRACE`, while `POST` and `PATCH` are not. Read carefully, that sentence
+`HEAD`, `OPTIONS` and `TRACE`, while `POST` is not, and neither is `PATCH`, which RFC 5789 defines separately. Read carefully, that sentence
 is a statement about what those methods are **defined to mean**, not a promise about what any
 particular server does when you call one twice.
 
@@ -129,7 +129,7 @@ generated id, publishing a message, and calling someone else's API are not.
 
 A great deal of accidental idempotency comes from this, and a great deal of accidental
 breakage comes from a change that turns an assignment into an accumulation. Adding an
-`updated_by` audit trail to a naturally idempotent `PUT` handler converts it into a
+audit row per call to a naturally idempotent `PUT` handler converts it into a
 non-idempotent one, and nothing about the change looks dangerous in review.
 
 A unique constraint on a caller-supplied identifier is the other source of natural
