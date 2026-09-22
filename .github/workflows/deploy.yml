@@ -1,0 +1,51 @@
+# Builds the site and publishes it to GitHub Pages on every push to main.
+#
+# The base path is not written here. site.config.mjs reads GITHUB_REPOSITORY, which
+# Actions always sets, so the repository can be renamed without touching this file
+# or any other. Nothing else in the build needs configuring.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # So a broken build can be re-run, or the site republished, without an empty commit.
+  workflow_dispatch:
+
+# Pages needs to write the deployment; the checkout only reads.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, and a newer push waits for the running one rather than
+# cancelling it - a half-finished publish is worse than a slow one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # astro build, then pagefind indexes dist. The search index is part of the
+      # artifact, so it is never out of step with the pages it points at.
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v5
