@@ -4,13 +4,10 @@ description: An idempotency engine for Java. Give a unit of work a key: it runs 
 ---
 
 <!--
-The only source of words for the homepage. All three Stage 2 approaches render this
-same content in the same order; they differ in look and in the two moments.
-
-Every factual claim below is copied from ~/Private/idempotency4j/README.md at 0.4.0.
-Copy that is mine rather than the library's is marked [mock] and is replaced or
-confirmed in Stage 3. The version and the Maven coordinate are never written out here:
-they render from the constants in site.config.mjs.
+The only source of words for the homepage; src/data/home.ts mirrors it verbatim.
+Every factual claim is the library's own, from README.md at the released version.
+The version and the Maven coordinate are never written out here - they render from
+the constants in site.config.mjs.
 -->
 
 ## nav
@@ -37,8 +34,6 @@ An idempotency engine for Java. Apache 2.0.
 
 ### How it works
 
-[mock] Section heading.
-
 1. **Acquire.** A record is identified by a scope and a key together, never by the key
    alone. The key identifies the attempt; the scope names the unit of work it belongs to.
 2. **Run under a heartbeat.** Every acquisition carries a lease. The heartbeat fires at
@@ -57,8 +52,6 @@ An action that dies without releasing leaves an expired lease, which the next
 ## change
 
 ### The whole change
-
-[mock] Section heading.
 
 **On a method**, name the key with a SpEL expression over the parameters:
 
@@ -107,8 +100,6 @@ switch (outcome) {
 
 ### What it prevents
 
-[mock] Section heading.
-
 You need this if callers retry and a duplicate would cause a real problem.
 
 - **Money charged twice.** A payment retried by an impatient client or a gateway timeout.
@@ -138,9 +129,6 @@ a failed request to be retriable, throw.
 
 ### The alternatives
 
-[mock] Section heading and the framing of all three rows; each row's factual content is
-from the README.
-
 - **Your own `processed_events` table.** A row and a unique constraint deduplicate. They
   do not give you a lease, a heartbeat that holds it while a slow action runs, a
   concurrent duplicate that waits for the real result instead of failing, or an atomic
@@ -155,8 +143,7 @@ from the README.
 
 ## specs
 
-Moved off the homepage to the specs sub-page: a support matrix is read after the
-decision, not during it. The words below are the source for that page.
+Rendered on the specification sheet rather than the homepage.
 
 ### Supported
 
@@ -202,8 +189,6 @@ sheet](/specs).
 ## closing
 
 ### Add the dependency
-
-[mock] Section heading.
 
 - Coordinate panel again, copyable, Maven and Gradle.
 - **Get started** → /docs/quickstart

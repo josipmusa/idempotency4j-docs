@@ -10,6 +10,10 @@ const docs = defineCollection({
     description: z.string(),
     // Where in the library the page's facts come from. Carried over from the content so a
     // claim can be traced back to the README or the source at a named version.
+    // Authoring provenance: which part of the library's own documentation a page was
+    // written from, so a claim on it can be traced back and re-checked at the next
+    // release. It is never rendered. A reader of this site is deciding whether to use
+    // the library, and where our sentences came from is our problem, not theirs.
     sourceOf: z.string().optional(),
   }),
 });

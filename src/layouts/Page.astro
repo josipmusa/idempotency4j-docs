@@ -22,15 +22,13 @@ interface Props {
   // Where the page sits, as a trail you can walk back up. It is deliberately not a
   // tracked-caps label above the headline: that shape is decoration, and this has a job.
   trail?: { label: string; href?: string }[];
-  // Set when the page's words are the library's own, so a claim can be traced.
-  source?: string;
   // What goes in the margins. `sheet` is the prose alone; `reference` puts the index of
   // the reference in the left margin and the page's own sections in the right;
   // `article` keeps the sections and drops the index, because an article is read
   // through rather than looked things up in.
   shape?: 'sheet' | 'reference' | 'article';
 }
-const { title, description, trail = [], source, shape = 'sheet' } = Astro.props;
+const { title, description, trail = [], shape = 'sheet' } = Astro.props;
 ---
 <Base title={`${title} - idempotency4j`} description={description}>
   <Nav />
@@ -51,9 +49,6 @@ const { title, description, trail = [], source, shape = 'sheet' } = Astro.props;
         )}
         <h1 class="page__h1" data-reveal>{title}</h1>
         <p class="page__lede" data-reveal>{description}</p>
-        {source && (
-          <p class="page__src mono" data-reveal>Source: {source}</p>
-        )}
       </header>
       <div class="page__aside"><slot name="aside" /></div>
       <div class="page__body">
@@ -113,8 +108,6 @@ const { title, description, trail = [], source, shape = 'sheet' } = Astro.props;
     color: var(--ink-2);
     max-width: 62ch;
   }
-  .page__src { font-size: var(--step--2); color: var(--ink-3); }
-
   .page__aside { min-width: 0; }
   .page__aside:empty { display: none; }
   .page__body { min-width: 0; }

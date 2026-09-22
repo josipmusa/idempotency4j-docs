@@ -32,7 +32,6 @@ const at = order.indexOf(page.id);
   title={page.data.title}
   description={page.data.description}
   trail={[{ label: 'Docs', href: '/docs' }, { label: group?.label ?? 'Reference' }]}
-  source={page.data.sourceOf}
   shape="reference"
 >
   <Reference slot="aside" current={page.id} />
