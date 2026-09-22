@@ -75,7 +75,7 @@ const { title, description, trail = [], shape = 'sheet' } = Astro.props;
     gap: clamp(0.6rem, 1.5vw, 1rem);
     padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
     /* The one rule at the top of a printed sheet, under the sheet's own name. */
-    border-bottom: 2px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
     margin-bottom: clamp(1rem, 3vw, 2rem);
   }
   .page__trail {
@@ -96,9 +96,8 @@ const { title, description, trail = [], shape = 'sheet' } = Astro.props;
     font-family: var(--font-display);
     font-size: var(--step-5);
     line-height: var(--display-lh);
-    letter-spacing: var(--tracking-display);
     font-weight: var(--weight-display);
-    text-transform: var(--display-case);
+    letter-spacing: -0.03em;
     text-wrap: balance;
     max-width: 28ch;
   }
@@ -126,8 +125,13 @@ const { title, description, trail = [], shape = 'sheet' } = Astro.props;
      squeezing the prose, and the index becomes a strip above the page. */
   @media (min-width: 1024px) {
     .page[data-shape='reference'] .page__inner {
-      grid-template-columns: 15rem minmax(0, 1fr);
+      grid-template-columns: 17rem minmax(0, 1fr);
       column-gap: clamp(2rem, 4vw, 4rem);
+    }
+    /* The index is a sidebar with an edge, not a list floating in the margin. */
+    .page[data-shape='reference'] .page__aside {
+      border-right: 1px solid var(--line);
+      padding-right: 1.5rem;
     }
     .page[data-shape='reference'] .page__head { grid-column: 1 / -1; }
     .page[data-shape='reference'] .page__aside { grid-column: 1; grid-row: 2; }
@@ -135,9 +139,26 @@ const { title, description, trail = [], shape = 'sheet' } = Astro.props;
   }
   @media (min-width: 1280px) {
     .page[data-shape='reference'] .page__inner {
-      grid-template-columns: 15rem minmax(0, 1fr) 14rem;
+      grid-template-columns: 17rem minmax(0, 1fr) 15rem;
     }
-    .page[data-shape='reference'] .page__spine { grid-column: 3; grid-row: 2; }
+    .page[data-shape='reference'] .page__spine {
+      grid-column: 3;
+      grid-row: 2;
+    }
+    /* A page with fewer than two sections has no contents list, and an edge beside
+       nothing is a box around nothing. */
+    .page[data-shape='reference'] .page__spine:has(.toc) {
+      border-left: 1px solid var(--line);
+      padding-left: 1.5rem;
+    }
+    /* On a wide screen the prose sits in the middle of the space between the index and
+       the contents, at its own measure, rather than hugging the index and leaving the
+       gap on one side. */
+    .page[data-shape='reference'] .page__body {
+      justify-self: center;
+      width: 100%;
+      max-width: 66ch;
+    }
 
     .page[data-shape='article'] .page__inner {
       grid-template-columns: minmax(0, 1fr) 14rem;

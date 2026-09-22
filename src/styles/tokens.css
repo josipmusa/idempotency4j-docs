@@ -1,10 +1,7 @@
-/* The site's tokens. Direction: Foundry Plate - a parts catalogue printed in black,
-   rendered on screen at poster scale. Flat true black, paper-white, one orange used
-   as a stamped marking. No gradient, no glow, no blur.
-
-   Guard: every rule here is drawing. A line describes the mechanism, carries a
-   callout, or is part of the plate grid. There is no rule whose only job is to frame
-   the page.
+/* The site's tokens. Direction: a reference site - a charcoal ground, paper-white ink
+   and one orange used as a stamped marking. The drafting lattice survives in the hero
+   only, where the plate is printed; everywhere else the page is a plain ground so the
+   words carry, and sections are told apart by full-width bands rather than by space.
 
    Selectors are prefixed `html[data-world='plate']` so they outrank Astro's scoped
    component styles, which compile to a `:where()` class of equal weight. */
@@ -41,22 +38,25 @@
   line-gap-override: 0%;
 }
 :root {
-  --bg: #000000;
-  --bg-raised: #0a0a0a;
-  --bg-sunken: #050505;
-  --panel-bg: #000000;
+  --bg: #0d0d0e;
+  --bg-raised: #161618;
+  --bg-sunken: #0a0a0b;
+  --panel-bg: #131315;
+  /* Every other homepage section sits on this, full width, so a section has edges. */
+  --band: #16161a;
+  /* The well a code block is set in: darker than any panel it sits inside, so what the
+     Copy button copies is the one box that looks like code. */
+  --code-bg: #0a0a0b;
 
   --ink: #f4f1ea;
-  --ink-2: #b6b2a9;
+  --ink-2: #c4c1ba;
   /* The quietest level still carries text - unselected tab labels, the mono captions -
-     and most of it sits on --bg-raised rather than on the sheet, where #78756e measured
-     4.31:1 and missed the bar. This clears it on both grounds, 4.82:1 raised and 5.11:1
-     on black, without moving the level's character. */
-  --ink-3: #807d76;
+     so it has to clear 4.5:1 on --bg-raised as well as on the ground. */
+  --ink-3: #8a877f;
 
-  --line: #2a2924;
-  --line-faint: #1a1917;
-  --line-strong: #4a4840;
+  --line: #242427;
+  --line-faint: #1b1b1e;
+  --line-strong: #37373b;
 
   /* Stamped ink rather than a signal orange: pulled back from the saturated
      #ff5a1f the approach shipped with, which read as loud and sat too close to
@@ -66,10 +66,8 @@
   --danger: #e0562a;
   --danger-line: #3a1a0a;
 
-  /* The plate grid. Minor pitch is the drafting unit; every fourth line is major. */
+  /* The hero plate's grid. Minor pitch is the drafting unit; every fourth line is major. */
   --grid-pitch: 3.5rem;
-  --grid-minor: #131210;
-  --grid-major: #1e1c19;
 
   --font-display: 'Archivo Variable', 'Archivo fallback', system-ui, sans-serif;
   --font-body: 'Instrument Sans Variable', 'Instrument Sans fallback', system-ui, sans-serif;
@@ -79,7 +77,7 @@
   --display-lh: 0.9;
   --display-case: uppercase;
 
-  --step--2: 0.75rem;
+  --step--2: 0.8125rem;
   --step--1: 0.875rem;
   --step-0: 1rem;
   --step-1: clamp(1.09rem, 0.3vw + 1rem, 1.3rem);
@@ -87,15 +85,16 @@
   --step-4: clamp(2rem, 3vw + 1rem, 3.5rem);
   --step-5: clamp(2.2rem, 3.4vw + 1rem, 4rem);
   --step-7: clamp(2.6rem, 5.4vw + 0.5rem, 5.5rem);
-  --code-size: 0.8125rem;
+  --code-size: 0.875rem;
   --code-lh: 1.7;
 
-  --shell: 84rem;
+  --shell: 88rem;
+  --shell-docs: 100rem;
   --gutter: clamp(1rem, 4vw, 3.5rem);
   --section-y: clamp(4rem, 12vh, 9rem);
   --nav-h: 4rem;
-  --radius: 0px;
-  --radius-lg: 0px;
+  --radius: 6px;
+  --radius-lg: 10px;
   --shadow-panel: none;
   --hero-cols: minmax(0, 1fr);
 
@@ -126,32 +125,33 @@
   --astro-code-token-link: #c8c4bb;
 }
 
-/* The sheet. The same drafting grid as the hero plate, held at the page's own
-   quiet level and fixed, because the sheet does not scroll - the print on it does.
-   Hard colour stops, so these render as hairlines and never as gradation. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    repeating-linear-gradient(90deg, var(--grid-major) 0 1px, transparent 1px calc(var(--grid-pitch) * 4)),
-    repeating-linear-gradient(0deg, var(--grid-major) 0 1px, transparent 1px calc(var(--grid-pitch) * 4)),
-    repeating-linear-gradient(90deg, var(--grid-minor) 0 1px, transparent 1px var(--grid-pitch)),
-    repeating-linear-gradient(0deg, var(--grid-minor) 0 1px, transparent 1px var(--grid-pitch));
-}
+/* The site scales with the screen. Every size is in rem, so moving the root moves type,
+   measure, panels and the shell together: 16px up to a 1440px laptop, then growing to
+   20px at 2560px, the distance a big monitor or a TV is read from. */
+html { font-size: clamp(100%, calc(1rem + (100vw - 90rem) * 0.0036), 125%); }
 
-/* Print grain only. No light source, because a printed plate has none. */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0.45;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='4'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+/* Sections have edges: a full-width band on every other one and a hairline between
+   them, so the homepage reads as a run of distinct parts rather than one long sheet. */
+html[data-world='plate'] .hero { border-bottom: 1px solid var(--line); }
+html[data-world='plate'] .section { border-bottom: 1px solid var(--line); }
+html[data-world='plate'] .section:nth-of-type(odd) { background: var(--band); }
+
+/* Each section is numbered in a small stamped chip above its heading. */
+html[data-world='plate'] main { counter-reset: sec; }
+html[data-world='plate'] .section { counter-increment: sec; }
+html[data-world='plate'] .section__head { align-items: flex-start; }
+/* The reference uses the whole screen: index, prose and the page's own sections side by
+   side. Set on the body so the nav's shell widens with it and the logo stays aligned. */
+body:has(.page[data-shape='reference']) { --shell: var(--shell-docs); }
+
+html[data-world='plate'] .section__head::before {
+  content: counter(sec, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--accent);
+  padding: 0.2em 0.55em;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
 }
 
 body > * { position: relative; z-index: 1; }
@@ -167,12 +167,16 @@ html[data-world='plate'] .hero__stage { position: relative; }
 
 html[data-world='plate'] .h2 { max-width: 15ch; }
 
-/* Panels are plates: a hard keyline, never a frame around the page. */
+/* Panels: a keyline, a rounded corner and their own ground. */
 html[data-world='plate'] .out,
 html[data-world='plate'] .ann,
 html[data-world='plate'] .change,
-html[data-world='plate'] .coord {
+html[data-world='plate'] .coord,
+html[data-world='plate'] .card {
   border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--panel-bg);
 }
 
 html[data-world='plate'] .step { border-top-width: 2px; border-top-color: var(--line-strong); }
