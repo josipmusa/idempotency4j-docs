@@ -8,3 +8,7 @@ dist/
 .idea/
 .vscode/
 .playwright-mcp/
+.agents/
+.claude/
+.codex/
+.impeccable/
