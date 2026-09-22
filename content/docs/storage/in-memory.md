@@ -20,8 +20,8 @@ That is the whole guarantee, and both halves of it are limits.
 
 :::caution[One JVM, and only until it restarts]
 Two instances of your application do not share records, so a duplicate that lands on the
-other instance re-executes. Any deployment with more than one replica has no idempotency at
-all.
+other instance re-executes. Any deployment with more than one replica has no idempotency
+guarantee.
 
 Records do not survive a redeploy, a crash, or a pod eviction.
 :::

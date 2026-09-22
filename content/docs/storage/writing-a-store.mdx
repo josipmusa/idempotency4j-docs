@@ -42,8 +42,9 @@ behaviour.
    than one that does not support the feature, because the difference only appears under
    concurrency in production.
 
-4. **Extend `TransactionalStoreContract` too**, if and only if your store can complete inside
-   a caller's transaction. Declining is a supported answer.
+4. **Override `supportsTransactionalCompletion()` to return `true` and extend
+   `TransactionalStoreContract` too**, if and only if your store can complete inside a
+   caller's transaction. Declining is a supported answer.
 
 </Steps>
 

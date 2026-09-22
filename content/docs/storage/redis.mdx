@@ -53,21 +53,22 @@ connection, which is why the beans declare their shutdown methods.
 most applications change none of them. Two concerns are worth understanding before you do:
 what a waiting caller costs under load, and what survives a failover.
 
-- **`keyPrefix`** - namespace for every key the store writes. Defaults to the provider's own
-  prefix.
-- **`pollInterval`** - how often a waiting caller re-checks a held key. Defaults to 50ms.
-- **`retentionGrace`** - extra margin before an expired record is purged. Defaults to
-  1 hour.
-- **`purgeBatchSize`** - records scanned per purge page. Defaults to 500.
+- **`keyPrefix`** - namespace for every key the store writes. Defaults to `idempotency4j:`.
+- **`pollInterval`** - the first interval of a waiting caller's jittered backoff, which
+  doubles up to 1s. Defaults to 50ms.
+- **`retentionGrace`** - how much longer the Redis key's own TTL outlives the record's
+  logical expiry, as a backstop when purge does not run. Defaults to 1 hour.
+- **`purgeBatchSize`** - the `SCAN` `COUNT` hint for each purge page. Defaults to 500.
 - **`maxPurgePagesPerCall`** - pages one purge run will scan before stopping. Defaults
   to 100.
 - **`replicaAcknowledgement`** - the Redis `WAIT` policy applied after each mutation.
   Disabled by default.
 
 **`pollInterval`** is the one to know about. Redis has no way to block on the specific
-condition the store waits for, so a caller waiting out someone else's lease polls. At 50ms a
-duplicate that arrives mid-flight adds up to 50ms of latency before it sees the completion.
-Lowering it sharpens that at the cost of more round trips per waiting caller.
+condition the store waits for, so a caller waiting out someone else's lease polls, starting
+near 50ms and backing off towards 1s. A duplicate that arrives mid-flight can therefore see
+up to its current interval of extra latency before it sees the completion. Lowering it
+sharpens the early polls at the cost of more round trips per waiting caller.
 
 **`purgeBatchSize` and `maxPurgePagesPerCall`** bound a single purge run, which is what keeps
 the SCAN from becoming a long-running command on a large keyspace. A run that hits the page

@@ -35,7 +35,8 @@ Prefix keys at the application level where that matters, for example `userId:cli
 
 This is worth taking seriously on a public API. A client that generates keys from a sequence
 rather than a UUID will collide with another tenant's keys, and the second tenant gets the
-first tenant's stored response replayed to them. Prefixing the key is the fix, and it is
+first tenant's stored response replayed to them, or a `422` if their request body differs.
+Prefixing the key is the fix, and it is
 yours to apply.
 
 ## Redis Cluster is not supported

@@ -27,7 +27,8 @@ class Application { }
 ```
 
 :::caution[Without it the setting reads as on and nothing is ever purged]
-The scheduler is never registered and the table grows until someone notices. The warning
+The scheduler is never registered and the JDBC table grows until someone notices. Redis
+keys still expire on their own native TTL. The warning
 exists because the symptom - a slowly growing table - is one nobody attributes to this
 library for months.
 :::

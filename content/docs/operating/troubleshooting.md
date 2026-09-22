@@ -48,18 +48,24 @@ With several data sources, declare the store yourself against the one you want. 
 ### The store cannot complete inside a caller's transaction
 
 > `idempotency.completion-mode` is join-transaction, but the configured idempotency store
-> cannot complete inside a caller's transaction. Use a store that can, such as the JDBC one,
+> (`<store class>`) cannot complete inside a caller's transaction. Use a store that can, such as the JDBC one,
 > or set `idempotency.completion-mode=autonomous`.
 
 Only the JDBC store supports [joined completion](/docs/joining-your-transaction/). The Redis
 and in-memory stores report that they cannot, and asking for it anyway fails the context
-rather than silently downgrading to autonomous completion.
+rather than silently downgrading to autonomous completion. Asking for it on a single
+annotation fails the same way, with a message naming the method:
+
+> `@Idempotent(completion = "join-transaction")` on `<Class>.<method>` cannot be honoured:
+> the configured idempotency store cannot complete inside a caller's transaction. Use a store
+> that can, such as the JDBC one, or drop the attribute to complete autonomously.
 
 ### The transaction advisor does not run ahead of the idempotency advisor
 
-> `<method>` is also @Transactional, but the transaction advisor does not run ahead of the
-> idempotency advisor, so the method would be entered before its transaction starts. Order
-> the transaction advisor ahead, for example
+> `@Idempotent(completion = "join-transaction")` on `<Class>.<method>` is also
+> @Transactional, but the transaction advisor (order `<n>`) does not run ahead of the
+> idempotency advisor (order `<m>`), so the method would be entered before its transaction
+> starts. Order the transaction advisor ahead, for example
 > `@EnableTransactionManagement(order = Ordered.HIGHEST_PRECEDENCE)`.
 
 The message names both advisors' order values. Both default to `Ordered.LOWEST_PRECEDENCE`,
@@ -94,7 +100,7 @@ endpoint the opposite holds and `key` is rejected - the client's header is the k
 
 ### The purge cron expression is invalid
 
-> Invalid `idempotency.purge.cron` value.
+> Invalid `idempotency.purge.cron` value: `'<cron>'`
 
 The value is not a valid Spring cron expression. The default is `0 0 * * * *`, which is six
 fields, not five - Spring cron expressions carry a leading seconds field.
@@ -102,8 +108,13 @@ fields, not five - Spring cron expressions carry a leading seconds field.
 ### Malformed durations and out-of-range values
 
 Every duration on the annotation is ISO-8601, so thirty seconds is `PT30S`, not `30s`.
+A malformed one fails startup naming the attribute and the method:
+
+> Invalid `@Idempotent(ttl = "30s")` on `<Class>#<method>`: not a valid ISO-8601 duration
+> (e.g. "PT10S", "PT5M", "PT1H")
+
 Several bounds are validated at construction and name the value they received:
-`defaultTtl must be at least 1ms`, `leaseDuration must be at least 2ms`,
+`defaultTtl must be at least 1ms`, `defaultLeaseDuration must be at least 2ms`,
 `inFlightStatus must be a 4xx or 5xx status`, `requestFingerprint must be a hex string`.
 
 ## Warnings worth treating as errors
@@ -129,7 +140,7 @@ The selected store is logged at startup, so the positive confirmation is in the 
 
 ### The records table could not be queried
 
-> The `idempotency_records` table could not be queried, so every idempotent call will fail
+> The `idempotency_records` table could not be queried (`<SQL error>`), so every idempotent call will fail
 > until it exists. Create it from the `idempotency-schema-postgresql.sql` or
 > `idempotency-schema-mysql.sql` file shipped in the `idempotency-jdbc` jar, or set
 > `idempotency.jdbc.initialize-schema=always` to let the store create it.
@@ -141,11 +152,14 @@ migration tool at the shipped schema file. See [JDBC](/docs/storage/jdbc/).
 ### Purging is enabled but scheduling is not
 
 > `idempotency.purge.enabled` is true but `@EnableScheduling` was not detected. Expired
-> idempotency records will NOT be purged automatically.
+> idempotency records will NOT be purged automatically. Add `@EnableScheduling` to your
+> application class, or set `idempotency.purge.enabled=false` to suppress this warning.
 
 The setting reads as on, the scheduler is never registered, and the table grows until someone
 notices. Add `@EnableScheduling`, or set `purge.enabled=false` so the configuration matches
 reality. See [purging and retention](/docs/operating/purging-and-retention/).
+
+## Expected debug output
 
 ### Leaving an annotated endpoint to the HTTP adapter
 
@@ -195,8 +209,11 @@ clients, give them separate [scopes](/docs/concepts/scope-and-key/).
 
 ### Two different requests were treated as the same
 
-Add a fingerprint. Without one the library has no way to know the payloads differ, and a
-client that reuses a key for different work gets the first result back.
+Over HTTP this cannot happen with different bodies: the filter fingerprints the body and
+answers `422`. On an annotated method there is no fingerprint, so make the `key` expression
+distinguish the two requests, or drive [the engine](/docs/the-engine/) directly and add
+`.fingerprint(...)` to the context. Without one the library has no way to know the payloads
+differ, and a caller that reuses a key for different work gets the first result back.
 
 Note the asymmetry: two acquisitions clash **only when both carry a fingerprint and the two
 differ**. A stored record without one cannot be contradicted by an incoming request that has

@@ -38,7 +38,7 @@ Whichever store is selected is logged at startup.
 An in-memory record set deduplicates within one JVM until it restarts, which is not a
 property anything should acquire by accident - **ask for it by name.**
 
-:::danger[A deployment that loses its `DataSource` binding starts cleanly and deduplicates nothing]
+:::danger[Were `auto` to fall back, a deployment that lost its `DataSource` binding would start cleanly on a store that forgets]
 It would log nothing alarming, provide idempotency that evaporates on the next restart, and
 not hold across instances at all. Every request would look correct. The duplicates would
 arrive months later, in production, as money charged twice.

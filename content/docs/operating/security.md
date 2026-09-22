@@ -83,7 +83,7 @@ same way, naming the record by scope and digest rather than by key.
 ## Size is a security property too
 
 `idempotency.web.max-body-bytes` defaults to 1 MiB and bounds what the filter will
-fingerprint; a larger body is rejected with `413` rather than read and stored unchecked.
+fingerprint; a larger body is rejected with `413` rather than buffered into memory without bound.
 
 Response size has no equivalent ceiling. An endpoint returning a large collection has that
 collection stored for the full TTL, once per distinct key. Auditing what is annotated includes
