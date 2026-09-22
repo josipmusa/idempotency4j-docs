@@ -6,6 +6,13 @@ sourceOf: README "How it works"
 
 A record is absent, `IN_PROGRESS`, or `COMPLETE`. There is no failed state.
 
+<!-- DIAGRAM GOES HERE: the state machine, drawn as a plate. Three states and the five
+     edges below it, in the site's own ink levels, inline SVG so it costs no request and
+     takes the page's colours. It sits above the parts list because the plate comes first
+     and the callouts under it - a reader should see the whole machine before reading
+     what each edge does. Redrawn from the library's docs/diagrams/record-lifecycle.html,
+     not dropped in as its PNG. Alt text from that file. -->
+
 ## The states
 
 **Absent.** No caller has acquired this scope and key, or a previous attempt released it.
