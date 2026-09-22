@@ -12,6 +12,17 @@ import {
 
 // Two moments, as the plan allows: the annotation landing in the hero, and the four
 // outcomes below. The support matrix lives on the specs sub-page.
+
+// The section is called the whole change, so the lines that are the change are marked
+// as a diff marks them - the accent and a `+` in the margin, the same language the hero
+// plate uses when a line arrives. Shiki numbers lines from one; `added` is an index.
+const marks = (added: number[]) => [
+  {
+    line(node: { properties: Record<string, unknown> }, n: number) {
+      if (added.includes(n - 1)) node.properties['data-add'] = '';
+    },
+  },
+];
 ---
 <main id="main">
   <!-- 02 hero -->
@@ -77,7 +88,7 @@ import {
           hidden={i !== 0}
         >
           <p class="change__note">{tab.note}</p>
-          <Code code={tab.code} lang="java" theme="css-variables" />
+          <Code code={tab.code} lang="java" theme="css-variables" transformers={marks(tab.added)} />
         </div>
       ))}
     </div>
@@ -233,7 +244,12 @@ import {
     cursor: pointer;
     transition: color var(--dur-hover) var(--ease), background var(--dur-hover) var(--ease);
   }
-  .change__tab[aria-selected='true'] { color: var(--ink); background: var(--panel-bg); }
+  /* The same stamp every strip on the site uses for the picked choice. */
+  .change__tab[aria-selected='true'] {
+    color: var(--ink);
+    background: var(--panel-bg);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
   @media (hover: hover) and (pointer: fine) { .change__tab:hover { color: var(--ink); } }
   .change__panel { padding: clamp(1.1rem, 3vw, 2rem); }
   .change__note { font-size: var(--step--1); color: var(--ink-3); margin-bottom: 1rem; }
@@ -268,6 +284,21 @@ import {
   .change__panel :global(.line:nth-child(4)) { --line-d: 180ms; }
   .change__panel :global(.line:nth-child(5)) { --line-d: 240ms; }
   .change__panel :global(.line:nth-child(6)) { --line-d: 300ms; }
+
+  /* The change itself. The accent is spent here and nowhere else in a snippet, so the
+     line that makes the method idempotent is the one thing the eye lands on. The marker
+     sits in the margin a diff puts it in, and the panel reserves that margin on every
+     line so a marked line does not shift its own text sideways. */
+  .change__panel :global(.line) { padding-left: 1.6ch; }
+  .change__panel :global(.line[data-add]),
+  .change__panel :global(.line[data-add] span) { color: var(--accent); }
+  .change__panel :global(.line[data-add])::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+  .change__panel :global(.line[data-add]) { position: relative; }
 
   .cards {
     display: grid;
@@ -339,7 +370,10 @@ import {
       overflow-wrap: anywhere;
       overflow-x: hidden;
     }
-    .change__panel :global(.line) { padding-left: 2.5ch; text-indent: -2.5ch; }
+    /* Wrapped on a phone, the continuation is indented by the line's own hanging
+       indent; the diff margin is added to it rather than replacing it. */
+    .change__panel :global(.line) { padding-left: 4.1ch; text-indent: -2.5ch; }
+    .change__panel :global(.line[data-add])::before { left: 1.6ch; }
   }
 </style>
 

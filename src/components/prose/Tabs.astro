@@ -43,9 +43,13 @@ const { sync = 'build-tool' } = Astro.props;
       color var(--dur-hover) var(--ease),
       background var(--dur-hover) var(--ease);
   }
+  /* The picked one is stamped, the same mark the quickstart's pickers carry: a rule in
+     the accent under the choice. Ink and ground alone is a difference you only see by
+     comparing two chips. */
   .tabs :global(.tabs__tab[aria-selected='true']) {
     color: var(--ink);
     background: var(--bg-sunken);
+    box-shadow: inset 0 -2px 0 var(--accent);
   }
   @media (hover: hover) and (pointer: fine) {
     .tabs :global(.tabs__tab:hover) { color: var(--ink); }

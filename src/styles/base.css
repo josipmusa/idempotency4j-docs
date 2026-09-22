@@ -196,9 +196,10 @@ code, pre, .mono { font-family: var(--font-mono); font-variant-ligatures: none; 
   .link--out:hover .link__out { transform: translate(1px, -1px); color: var(--accent); }
 }
 
-/* Shiki renders with the css-variables theme, so code takes the approach's palette. */
-.astro-code,
-.astro-code span { color: var(--shiki-color-text); }
+/* Shiki renders with the css-variables theme, so code takes the site's own ink levels
+   from the --astro-code-* tokens. The <pre> carries its foreground inline; this stops a
+   container's colour reaching a span Shiki gave no token type. */
+.astro-code { color: var(--astro-code-foreground); }
 
 /* Grid and flex items default to min-width:auto, so a <pre> or a nowrap label can push
    the page wider than a phone. Everything that can hold code is allowed to shrink. */

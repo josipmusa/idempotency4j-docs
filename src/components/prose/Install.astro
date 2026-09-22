@@ -71,7 +71,7 @@ const snippet = (tool: string, artifact: string) =>
 ---
 <div class="install" data-install data-tabs data-sync="build-tool">
   <div class="install__bar">
-    <span class="install__k mono" id="install-build">Build</span>
+    <span class="install__k" id="install-build">Build tool</span>
     <div class="install__strip" role="tablist" aria-labelledby="install-build">
       {tools.map((tool, i) => (
         <button
@@ -87,7 +87,7 @@ const snippet = (tool: string, artifact: string) =>
     </div>
   </div>
   <div class="install__bar" data-tabs data-sync="store">
-    <span class="install__k mono" id="install-store">Store</span>
+    <span class="install__k" id="install-store">Store</span>
     <div class="install__strip" role="tablist" aria-labelledby="install-store">
       {stores.map((store, i) => (
         <button
@@ -157,20 +157,26 @@ const snippet = (tool: string, artifact: string) =>
     align-items: stretch;
     border-bottom: 1px solid var(--line-strong);
   }
+  /* The question is a printed caption, not a cell. It used to be mono, uppercase,
+     tracked, --ink-3 and inset exactly like an unselected choice sitting next to it, so
+     the row read as four equal chips and there was no telling the question from the
+     answers. It is the body face in sentence case now, and it holds a fixed column so
+     both captions right-align and both strips start on the same vertical - the stub
+     column of a table, which is what says these two are labels and those are values. */
   .install__k {
     display: grid;
     align-items: center;
+    justify-items: end;
     flex: none;
-    /* The same vertical inset the choices carry: a label sitting flush on the rule below
-       it reads as part of the rule. */
-    padding: 0.7em 1.1em;
-    border-right: 1px solid var(--line);
+    width: 7.5rem;
+    padding: 0.7em 1.1em 0.7em 0;
     font-size: var(--step--2);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
     color: var(--ink-3);
   }
-  .install__strip { display: flex; min-width: 0; }
+  /* The rule the captions stop at. With it the two rows are one table - stub column on
+     the left, values on the right - and without it the caption is just text floating
+     near a chip. */
+  .install__strip { display: flex; min-width: 0; border-left: 1px solid var(--line); }
   .install__tab {
     appearance: none;
     background: none;
@@ -187,7 +193,17 @@ const snippet = (tool: string, artifact: string) =>
       color var(--dur-hover) var(--ease),
       background var(--dur-hover) var(--ease);
   }
-  .install__tab[aria-selected='true'] { color: var(--ink); background: var(--bg-sunken); }
+  /* The picked one is stamped. Full ink and the sunken ground were the whole signal,
+     which is a difference you have to compare two chips to see; the accent rule under it
+     is the mark a plate uses, and it reads without comparing anything. */
+  .install__tab[aria-selected='true'] {
+    color: var(--ink);
+    background: var(--bg-sunken);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+  /* The row ends at the last choice, not at a stray keyline hanging in the empty half
+     of the bar. */
+  .install__tab:last-child { border-right: none; }
   @media (hover: hover) and (pointer: fine) {
     .install__tab:hover { color: var(--ink); }
   }
@@ -209,7 +225,7 @@ const snippet = (tool: string, artifact: string) =>
      read as two separate things, and the strip wrapping read as a broken row. The insets
      give way instead, which is the only part of this with room to spare. */
   @media (max-width: 560px) {
-    .install__k { padding-inline: 0.8em; letter-spacing: 0.1em; }
+    .install__k { width: 5.2rem; padding-right: 0.8em; }
     .install__tab { padding-inline: 0.8em; letter-spacing: 0.04em; }
   }
 </style>

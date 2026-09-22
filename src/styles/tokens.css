@@ -69,17 +69,26 @@
   --dur-reveal: 300ms;
   --dur-section: 580ms;
 
-  --astro-code-color-text: #c8c4bb;
-  --astro-code-color-background: transparent;
+  /* Code is printed, not syntax-coloured: four levels of the one ink, no hues. The
+     accent appears in a snippet only where a line is the change being shown, which is
+     the whole point of showing the snippet - so it is spent nowhere else. It used to
+     be the keyword colour, and Java's grammar calls `void`, `=`, every annotation and
+     every type name a keyword, so most of a plate came out orange and the line that
+     mattered was indistinguishable from the code around it.
+
+     The names are Astro's; `foreground` and `background` are what a Shiki span with no
+     token type resolves to. */
+  --astro-code-background: transparent;
+  --astro-code-foreground: #c8c4bb;
+  --astro-code-token-keyword: #f4f1ea;
   --astro-code-token-constant: #f4f1ea;
-  --astro-code-token-string: #c9bfa6;
-  --astro-code-token-comment: #6a6760;
-  --astro-code-token-keyword: #e0562a;
-  --astro-code-token-parameter: #c8c4bb;
   --astro-code-token-function: #f4f1ea;
-  --astro-code-token-string-expression: #c9bfa6;
+  --astro-code-token-parameter: #c8c4bb;
+  --astro-code-token-string: #a49c8c;
+  --astro-code-token-string-expression: #a49c8c;
   --astro-code-token-punctuation: #8a867d;
-  --astro-code-token-link: #e0562a;
+  --astro-code-token-comment: #85817a;
+  --astro-code-token-link: #c8c4bb;
 }
 
 /* The sheet. The same drafting grid as the hero plate, held at the page's own
