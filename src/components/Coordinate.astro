@@ -14,10 +14,6 @@ const maven = `<dependency>
 
 const gradle = `implementation("${GROUP_ID}:${ARTIFACT_ID}:${LIBRARY_VERSION}")`;
 ---
-<!-- impeccable-disable cramped-padding -- .coord's first child is a tab strip, which
-     is flush to the panel edge by design; the labels inside it carry 1.1em of inset.
-     The same shape in .change and .ann is not flagged, only this one, because its
-     surface differs from the page behind it. -->
 <div class="coord" class:list={[{ 'coord--compact': compact }]} data-coord>
   <div class="coord__bar">
     <div class="coord__tabs" role="tablist" aria-label="Build tool">

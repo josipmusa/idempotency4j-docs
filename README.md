@@ -1,30 +1,33 @@
-# Running this site
+# idempotency4j-docs
 
-The site is the marketing and documentation front for **idempotency4j**. It is a static
-Astro build, published by GitHub Actions to GitHub Pages at
+The website and documentation for
+[idempotency4j](https://github.com/josipmusa/idempotency4j). It is a static Astro build, published by GitHub Actions to GitHub Pages at
 `https://josipmusa.github.io/idempotency4j-docs/`. There is no server, no database and no
 account to pay for.
 
 ## Changing the words
 
-Every sentence on the site lives in `content/`, one Markdown file per page. Nothing in
-`src/` contains prose you would want to edit.
+Every page's words live in `content/`, one Markdown file per page, except the homepage's,
+which are typed data in `src/data/home.ts`.
 
 | You want to change | Edit |
 | --- | --- |
-| The homepage | `content/home.md` |
+| The homepage | `src/data/home.ts` |
 | A reference page | `content/docs/<the page>.md` |
 | A learn article | `content/learn/<the article>.md` |
-| The specification sheet | `content/specs.md` |
+| The specification sheet | `src/data/specs.ts`; its title and intro in `content/specs.md` |
 | The "nothing at this address" page | `content/404.md` |
 
 Edit the file, commit, push to `main`. The site rebuilds and republishes itself in about
 two minutes. Watch it under the repository's **Actions** tab.
 
-`content/README.md` is the authoring guide: how the front matter works, what the
-`:::caution` blocks are, and the house rules for the prose. Read it before writing a new
-page. The one rule worth repeating here: **nothing on a page describes the site or how it
-was made.** Every sentence is about the library.
+Two rules for the prose. Every factual claim - versions, coordinates, support matrix rows,
+limits, defaults - is the library's own, from its `README.md` and Java sources at the
+released version. And **nothing on a page describes the site or how it was made**: every
+sentence is about the library, for someone deciding whether to use it.
+
+`__VERSION__` in prose renders from `site.config.mjs`. Never type a version or a coordinate
+out.
 
 ## Adding a page
 
@@ -54,8 +57,8 @@ taken from. That field is never shown to a reader; it exists so this check is po
 
 There are none, by design. The direction is a printed plate: the drawing is done in CSS
 and SVG, and the only raster file on the site is `public/og.png`, the card that appears
-when a link is shared. If a photograph is ever added it goes in `assets/`, sized for the
-web and named by its section, and it needs real alt text.
+when a link is shared. If a photograph is ever added it should be sized for the web and
+needs real alt text.
 
 `public/og.svg` is the source for that card. Re-rasterise it to `og.png` at 1200×630 if
 its words ever change.
@@ -98,8 +101,6 @@ src/data/         docs.ts is the reference's reading order; home.ts and specs.ts
 src/components/   the pieces pages are built from
 src/styles/       tokens.css is the palette, type and spacing; fonts.css the three faces
 site.config.mjs   version, coordinates, deployment path - the single source of all four
-web/              the process kit this site was built with; not part of the site
-DECISIONS.md      why the site is the way it is, one line per decision
 ```
 
 ## If something breaks

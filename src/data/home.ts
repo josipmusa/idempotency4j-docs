@@ -1,5 +1,5 @@
-// The homepage's words. This file mirrors `content/home.md`, which is the source and
-// the thing to edit first; every string below is copied from it verbatim.
+// The homepage's words. Every factual claim is the library's own, from its README at the
+// released version.
 //
 // The version and the Maven coordinate are never written out here. They come from
 // site.config.mjs.
