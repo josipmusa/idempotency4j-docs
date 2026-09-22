@@ -8,10 +8,11 @@
 // nothing the heading does not already carry, and the words that mattered are now in
 // the headings themselves.
 export type Step = { n: string; title: string; body: string };
-export type Row = { cells: string[] };
 
 export const hero = {
   headline: 'It runs once.',
+  description:
+    'An idempotency engine for Java. Give a unit of work a key: it runs once, and every duplicate gets the stored result back.',
   sub: 'Give a unit of work a key. The first caller acquires a lease, runs under a heartbeat and stores the result. Every duplicate gets that stored result back.',
   kicker: 'An idempotency engine for Java. Apache 2.0.',
   cta: { label: 'Get started', href: '/docs/quickstart' },
@@ -34,7 +35,7 @@ export const mechanism = {
     {
       n: '03',
       title: 'Store',
-      body: 'The result is encoded and recorded. A record is absent, IN_PROGRESS or COMPLETE; there is no failed state. Releasing deletes the row, so a failed attempt leaves no trace.',
+      body: 'The result is encoded and recorded. A record is absent, IN_PROGRESS or COMPLETE; there is no failed state. Releasing deletes the row, so a failed attempt leaves no trace and the next caller sees a key that was never used.',
     },
     {
       n: '04',
@@ -124,36 +125,6 @@ export const outcomes = {
   id: 'outcomes',
   heading: 'Four outcomes over HTTP',
   lede: 'Decided entirely by the state the record already holds in the store.',
-  rows: [
-    {
-      state: 'New key',
-      what: 'The handler runs and its response is stored',
-      code: '200',
-      response: "The handler's own response",
-      tone: 'run',
-    },
-    {
-      state: 'Completed, body matches',
-      what: 'The stored response is replayed',
-      code: '200',
-      response: 'Idempotent-Replayed: true',
-      tone: 'replay',
-    },
-    {
-      state: 'Completed, body differs',
-      what: 'Key reused with a different request body',
-      code: '422',
-      response: 'Unprocessable Entity',
-      tone: 'refuse',
-    },
-    {
-      state: 'Still held past waitTimeout',
-      what: 'Another request has the key',
-      code: '409',
-      response: 'Conflict, with Retry-After',
-      tone: 'refuse',
-    },
-  ],
   footnote:
     'The filter stores whatever your handler returns, including 4xx and 5xx, as long as the handler returns normally. A handler that throws is different: the engine releases the lease, which deletes the record, and the next request runs the handler again. If you want a failed request to be retriable, throw.',
 };
@@ -172,32 +143,9 @@ export const compare = {
     },
     {
       title: 'A workflow platform',
-      body: 'Temporal and its neighbours will do this, and much more, in exchange for a new runtime, a new programming model and a new operational surface. This is a dependency and a table.',
+      body: 'Temporal and its neighbours will do this, and much more, in exchange for a new runtime, a new programming model and a new operational surface. This is a dependency and a store.',
     },
   ],
-};
-
-// Kept here and rendered on the specs sub-page rather than the homepage: the support
-// matrix is what you read once you have decided, not while you are deciding.
-export const specs = {
-  id: 'specs',
-  heading: 'Supported',
-  lede: 'Every row is a combination CI runs: the build matrix covers Java 21 and 25 against Spring Boot 4.0 and 4.1.',
-  head: ['', 'Supported', 'Notes'],
-  rows: [
-    ['Java', '21+', 'Compiled to 21, tested on 21 and 25'],
-    ['idempotency-core', 'No framework', 'Plain Java, plus SLF4J'],
-    ['Spring Boot', '4.0.x, 4.1.x', 'Built against 4.0.8, for the adapters and the starter'],
-    ['Annotated methods', 'Spring AOP', 'No web stack needed, works in a consumer or a batch job'],
-    ['Spring MVC (Servlet)', 'Yes', 'The HTTP filter activates only for Servlet web applications'],
-    ['Spring WebFlux', 'No', 'Nothing registers, and no error is raised'],
-    ['PostgreSQL', 'Tested on 16', 'Via idempotency-jdbc'],
-    ['MySQL', 'Tested on 8.0', 'Via idempotency-jdbc'],
-    ['H2', 'Tested on 2.x', 'Via idempotency-jdbc, for development'],
-    ['Redis', '7+, tested on 7', 'Standalone and Sentinel. Redis Cluster is not supported'],
-  ] satisfies string[][],
-  footnote:
-    'Boot 3 applications should stay on 0.3.0, which remains on Maven Central. Spring Boot 3.5 reached open source end of life on 30 June 2026.',
 };
 
 export const limits = {

@@ -22,21 +22,20 @@ const plates: Plate[] = [
   {
     label: 'On a listener',
     lines: [
-      { t: '@Component' },
       { t: '@Idempotent(key = "#event.id()")', kind: 'new' },
       { t: '@KafkaListener(topics = "orders")' },
       { t: 'void on(OrderPlaced event) {' },
       { t: '    // Runs once per event id.', kind: 'muted' },
       { t: '}' },
     ],
-    caption: 'A redelivery is handed the stored result instead of running again.',
+    caption: 'A redelivery is recognised and skipped instead of running again.',
   },
   {
     label: 'On an HTTP endpoint',
     lines: [
       { t: '@PostMapping("/payments")' },
       { t: '@Idempotent', kind: 'new' },
-      { t: 'public Payment pay(PaymentRequest req) {' },
+      { t: 'public Payment pay(@RequestBody PaymentRequest req) {' },
       { t: '    // A duplicate gets the stored response.', kind: 'muted' },
       { t: '    return payments.charge(req);' },
       { t: '}' },

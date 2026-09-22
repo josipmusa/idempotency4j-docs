@@ -53,7 +53,7 @@ export const matrix: SpecGroup[] = [
       {
         item: 'Spring WebFlux',
         supported: 'No',
-        note: 'Nothing registers, and no error is raised',
+        note: 'The HTTP filter does not register, and no error is raised',
         no: true,
       },
     ],

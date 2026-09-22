@@ -117,7 +117,7 @@ Decided entirely by the state the record already holds in the store.
 | The record | What happens | Response |
 | --- | --- | --- |
 | New key | The handler runs and its response is stored | The handler's own response |
-| Completed, body matches | The stored response is replayed | `Idempotent-Replayed: true`, `Cache-Control: no-store` |
+| Completed, body matches | The stored response is replayed | `Idempotent-Replayed: true` |
 | Completed, body differs | Key reused with a different request body | `422 Unprocessable Entity` |
 | Still held past `waitTimeout` | Another request has the key | `409 Conflict` with `Retry-After` |
 
@@ -140,7 +140,7 @@ a failed request to be retriable, throw.
   in-flight first execution, so two concurrent duplicates both run.
 - **A workflow platform.** Temporal and its neighbours will do this, and much more, in
   exchange for a new runtime, a new programming model and a new operational surface. This
-  is a dependency and a table.
+  is a dependency and a store.
 
 ## specs
 
@@ -156,12 +156,12 @@ Boot 4.0 and 4.1.
 | Java | 21+ | Compiled to 21, tested on 21 and 25 |
 | `idempotency-core` | No framework | Plain Java, plus SLF4J |
 | Spring Boot | 4.0.x, 4.1.x | Built against 4.0.8, for the adapters and the starter |
-| Annotated methods | Spring AOP | No web stack needed, works in a consumer or a batch job |
+| Annotated methods | Spring AOP | No web stack needed - works in a consumer or a batch job |
 | Spring MVC (Servlet) | Yes | The HTTP filter activates only for Servlet web applications |
-| Spring WebFlux | No | Nothing registers, and no error is raised |
+| Spring WebFlux | No | The HTTP filter does not register, and no error is raised |
 | PostgreSQL | Tested on 16 | Via `idempotency-jdbc` |
 | MySQL | Tested on 8.0 | Via `idempotency-jdbc` |
-| H2 | Tested on 2.x | Via `idempotency-jdbc`, for development |
+| H2 | Tested on 2.x | Via `idempotency-jdbc`, for development. The store contract runs on it |
 | Redis | 7+, tested on 7 | Standalone and Sentinel. Redis Cluster is not supported |
 
 Boot 3 applications should stay on 0.3.0, which remains on Maven Central. Spring Boot 3.5
@@ -194,10 +194,9 @@ sheet](/specs).
 - Coordinate panel again, copyable, Maven and Gradle.
 - **Get started** → /docs/quickstart
 - Learn → /learn
-- GitHub → external
 
 ## footer
 
 - Apache License 2.0 → LICENSE
-- NOTICE → NOTICE
+- Notice → NOTICE
 - Copyright 2026 Josip Musa
