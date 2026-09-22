@@ -6,11 +6,14 @@ sourceOf: README "The engine"
 
 A key says "this is the same attempt". A fingerprint checks that claim against the payload.
 
-Add `.fingerprint(sha256Hex)` to the context builder when the payload is worth guarding
-against key reuse:
+Add `.fingerprint(...)` to the [context builder](/docs/the-engine/) when the payload is
+worth guarding against key reuse. The fingerprint is a hex string of at least 16 characters
+that your own code computes. Below, `key` is the caller's idempotency key and
+`sha256Hex(requestBody)` stands for your hex-encoded SHA-256 of the request:
 
 ```java
-IdempotencyContext context = IdempotencyContext.builder("PaymentService.charge", key)
+IdempotencyContext context = IdempotencyContext
+        .builder("PaymentService.charge", key)
         .fingerprint(sha256Hex(requestBody))
         .build();
 ```

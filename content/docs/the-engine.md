@@ -14,26 +14,36 @@ else in the library is an adapter over this.
 
 ## Building a context
 
+The engine needs a store - any [`IdempotencyStore`](/docs/storage/choosing/) - and a
+`ScheduledExecutorService` it runs heartbeats on. Share one scheduler across the application
+rather than creating one per call.
+
 ```java
+ScheduledExecutorService scheduler =
+        Executors.newSingleThreadScheduledExecutor();
 IdempotencyEngine engine = new IdempotencyEngine(store, scheduler);
 
-IdempotencyContext context = IdempotencyContext.builder("ShipmentListener.onOrderShipped", event.id())
+IdempotencyContext context = IdempotencyContext
+        .builder("ShipmentListener.onOrderShipped", event.id())
         .ttl(Duration.ofHours(24))
         .leaseDuration(Duration.ofSeconds(30))
         .waitTimeout(Duration.ZERO)   // decline instead of parking the consumer thread
         .build();
 ```
 
-The builder takes the [scope and key](/docs/concepts/scope-and-key/) pair. Outside Spring
-there is no method name to derive a scope from, so you name it - and naming it after the
-handler keeps it stable when the method moves.
+The builder takes the [scope and key](/docs/concepts/scope-and-key/) pair. Here `event` is
+the message being handled, so its id is the key. Outside Spring there is no method name to
+derive a scope from, so you name it - and naming it after the handler keeps it stable when
+the method moves.
 
 Add `.fingerprint(sha256Hex)` when the payload is worth guarding against key reuse. See
 [fingerprints](/docs/concepts/fingerprints/).
 
 ## The runnable overload
 
-A caller with nothing for a duplicate to replay uses the runnable overload:
+A caller with nothing for a duplicate to replay uses the runnable overload. Below,
+`handler.handle(event)` is the work being guarded, and `consumer.nack` stands for however
+your broker client asks for a redelivery:
 
 ```java
 switch (engine.execute(context, () -> handler.handle(event))) {
@@ -47,10 +57,12 @@ switch (engine.execute(context, () -> handler.handle(event))) {
 ## The codec overload
 
 When a duplicate should get a real result back, pass a `PayloadCodec<T>` for whatever the
-action returns:
+action returns. Here `handler.handle(event)` returns a `Handled` of your own, and `codec` is
+a `PayloadCodec<Handled>`:
 
 ```java
-Outcome<Handled> outcome = engine.execute(context, () -> handler.handle(event), codec);
+Outcome<Handled> outcome =
+        engine.execute(context, () -> handler.handle(event), codec);
 ```
 
 `Outcome.Replayed` carries the decoded value from the original execution, so the same
@@ -73,7 +85,7 @@ and a retry after that re-executes.
 IdempotencyEngine engine = new IdempotencyEngine(
         store,
         scheduler,
-        List.of(),
+        List.of(),   // lifecycle listeners, none here
         IdempotencyConfig.builder()
                 .completionFailurePolicy(CompletionFailurePolicy.LOG_AND_RETURN)
                 .build());
@@ -87,6 +99,9 @@ again in [configuration](/docs/reference/configuration/).
 :::
 
 ## Listeners outside Spring
+
+Pass [lifecycle listeners](/docs/lifecycle-callbacks/) as the third argument. Here
+`auditListener` is an `IdempotencyLifecycleListener` of your own:
 
 ```java
 IdempotencyEngine engine = new IdempotencyEngine(store, scheduler, List.of(auditListener));

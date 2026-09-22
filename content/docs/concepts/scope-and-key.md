@@ -24,16 +24,23 @@ silently skipping the other's work.
 ## The default, and when to override it
 
 ```java
-@Idempotent(key = "#event.id()")   // scope defaults to OrderListener.on
+@Component
+class OrderListener {
+
+    @Idempotent(key = "#event.id()")   // scope defaults to OrderListener.on
+    void on(OrderPlaced event) { ... }
+}
 ```
 
 The default is right whenever a method is the unit of work, which is the common case. Set
 `scope` explicitly when two methods genuinely perform the same unit of work and should share
 a record - a handler that was renamed and must keep deduplicating against records written
-under the old name, for example.
+under the old name, for example. Renaming `on` above to `onOrderPlaced` would change the
+default scope, so the renamed method names the old one:
 
 ```java
-@Idempotent(scope = "order-placed", key = "#event.id()")
+@Idempotent(scope = "OrderListener.on", key = "#event.id()")
+void onOrderPlaced(OrderPlaced event) { ... }
 ```
 
 A scope that is too long is rejected when the context starts, not on the first message.
@@ -55,5 +62,6 @@ is yours to apply.
 
 Idempotency keys are client-controlled and may carry identifying data, so the library never
 writes one to a log or an exception message. Both render a record as its scope followed by a
-short digest of the key, `PaymentController.create/#3f9a2c71` - see
+short digest of the key - `PaymentController.create/#3f9a2c71` for a key sent to a `create`
+method on `PaymentController` - see
 [security](/docs/operating/security/).

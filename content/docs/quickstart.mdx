@@ -76,7 +76,8 @@ import Tab from '../../src/components/prose/Tab.astro';
    ```
    </Tab>
    <Tab label="Without Spring">
-   The engine is a plain Java object you call directly:
+   The engine is a plain Java object you call directly. It takes a store and a
+   `ScheduledExecutorService` it runs heartbeats on:
 
    ```java
    IdempotencyEngine engine = new IdempotencyEngine(store, scheduler);

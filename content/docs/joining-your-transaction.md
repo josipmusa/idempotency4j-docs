@@ -16,7 +16,7 @@ together - a crash before the commit leaves neither, a crash after it leaves bot
 @Transactional
 @Idempotent(key = "#event.id()", completion = "join-transaction", waitTimeout = "PT0S")
 void on(OrderPlaced event) {
-    orders.save(new Order(event));
+    orders.save(new Order(event));   // orders: your repository
 }
 ```
 
@@ -32,7 +32,7 @@ the request came from `idempotency.completion-mode=join-transaction` or from a s
 `@Idempotent(completion = "join-transaction")`.
 
 **A transaction must already be active when the method is entered.** The transaction advisor
-has to run *outside* this one. Both default to `Ordered.LOWEST_PRECEDENCE`, which is a tie
+has to run *outside* the idempotency advisor. Both default to `Ordered.LOWEST_PRECEDENCE`, which is a tie
 rather than an order, so break it:
 
 ```java
@@ -79,8 +79,8 @@ A retry arriving in between is told the work is in flight rather than being allo
 ## What moves with the record
 
 Under joined completion the terminal lifecycle callback moves with the record: `onCompleted`
-fires after the commit, and a rollback releases the lease and fires
-`onFailed(..., ROLLBACK)`. Exactly one terminal still fires per lease, only later. See
+fires after the commit, and a rollback releases the lease and fires `onFailed` with
+`FailurePhase.ROLLBACK`. Exactly one terminal still fires per lease, only later. See
 [lifecycle callbacks](/docs/lifecycle-callbacks/).
 
 ## Application-wide

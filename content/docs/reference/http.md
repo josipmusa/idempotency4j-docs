@@ -18,7 +18,7 @@ These come from the filter itself, before or instead of your handler. Each carri
 | `422 Unprocessable Entity` | Key header missing or blank while `idempotency.web.required` is true |
 | `422 Unprocessable Entity` | Key longer than 255 characters |
 | `422 Unprocessable Entity` | Key reused with a different request body |
-| `409 Conflict` | Another request still holds the key after `waitTimeout`; carries `Retry-After`. Configurable through `idempotency.web.in-flight-status` |
+| `409 Conflict` | Another request still holds the key after the annotation's [`waitTimeout`](/docs/reference/annotation/); carries `Retry-After`. Configurable through `idempotency.web.in-flight-status` |
 
 :::note[Any other status your client sees came from your handler]
 Including a replayed one. The five above are the only statuses the filter produces itself.

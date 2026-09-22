@@ -7,6 +7,10 @@ sourceOf: README "Lifecycle callbacks"
 Register an `IdempotencyLifecycleListener` bean to observe the idempotent boundary. The
 starter picks up every listener bean and honours `@Order`; no other configuration is needed.
 
+The interface has five callbacks, all default methods, so you override only the ones you
+need: `onAcquired`, `onCompleted` and `onFailed`, shown below, plus `onDuplicate` and
+`onInFlight`. `AuditService` stands for your own audit component.
+
 ```java
 @Bean
 public IdempotencyLifecycleListener auditListener(AuditService audit) {
@@ -62,7 +66,8 @@ after the commit, and a rollback fires `onFailed` with `FailurePhase.ROLLBACK`. 
 
 ## Outside Spring
 
-Pass the listeners to the engine directly:
+Pass the listeners to the engine directly. `store` and `scheduler` are the engine's two
+required arguments, covered on [the engine](/docs/the-engine/) page:
 
 ```java
 IdempotencyEngine engine = new IdempotencyEngine(store, scheduler, List.of(auditListener));

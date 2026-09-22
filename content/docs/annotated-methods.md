@@ -70,9 +70,14 @@ call can be given the original answer back. The module does not guess at a seria
 format, and a value-returning method without a codec fails at startup:
 
 ```java
+@Bean
+PayloadCodec<Receipt> receiptCodec() { ... }
+
 @Idempotent(key = "#command.id()", codec = "receiptCodec")
 Receipt settle(SettleCommand command) { ... }
 ```
+
+`codec` names the bean, so `receiptCodec` here is the `PayloadCodec<Receipt>` declared above.
 
 A `void` method needs none - there is nothing to replay - and must leave `codec` empty.
 
@@ -82,6 +87,6 @@ what to put in `attributes`.
 ## On an endpoint
 
 An annotated request mapping handler belongs to the [HTTP filter](/docs/http-endpoints/)
-alone, and `key`, `codec` and `completion` are rejected on one at startup. The method advisor
-leaves those handlers to the filter so the two never guard the same call under two different
+alone, and `key`, `codec` and `completion` are rejected on one at startup. The advisor that
+intercepts annotated methods leaves those handlers to the filter so the two never guard the same call under two different
 keys.

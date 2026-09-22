@@ -193,7 +193,7 @@ Its records are step 1's dedup table. `@Idempotent` is transport-neutral, so it 
 `@KafkaListener` or an `@EventListener` as readily as on an MVC handler, with the key given as a
 SpEL expression over the method's parameters. Its default scope is the class and method name,
 which keeps two consumers of the same message independent. With the JDBC store and
-`join-transaction` completion, the record is written on the caller's own transaction-bound
+[`join-transaction` completion](/docs/joining-your-transaction/), the record is written on the caller's own transaction-bound
 connection, so the record and the business writes commit or roll back together. That is step 1's
 one-commit property, for the inbound half.
 
@@ -209,7 +209,8 @@ to the JDBC store; the Redis store reports that it cannot support transactional 
 always will, because there is no transaction a JDBC caller's writes could join. The HTTP side is
 a servlet filter, with no reactive equivalent.
 
-Step 3 has a seam, at least. `IdempotencyLifecycleListener.onDuplicate` fires exactly when a
+Step 3 has a seam, at least.
+[`IdempotencyLifecycleListener.onDuplicate`](/docs/lifecycle-callbacks/) fires exactly when a
 completed record is found and the action is skipped, which is the moment step 3 describes: the
 point at which you could ask whether the first attempt left anything unfinished, and finish it.
 The callback is there and the decision is yours to write. Making that generic is a design

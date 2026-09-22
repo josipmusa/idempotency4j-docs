@@ -17,6 +17,10 @@ A `Payload` is three things:
 - **`body`** - the bytes themselves.
 - **`attributes`** - flat string key-value pairs the store returns verbatim.
 
+Here the action, `handler.handle(event)`, returns a `Handled` - your own type, carrying a
+`publicationId()` - and `objectMapper` is your Jackson `ObjectMapper`. `engine` and
+`context` are built as on [the engine](/docs/the-engine/) page.
+
 ```java
 PayloadCodec<Handled> codec = new PayloadCodec<>() {
     @Override
@@ -50,13 +54,18 @@ to retry for you. If the first execution published three messages downstream, th
 must not publish them a second time.
 :::
 
-Storing their ids as attributes gives the duplicate something to point at:
+Storing their ids as attributes gives the duplicate something to point at. For an action
+that returns an `OrderAccepted` of your own, carrying the ids in `outboxIds()`, the codec's
+`encode` becomes:
 
 ```java
-return new Payload(
-        "order/accepted",
-        objectMapper.writeValueAsBytes(accepted),
-        Map.of("outboxIds", String.join(",", accepted.outboxIds())));
+@Override
+public Payload encode(OrderAccepted accepted) {
+    return new Payload(
+            "order/accepted",
+            objectMapper.writeValueAsBytes(accepted),
+            Map.of("outboxIds", String.join(",", accepted.outboxIds())));
+}
 ```
 
 They are flat strings by design. An attribute map that could nest would become a second
@@ -64,8 +73,10 @@ serialisation format with no schema, and the `body` already exists for structure
 
 ## When you need no codec
 
-A `void` method has nothing to replay and must leave `codec` empty - supplying one is
-rejected at startup. The engine's runnable overload is the same case:
+A `void` [annotated method](/docs/annotated-methods/) has nothing to replay and must leave
+the annotation's [`codec`](/docs/reference/annotation/) attribute empty - supplying one is
+rejected at startup. The engine's runnable overload is the same case: it takes no codec and
+returns an `Outcome<Void>`, switched on as in [outcomes](/docs/concepts/outcomes/).
 
 ```java
 switch (engine.execute(context, () -> handler.handle(event))) { ... }

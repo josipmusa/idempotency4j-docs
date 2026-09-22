@@ -74,7 +74,7 @@ Joined completion needs the transaction to already be open when the method is en
 
 ### A codec is required on a value-returning method
 
-> `@Idempotent(codec = ...)` is required on `<method>`: it returns `Receipt`, and a duplicate
+> `@Idempotent(codec = ...)` is required on `<method>`: it returns `<type>`, and a duplicate
 > call has to be given that value back. Name a `PayloadCodec` bean that encodes it, or make
 > the method void.
 
@@ -84,7 +84,9 @@ the method `void` if a duplicate genuinely needs nothing back.
 
 ### A key is required on an annotated method
 
-> `@Idempotent(key = ...)` is required on `<method>`.
+> `@Idempotent(key = ...)` is required on `<method>`: a method has no transport to take an
+> idempotency key from, so the key must be an expression over its parameters, for example
+> `"#event.id()"`
 
 A method has no transport to take a key from, so the SpEL expression is required. On an HTTP
 endpoint the opposite holds and `key` is rejected - the client's header is the key. See
@@ -147,10 +149,12 @@ reality. See [purging and retention](/docs/operating/purging-and-retention/).
 
 ### Leaving an annotated endpoint to the HTTP adapter
 
-> Leaving `@Idempotent` on `<method>` to the HTTP adapter: it is a request mapping handler.
+> Leaving `@Idempotent` `<Class>.<method>` to the HTTP adapter: it is a request mapping
+> handler, so its key comes from the request header rather than its parameters
 
-Informational. The method advisor deliberately skips endpoints so the filter and the advisor
-never guard the same call under two different keys.
+Logged at DEBUG, and nothing is wrong. The advisor that intercepts
+[annotated methods](/docs/annotated-methods/) deliberately skips endpoints so the filter and
+the advisor never guard the same call under two different keys.
 
 ## Runtime behaviour that surprises people
 

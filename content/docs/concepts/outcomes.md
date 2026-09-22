@@ -7,6 +7,10 @@ sourceOf: README "The engine"
 `IdempotencyEngine.execute` returns a sealed `Outcome<T>` you switch on. Three cases, and the
 compiler holds you to all three.
 
+In this example `engine` is an `IdempotencyEngine` and `context` an `IdempotencyContext`, both
+built as on [the engine](/docs/the-engine/) page. `handler.handle(event)` is the work being
+guarded, and `consumer.nack` stands for however your broker client asks for a redelivery.
+
 ```java
 switch (engine.execute(context, () -> handler.handle(event))) {
     case Outcome.Executed<Void> ignored -> { /* ran for the first time */ }
@@ -25,7 +29,8 @@ the result. The value is what the action returned.
 the decoded result of the original execution, which is why the same `switch` handles a first
 run and a duplicate without the caller knowing which it got.
 
-**`InFlight<T>`** - another caller holds the lease and still held it after `wait` elapsed.
+**`InFlight<T>`** - another caller holds the lease and still held it after the
+[wait timeout](/docs/concepts/leases-and-waiting/) elapsed.
 The action did not run and there is no value. `retryAfter()` carries how long to wait before
 trying again, derived from the remaining lease.
 

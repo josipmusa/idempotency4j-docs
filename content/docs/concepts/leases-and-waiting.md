@@ -25,13 +25,14 @@ its key to a duplicate halfway through. The heartbeat separates the two: `lease`
 long the library waits after the process stops responding, not a budget the action has to
 finish inside.
 
-An action that dies without releasing leaves an expired lease, which the next `tryAcquire`
-steals atomically.
+An action that dies without releasing leaves an expired lease, which the next caller's
+acquisition steals atomically.
 
 ## Where the blocking happens
 
 The blocking happens inside the store, not in the engine. A concurrent duplicate waits inside
-`tryAcquire` for the holder to finish, and only gives up once `wait` elapses - which is why a
+the store's acquire call, [`tryAcquire`](/docs/storage/writing-a-store/), for the holder to
+finish, and only gives up once `wait` elapses - which is why a
 duplicate arriving mid-flight usually gets the real result rather than an error.
 
 Putting it in the store rather than the engine is a boundary decision. Each backend can wait
@@ -41,10 +42,12 @@ have to tune for every store.
 ## The caller that must not block
 
 A caller that must not block sets `wait` to zero and is told the record is in flight straight
-away.
+away. On the annotation, `wait` is the `waitTimeout` attribute:
 
 ```java
 @Idempotent(key = "#event.id()", waitTimeout = "PT0S")
+@KafkaListener(topics = "orders")
+void on(OrderPlaced event) { ... }
 ```
 
 The call throws `IdempotencyInFlightException`, which carries `retryAfter` so the broker can
@@ -66,5 +69,6 @@ exception.
 | `idempotency.default-wait` | `PT10S` |
 | `idempotency.default-ttl` | `PT24H` |
 
-Each is overridable per method on the annotation. The full list is in
+Each is overridable per method on [`@Idempotent`](/docs/reference/annotation/), as `lease`,
+`waitTimeout` and `ttl`. The full list is in
 [configuration](/docs/reference/configuration/).

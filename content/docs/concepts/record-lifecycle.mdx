@@ -31,7 +31,7 @@ payload.
 trace at all and the next caller sees a key that was never used.
 
 **Steal.** An action that dies without releasing leaves an expired lease, which the next
-`tryAcquire` steals atomically. See [leases and waiting](/docs/concepts/leases-and-waiting/).
+caller's acquisition steals atomically. See [leases and waiting](/docs/concepts/leases-and-waiting/).
 
 **Purge.** A completed record is purged once its TTL elapses. An abandoned `IN_PROGRESS`
 record is purged only once its TTL has elapsed *and* its lease has expired too, so a
@@ -53,7 +53,8 @@ This is the consequence of the rule above that surprises people most.
 
 ## Fencing
 
-Every acquisition carries a lease, and `complete`, `release` and the heartbeat all have to
-present a matching lease. That is what fences a stale owner out after its lease has been
+Every acquisition carries a lease, and the store calls that complete, release and extend a
+record for the heartbeat all have to present a matching lease - see
+[the store SPI](/docs/storage/writing-a-store/). That is what fences a stale owner out after its lease has been
 stolen: a process that wakes up from a long pause and tries to complete a record whose lease
 now belongs to someone else is refused rather than overwriting the new owner's work.

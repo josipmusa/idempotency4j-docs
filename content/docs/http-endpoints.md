@@ -45,8 +45,8 @@ public ResponseEntity<Payment> createPayment(@RequestBody PaymentRequest request
 }
 ```
 
-An annotated endpoint belongs to the filter alone. The method advisor leaves request mapping
-handlers to it, so the two never guard the same call under two different keys, and the three
+An annotated endpoint belongs to the filter alone. The advisor that intercepts
+[annotated methods](/docs/annotated-methods/) leaves request mapping handlers to it, so the two never guard the same call under two different keys, and the three
 attributes only a method can honour - `key`, `codec` and `completion` - are rejected at
 startup rather than silently ignored on an endpoint.
 

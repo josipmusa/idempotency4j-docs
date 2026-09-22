@@ -36,7 +36,8 @@ own request id.
 Idempotency keys are client-controlled and may themselves carry identifying data, so the
 library never writes one to a log or an exception message.
 
-Both render a record as its scope followed by a short digest of the key:
+Both render a record as its scope followed by a short digest of the key. For a key sent to
+a `create` method on `PaymentController`, that looks like:
 
 ```
 PaymentController.create/#3f9a2c71
@@ -50,7 +51,8 @@ the same way rather than searching for the raw value - it will not be there.
 
 To strip or redact sensitive fields before storage, register a `ResponseSanitizer` bean
 (`io.github.josipmusa.idempotency.spring.web.ResponseSanitizer`). The default is a no-op
-pass-through:
+pass-through. A sanitizer receives the captured response as a `StoredResponse` - status
+code, headers and body - and returns the `StoredResponse` to store:
 
 ```java
 @Bean
