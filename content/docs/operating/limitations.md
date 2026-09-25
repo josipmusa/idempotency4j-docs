@@ -1,6 +1,6 @@
 ---
 title: Limitations
-description: No reactive, no tenant isolation, no Redis Cluster, and what downstream side effects the library does not cover.
+description: No reactive, no tenant isolation, no Redis Cluster, no circular references, and what downstream side effects the library does not cover.
 sourceOf: README "Limitations", "What this is not"
 ---
 
@@ -12,6 +12,7 @@ better found now.
 | [No reactive support](#no-reactive-support) | Yes, if your application is WebFlux-only. Nothing registers and nothing warns you |
 | [No tenant isolation](#no-tenant-isolation) | No, but you must prefix keys yourself on a multi-tenant public API |
 | [No Redis Cluster](#redis-cluster-is-not-supported) | Yes, if Cluster is the only Redis you run. Standalone and Sentinel work |
+| [Beans in a circular reference](#beans-in-a-circular-reference-are-not-advised) | No. Spring Boot forbids circular references by default |
 | [Downstream side effects](#downstream-side-effects) | No, but it is the thing most often expected and not provided |
 | [Buffered request bodies](#buffered-request-bodies-over-http) | Yes, for streaming upload endpoints. Do not annotate them |
 
@@ -43,6 +44,12 @@ yours to apply.
 
 The provider takes Lettuce's non-cluster `StatefulRedisConnection`, and its bounded SCAN
 purge is not node-aware. Standalone and Sentinel master-replica connections work.
+
+## Beans in a circular reference are not advised
+
+The advice is applied by a bean post-processor, which - like `@Async` - cannot reach a bean
+that was injected into its own dependency cycle before it was post-processed. Spring Boot
+forbids circular references by default, so this only matters where they have been allowed.
 
 ## Downstream side effects
 

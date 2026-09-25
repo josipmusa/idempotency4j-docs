@@ -60,8 +60,10 @@ is the whole reason the phase is on the callback.
 **A fingerprint mismatch acquires no lease and fires nothing.** Heartbeat activity is not
 surfaced either.
 
-**Under `join-transaction` the terminal callback moves with the record:** `onCompleted` fires
-after the commit, and a rollback fires `onFailed` with `FailurePhase.ROLLBACK`. See
+**When the completion waits on a transaction, the terminal callback waits with it** - always
+under `join-transaction`, and under `autonomous` whenever the method runs inside one:
+`onCompleted` fires after the commit, and a rollback fires `onFailed` with
+`FailurePhase.ROLLBACK`. See
 [joining your transaction](/docs/joining-your-transaction/).
 
 ## Outside Spring

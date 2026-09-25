@@ -19,7 +19,7 @@ export const SITE = `https://${owner}.github.io`;
 
 // The library this site is about. Copied from the library at a named version,
 // never from memory.
-export const LIBRARY_VERSION = '0.4.0';
+export const LIBRARY_VERSION = '0.5.0';
 export const GROUP_ID = 'io.github.josipmusa';
 export const ARTIFACT_ID = 'idempotency-spring-boot-starter';
 export const COORDINATE = `${GROUP_ID}:${ARTIFACT_ID}:${LIBRARY_VERSION}`;

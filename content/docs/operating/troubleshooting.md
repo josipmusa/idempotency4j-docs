@@ -29,6 +29,8 @@ is a warning, not a failure, and the application serves traffic deduplicating no
 | Two different requests shared a result | [Two different requests were treated as the same](#two-different-requests-were-treated-as-the-same) |
 | Records vanished | [After a Redis failover](#records-disappeared-after-a-redis-failover) |
 | Consumers stopped making progress | [Consumer threads are parked](#consumer-threads-are-parked) |
+| A batch fails on a key it already processed | [The same key twice in one transaction](#the-same-key-twice-in-one-transaction-reports-in-flight) |
+| Transactional calls stall waiting for a connection | [The connection pool is too small](#transactional-calls-stall-on-the-connection-pool) |
 
 ## Startup failures
 
@@ -60,23 +62,18 @@ annotation fails the same way, with a message naming the method:
 > the configured idempotency store cannot complete inside a caller's transaction. Use a store
 > that can, such as the JDBC one, or drop the attribute to complete autonomously.
 
-### The transaction advisor does not run ahead of the idempotency advisor
+### An `IdempotentAdvisor` is declared as a bean
 
-> `@Idempotent(completion = "join-transaction")` on `<Class>.<method>` is also
-> @Transactional, but the transaction advisor (order `<n>`) does not run ahead of the
-> idempotency advisor (order `<m>`), so the method would be entered before its transaction
-> starts. Order the transaction advisor ahead, for example
-> `@EnableTransactionManagement(order = Ordered.HIGHEST_PRECEDENCE)`.
+> IdempotentAdvisor must not be registered as a bean: an auto-proxy creator would apply it at
+> an order that ties with the transaction advisor's. Register IdempotentBeanPostProcessor
+> instead - the starter already does.
 
-The message names both advisors' order values. Both default to `Ordered.LOWEST_PRECEDENCE`,
-which is a tie rather than an order, so the fix is to break the tie:
-
-```java
-@EnableTransactionManagement(order = Ordered.HIGHEST_PRECEDENCE)
-```
-
-Joined completion needs the transaction to already be open when the method is entered. See
-[joining your transaction](/docs/joining-your-transaction/).
+Remove the bean. With the starter there is nothing to replace it with; without the starter,
+register `IdempotentBeanPostProcessor` instead. The post-processor places the idempotency
+advice inside the bean's own transaction, which is what
+[joined completion](/docs/joining-your-transaction/) and a completion that waits for the
+commit both depend on. An `@EnableTransactionManagement(order = ...)` kept from 0.4.x is
+harmless and no longer needed.
 
 ### A codec is required on a value-returning method
 
@@ -177,8 +174,9 @@ the advisor never guard the same call under two different keys.
 Work through these in order:
 
 1. **Is a store actually active?** See the warning above. This is the common answer.
-2. **Did the first attempt throw?** Releasing deletes the record, so the next caller sees a
-   key that was never used. That is the intended contract - see
+2. **Did the first attempt throw, or its transaction roll back?** Releasing deletes the
+   record, so the next caller sees a key that was never used, and a rollback releases the key
+   just as an exception does. That is the intended contract - see
    [the record lifecycle](/docs/concepts/record-lifecycle/).
 3. **Has the TTL elapsed?** After `default-ttl` the record is purged and a retry is a fresh
    execution.
@@ -187,7 +185,9 @@ Work through these in order:
    [scope and key](/docs/concepts/scope-and-key/).
 5. **Did the completion fail?** Under the starter's default
    `completion-failure-policy: log-and-return`, a store that refused the completion is logged
-   and the caller still gets its result - the guarantee is lost for that one key.
+   and the caller still gets its result - the guarantee is lost for that one key. A
+   [joined](/docs/joining-your-transaction/) completion is the exception: its failure always
+   propagates, so the transaction cannot commit your writes without the record.
 
 ### An error response is replayed for hours
 
@@ -234,3 +234,21 @@ make room, and the store cannot detect that this happened.
 The default `default-wait` is `PT10S`, which suits a request thread and not a consumer. Set
 `waitTimeout = "PT0S"` on consumer methods so a redelivery is declined rather than blocking a
 thread from a small fixed pool. See [leases and waiting](/docs/concepts/leases-and-waiting/).
+
+### The same key twice in one transaction reports in flight
+
+A record is only complete once its transaction commits, so a second call with the same key
+inside the same transaction does not replay the first. It waits out its `waitTimeout` and
+reports in flight. If the method is itself `@Transactional`, that exception marks the shared
+transaction rollback-only on its way out, and the whole batch fails at commit with
+`UnexpectedRollbackException` even when the caller catches it. Declare
+`@Transactional(noRollbackFor = IdempotencyInFlightException.class)` to keep the rest of the
+batch. See [joining your transaction](/docs/joining-your-transaction/).
+
+### Transactional calls stall on the connection pool
+
+Inside a transaction, each `@Idempotent` call briefly needs a second pooled connection next to
+the one its transaction holds. A pool no larger than the number of concurrent transactional
+`@Idempotent` calls can starve until the pool's own timeout gives up. Size the pool above that
+number, or put a `LazyConnectionDataSourceProxy` in front of the `DataSource`. See
+[annotated methods](/docs/annotated-methods/#inside-a-transaction).

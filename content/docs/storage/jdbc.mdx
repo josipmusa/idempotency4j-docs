@@ -85,6 +85,12 @@ primary one.
 ## Joined completion
 
 The JDBC store is the only shipped store that supports it. The
-`TransactionAwareConnectionResolver` runs `COMPLETE` on the transaction-bound connection and
-everything else on a connection of its own, which is what lets the record commit with your
-business writes while the lease work stays outside your transaction.
+`TransactionAwareConnectionResolver` runs the joined completion on the transaction-bound
+connection and everything else, an autonomous completion included, on a connection of its
+own, which is what lets the record commit with your business writes while the lease work
+stays outside your transaction.
+
+Until that transaction commits, it holds the record's row. A duplicate that arrives meanwhile
+does not wait for the commit beyond its own `waitTimeout`: it is told the record is in flight,
+with the holder's remaining lease as `retryAfter`. Query timeouts are whole seconds, so the
+wait can overshoot by up to a second, or two on H2.

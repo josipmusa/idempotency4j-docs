@@ -19,7 +19,7 @@ idempotency:
   default-ttl: PT24H              # How long a completed record stays replayable. Default: 24h
   default-lease: PT30S            # How long an acquisition is protected. Default: 30s
   default-wait: PT10S             # How long a second caller blocks. PT0S to not block. Default: 10s
-  completion-mode: autonomous     # autonomous | join-transaction. Default: autonomous
+  completion-mode: autonomous     # autonomous | join-transaction, for @Idempotent methods. Default: autonomous
   completion-failure-policy: log-and-return   # log-and-return | propagate. Default: log-and-return
   store-type: auto                # auto | jdbc | in-memory | none. Default: auto
 
@@ -68,7 +68,7 @@ idempotency.purge.cron=0 0 * * * *
 | `default-ttl` | `PT24H` | How long a completed record stays replayable |
 | `default-lease` | `PT30S` | How long an acquisition is protected |
 | `default-wait` | `PT10S` | How long a second caller blocks. `PT0S` to not block |
-| `completion-mode` | `autonomous` | `autonomous` or `join-transaction` |
+| `completion-mode` | `autonomous` | `autonomous` or `join-transaction`, for `@Idempotent` methods. The HTTP filter always completes on its own |
 | `completion-failure-policy` | `log-and-return` | `log-and-return` or `propagate` |
 | `store-type` | `auto` | `auto`, `jdbc`, `in-memory` or `none` |
 

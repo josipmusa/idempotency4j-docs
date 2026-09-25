@@ -1,4 +1,4 @@
-// The support matrix, copied from the library's README at 0.4.0 - the "Requirements"
+// The support matrix, copied from the library's README at 0.5.0 - the "Requirements"
 // section - and nothing else. Every row is a combination the library's CI runs; the
 // build matrix covers Java 21 and 25 against Spring Boot 4.0 and 4.1.
 //

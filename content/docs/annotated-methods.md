@@ -86,6 +86,24 @@ A `void` method needs none - there is nothing to replay - and must leave `codec`
 See [payloads and codecs](/docs/concepts/payloads-and-codecs/) for writing one, including
 what to put in `attributes`.
 
+## Inside a transaction
+
+The idempotency advice always runs *inside* any transaction the method has: it is applied by a
+bean post-processor that appends itself behind the advice a bean already carries, so a
+`@Transactional` method, a `@TransactionalEventListener`, or Spring Modulith's
+`@ApplicationModuleListener` is guarded from within its own transaction, whatever order the
+transaction advisor was given. That is what lets the default completion wait for the commit,
+and a [joined](/docs/joining-your-transaction/) one write the record inside it.
+
+:::caution[Budget your connection pool for it]
+Inside a transaction, each call briefly needs a second pooled connection next to the one its
+transaction holds - to acquire the key, run the heartbeat, record the completion or release
+the key. A pool no larger than the number of concurrent transactional `@Idempotent` calls can
+starve until the pool's own timeout gives up. Size it above that, or put a
+`LazyConnectionDataSourceProxy` in front of the `DataSource` so a transaction takes its
+connection only when it first needs one.
+:::
+
 ## On an endpoint
 
 An annotated request mapping handler belongs to the [HTTP filter](/docs/http-endpoints/)

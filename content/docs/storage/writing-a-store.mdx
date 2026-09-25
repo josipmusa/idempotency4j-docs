@@ -42,9 +42,11 @@ behaviour.
    than one that does not support the feature, because the difference only appears under
    concurrency in production.
 
-4. **Override `supportsTransactionalCompletion()` to return `true` and extend
+4. **Override `completeInTransaction` and `supportsTransactionalCompletion()`, and extend
    `TransactionalStoreContract` too**, if and only if your store can complete inside a
-   caller's transaction. Declining is a supported answer.
+   caller's transaction. Both default to declining, which is a supported answer: `complete`
+   always means a write of its own, and the engine calls `completeInTransaction` only for
+   [joined completion](/docs/joining-your-transaction/).
 
 </Steps>
 

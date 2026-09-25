@@ -1,12 +1,26 @@
 ---
 title: Joining your transaction
-description: completion = "join-transaction", the window it closes, its three preconditions, and the advisor ordering trap.
+description: How the default waits for your commit, what completion = "join-transaction" adds, and its three preconditions.
 sourceOf: README "Completing inside your transaction"
 ---
 
-By default the record is written on its own, the moment the action returns. That leaves a
-window: if the process dies between your transaction committing and the record being written,
-the record stays in progress and a redelivery runs the action again.
+By default the record is written on its own. When the method runs inside a transaction - its
+own `@Transactional`, or one a caller opened - the engine waits for that transaction: the
+record is written after the commit, and a rollback frees the key so a retry runs the action
+again. With no transaction, the record is written the moment the method returns.
+
+Either way that leaves a window: if the process dies between your transaction committing and
+the record being written, the record stays in progress and a redelivery runs the action again.
+
+:::caution[The same key twice in one transaction does not replay]
+The record is only complete after the commit, so a second call with the same key inside the
+same transaction - a duplicate within a batch processed in one transaction - waits out its
+`waitTimeout` and reports in flight. If the method is itself `@Transactional`, that exception
+marks the shared transaction rollback-only on its way out, and the batch's commit fails even
+when the caller catches it. Declare
+`@Transactional(noRollbackFor = IdempotencyInFlightException.class)` to keep the rest of the
+batch.
+:::
 
 `completion = "join-transaction"` closes it. The engine writes the record inside the
 transaction the method is already running in, so the record and your business writes commit
@@ -31,29 +45,15 @@ joined completion against a store that cannot give it fails the context at start
 the request came from `idempotency.completion-mode=join-transaction` or from a single
 `@Idempotent(completion = "join-transaction")`.
 
-**A transaction must already be active when the method is entered.** The transaction advisor
-has to run *outside* the idempotency advisor. Both default to `Ordered.LOWEST_PRECEDENCE`, which is a tie
-rather than an order, so break it:
-
-```java
-@EnableTransactionManagement(order = Ordered.HIGHEST_PRECEDENCE)
-```
-
-A `@Transactional` method that asks for joined completion while the transaction advisor is
-not ordered ahead fails the context at startup, and the message names both advisors' actual
-order values so you can see the tie rather than infer it. A joined
-context entered without an active transaction at runtime is an `IllegalStateException`, not a
-silent downgrade.
-
-:::caution[Two advisors at the same precedence is a tie, not an order]
-A tie is resolved by something that is not your intent. The startup failure exists because
-the alternative - discovering it in production when the ordering happened to come out the
-other way - is not recoverable.
-:::
+**A transaction must be active when the method runs.** `@Transactional` on the method or its
+class is enough: the idempotency advice runs inside it, with no ordering to configure. A
+joined method with no transaction of its own relies on its caller's. A joined context entered
+without an active transaction is an `IllegalStateException`, not a silent downgrade.
 
 **The store needs the caller's connection.** The starter wires a
-`TransactionAwareConnectionResolver` into the JDBC store for you, which runs `COMPLETE` on the
-transaction-bound connection and everything else on a connection of its own.
+`TransactionAwareConnectionResolver` into the JDBC store for you, which runs the joined
+completion on the transaction-bound connection and everything else, an autonomous completion
+included, on a connection of its own.
 
 ## What the store guarantees
 
@@ -79,8 +79,9 @@ the work is in flight rather than being allowed to run.
 
 ## What moves with the record
 
-Under joined completion the terminal lifecycle callback moves with the record: `onCompleted`
-fires after the commit, and a rollback releases the lease and fires `onFailed` with
+Whenever the completion waits on a transaction - always under joined completion, and under
+the default whenever the method runs inside one - the terminal lifecycle callback waits with
+it: `onCompleted` fires after the commit, and a rollback releases the lease and fires `onFailed` with
 `FailurePhase.ROLLBACK`. Exactly one terminal still fires per lease, only later. See
 [lifecycle callbacks](/docs/lifecycle-callbacks/).
 
@@ -89,3 +90,6 @@ fires after the commit, and a rollback releases the lease and fires `onFailed` w
 Set `idempotency.completion-mode=join-transaction` to make it the default and leave
 `completion` off the individual annotations. Doing so requires a store that supports it, or
 the context fails at startup - which is the intended way to find out.
+
+The property applies to `@Idempotent` methods only: the HTTP filter runs outside any
+transaction a handler opens, so it always completes on its own.

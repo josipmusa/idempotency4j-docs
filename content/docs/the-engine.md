@@ -81,6 +81,11 @@ happens next.
 The lease is not released either way; the record stays in progress until its lease expires,
 and a retry after that re-executes.
 
+Joined completion is the exception: its completion failures always propagate, whatever the
+policy says, because returning normally would let the transaction commit the business writes
+without the record. When that transaction rolls back, the engine releases the lease, so the
+key is retryable at once instead of after the lease expires.
+
 ```java
 IdempotencyEngine engine = new IdempotencyEngine(
         store,
