@@ -1,4 +1,4 @@
-// The support matrix, copied from the library's README at 0.5.0 - the "Requirements"
+// The support matrix, copied from the library's README at 0.6.0 - the "Requirements"
 // section - and nothing else. Every row is a combination the library's CI runs; the
 // build matrix covers Java 21 and 25 against Spring Boot 4.0 and 4.1.
 //
@@ -33,7 +33,7 @@ export const matrix: SpecGroup[] = [
       {
         item: 'Spring Boot',
         supported: '4.0.x, 4.1.x',
-        note: 'Built against 4.0.8, for the adapters and the starter',
+        note: 'Built against 4.0.9, for the adapters and the starter',
       },
     ],
   },

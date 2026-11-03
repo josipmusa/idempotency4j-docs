@@ -10,7 +10,8 @@ the lookup.
 ## Status codes the filter can return
 
 These come from the filter itself, before or instead of your handler. Each carries a
-`{"error": "..."}` JSON body.
+`{"error": "..."}` JSON body, unless you
+[render them yourself](/docs/http-endpoints/#custom-rejection-responses).
 
 | Status | When |
 |---|---|
@@ -19,6 +20,13 @@ These come from the filter itself, before or instead of your handler. Each carri
 | `422 Unprocessable Entity` | Key longer than 255 characters |
 | `422 Unprocessable Entity` | Key reused with a different request body |
 | `409 Conflict` | Another request still holds the key after the annotation's [`waitTimeout`](/docs/reference/annotation/); carries `Retry-After`. Configurable through `idempotency.web.in-flight-status` |
+
+## Retry-After on an in-flight response
+
+`Retry-After` is the request's `waitTimeout`, or the holder's remaining lease when that is
+shorter, in whole seconds, rounded up, minimum 1. It paces retries; it does not predict when
+the holder finishes, so a retry can get another in-flight response. Earlier retries pick up
+the result sooner, at the cost of more duplicate requests while the holder is still running.
 
 :::note[Any other status your client sees came from your handler]
 Including a replayed one. Apart from the `204` described below, the five above are the only

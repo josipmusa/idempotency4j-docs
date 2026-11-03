@@ -188,6 +188,9 @@ Work through these in order:
    and the caller still gets its result - the guarantee is lost for that one key. A
    [joined](/docs/joining-your-transaction/) completion is the exception: its failure always
    propagates, so the transaction cannot commit your writes without the record.
+6. **Did a storage policy decline the result?** A `ResponseStoragePolicy` or `StoragePolicy`
+   that returned `false` released the key, so the retry ran as a first execution. Listeners
+   see that as `onReleased`.
 
 ### An error response is replayed for hours
 
@@ -196,6 +199,10 @@ returns normally.
 
 **If you want a failed request to be retriable, throw. If you return an error status, you are
 telling the library that error is the final answer for that key.**
+
+When the status is returned on purpose, for a failure that means nothing happened, a
+[`ResponseStoragePolicy`](/docs/http-endpoints/#releasing-the-key-instead-of-storing) can
+release the key instead of storing the response.
 
 A `@ControllerAdvice` that converts every exception into a `ResponseEntity` will make every
 failure permanent for its key without anyone intending it. See

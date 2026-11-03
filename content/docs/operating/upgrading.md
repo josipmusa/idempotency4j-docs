@@ -1,8 +1,38 @@
 ---
 title: Upgrading
-description: What 0.5.x changes for a 0.4.x application, the move from Spring Boot 3 to 4, and what Boot 3 applications should do.
+description: What 0.6.x and 0.5.x change for an existing application, the move from Spring Boot 3 to 4, and what Boot 3 applications should do.
 sourceOf: README "Spring Boot 3", CHANGELOG.md
 ---
+
+## 0.5.x to 0.6.x
+
+0.6.0 fixes two startup failures and adds two extension points to the HTTP filter. For most
+applications the upgrade is the version bump. Check these:
+
+- **Drop the Actuator workaround.** With Spring Boot Actuator on the classpath the starter
+  failed with `NoUniqueBeanDefinitionException` on `RequestMappingHandlerMapping`. It now
+  injects Spring MVC's mapping by name, so a `@Primary` added to work around it is no longer
+  needed.
+- **No more `spring-boot-sql` requirement.** An application using the Redis or in-memory store
+  failed at startup with `NoClassDefFoundError: DatabaseInitializationMode`.
+  `idempotency.jdbc.initialize-schema` keeps its values and default, but code calling
+  `IdempotencyProperties.Jdbc.getInitializeSchema()` now gets the starter's own
+  `IdempotencyProperties.SchemaInitialization` enum.
+- **`FailurePhase` gains `RELEASE`.** An exhaustive `switch` over it needs a new case.
+- **Listeners can see `onReleased`**, but only once you declare a storage policy. A listener
+  that cleans up in its terminal callbacks must handle it then; see
+  [lifecycle callbacks](/docs/lifecycle-callbacks/).
+- **The in-flight `Retry-After` is shorter.** It is now the request's `waitTimeout`, or the
+  holder's remaining lease when that is shorter, instead of the whole remaining lease. Expect
+  clients to retry sooner; see the [HTTP reference](/docs/reference/http/#retry-after-on-an-in-flight-response).
+
+New and optional: a `ResponseStoragePolicy` bean
+[releases the key](/docs/http-endpoints/#releasing-the-key-instead-of-storing) for responses
+that mean nothing happened, and an `IdempotencyRejectionHandler` bean
+[renders the filter's own rejections](/docs/http-endpoints/#custom-rejection-responses) in your
+API's error format. Without either, behaviour is unchanged.
+
+Records written by 0.5.x remain readable; the stored format did not change.
 
 ## 0.4.x to 0.5.x
 

@@ -1,6 +1,6 @@
 ---
 title: The engine
-description: IdempotencyEngine.execute without Spring - building a context, the two overloads, and CompletionFailurePolicy.
+description: IdempotencyEngine.execute without Spring - building a context, the overloads, StoragePolicy, and CompletionFailurePolicy.
 sourceOf: README "The engine"
 ---
 
@@ -68,6 +68,37 @@ Outcome<Handled> outcome =
 `Outcome.Replayed` carries the decoded value from the original execution, so the same
 `switch` handles a first run and a duplicate without the caller knowing which it got. Writing
 the codec is covered in [payloads and codecs](/docs/concepts/payloads-and-codecs/).
+
+## Releasing the key instead of storing
+
+Some results mean nothing happened - a refusal before any downstream call, for instance - and
+should not be replayed. Pass a `StoragePolicy<T>` as a fourth argument and return `false` for
+those. Here `Handled.refused()` is a method of your own:
+
+```java
+Outcome<Handled> outcome =
+        engine.execute(context, () -> handler.handle(event), codec, handled -> !handled.refused());
+```
+
+The engine asks the policy once, after a fresh action returns and before the result is
+encoded; a duplicate, an in-flight refusal or an action that threw never reaches it. On
+`false` the engine releases the lease instead of completing, fires `onReleased`, and still
+returns `Outcome.Executed` with the value. The next caller with that key runs the action as if
+the key had never been used.
+
+- **`false` is permission to run again, not an undo.** It does not reverse anything the action
+  did and does not roll back a transaction.
+- **Only an explicit `false` releases.** A policy that throws is a completion failure: the
+  record is kept and `CompletionFailurePolicy` applies, because the action may have done its
+  work.
+- **Inside a transaction, the release waits for the commit**, with the heartbeat still
+  running. A rollback releases the lease and fires `onFailed` with `FailurePhase.ROLLBACK` as
+  usual.
+- **A release the store refuses** with an exception is logged, fires `onFailed` with
+  `FailurePhase.RELEASE`, and the caller keeps its result. An `Error` fires the same callback
+  and propagates.
+
+`StoragePolicy.always()` stores every result, which is what the overloads without a policy do.
 
 ## When the store refuses the completion
 

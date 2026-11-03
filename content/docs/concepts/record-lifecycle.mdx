@@ -47,8 +47,8 @@ that is wrong for someone. Deleting the row instead makes the rule short enough 
 your head: **if you want a failed request to be retriable, throw.**
 
 :::caution[A handler that returns a `500` has that `500` replayed for the full TTL]
-Returning an error status tells the library that error is the final answer for that key.
-This is the consequence of the rule above that surprises people most.
+Returning an error status tells the library that error is the final answer for that key,
+unless a storage policy releases it. This is the consequence of the rule above that surprises people most.
 [HTTP endpoints](/docs/http-endpoints/) covers it in full.
 :::
 

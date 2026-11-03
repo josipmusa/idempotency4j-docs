@@ -7,9 +7,9 @@ sourceOf: README "Lifecycle callbacks"
 Register an `IdempotencyLifecycleListener` bean to observe the idempotent boundary. The
 starter picks up every listener bean and honours `@Order`; no other configuration is needed.
 
-The interface has five callbacks, all default methods, so you override only the ones you
-need: `onAcquired`, `onCompleted` and `onFailed`, shown below, plus `onDuplicate` and
-`onInFlight`. `AuditService` stands for your own audit component.
+The interface has six callbacks, all default methods, so you override only the ones you
+need: `onAcquired`, `onCompleted`, `onReleased` and `onFailed`, shown below, plus
+`onDuplicate` and `onInFlight`. `AuditService` stands for your own audit component.
 
 ```java
 @Bean
@@ -23,6 +23,11 @@ public IdempotencyLifecycleListener auditListener(AuditService audit) {
         @Override
         public void onCompleted(IdempotencyContext ctx, String leaseId, Payload payload) {
             audit.end(ctx.key());
+        }
+
+        @Override
+        public void onReleased(IdempotencyContext ctx, String leaseId) {
+            audit.released(ctx.key());   // a storage policy declined the result; the key is free
         }
 
         @Override
@@ -43,9 +48,16 @@ listener that blocks blocks the call.
 stored payload, the return value, or the exception the engine is propagating. Observation
 must not be able to break the thing being observed.
 
-**Every acquired lease gets exactly one terminal callback:** `onCompleted` **or** `onFailed`,
-always preceded by `onAcquired` with the same lease. Use the pair to unbind whatever
-`onAcquired` bound.
+**Every acquired lease gets exactly one terminal callback:** `onCompleted`, `onReleased`
+**or** `onFailed`, always preceded by `onAcquired` with the same lease. Use the pair to unbind
+whatever `onAcquired` bound.
+
+**`onReleased` fires only when a storage policy declined the result** - a
+[`ResponseStoragePolicy`](/docs/http-endpoints/#releasing-the-key-instead-of-storing) over
+HTTP, or a [`StoragePolicy`](/docs/the-engine/#releasing-the-key-instead-of-storing) on the
+engine. Nothing fires it until you declare one, but a listener that cleans up in `onCompleted`
+and `onFailed` must clean up there too once you do. A release the store refuses fires
+`onFailed` with `FailurePhase.RELEASE` instead.
 
 **`onDuplicate` and `onInFlight` stand alone.** Neither acquires a lease, so no terminal
 callback follows. A listener that unbinds state in its terminal callback will never see one
@@ -63,7 +75,8 @@ surfaced either.
 **When the completion waits on a transaction, the terminal callback waits with it** - always
 under `join-transaction`, and under `autonomous` whenever the method runs inside one:
 `onCompleted` fires after the commit, and a rollback fires `onFailed` with
-`FailurePhase.ROLLBACK`. See
+`FailurePhase.ROLLBACK`. A declined result waits the same way: the release, and `onReleased`,
+happen after the commit. See
 [joining your transaction](/docs/joining-your-transaction/).
 
 ## Outside Spring
